@@ -2,20 +2,16 @@
 
 import { Loader2 } from "lucide-react"
 
-import { AlertList } from "@/components/dashboard/alert-list"
-import { InsightList } from "@/components/dashboard/insight-list"
 import { MetricCard } from "@/components/dashboard/metric-card"
-import { ReminderList } from "@/components/dashboard/reminder-list"
+import { RevenueChart } from "@/components/dashboard/revenue-chart"
+import { OrderVolumeChart } from "@/components/dashboard/order-volume-chart"
+import { KPIComparisonChart } from "@/components/dashboard/kpi-comparison-chart"
+import { MonthlyGoalsRadialChart } from "@/components/dashboard/monthly-goals-radial-chart"
 import { Card, CardContent } from "@/components/ui/card"
-import { useDashboardStats, usePageTwoAlerts } from "@/hooks/use-dashboard"
+import { useDashboardStats } from "@/hooks/use-dashboard"
 
 export default function DashboardHomePage() {
   const { data, isLoading, isError } = useDashboardStats()
-  const {
-    data: alertData,
-    isLoading: areAlertsLoading,
-    isError: alertsError,
-  } = usePageTwoAlerts()
 
   if (isLoading) {
     return (
@@ -45,26 +41,16 @@ export default function DashboardHomePage() {
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </section>
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <InsightList insights={data.insights} />
-        <ReminderList reminders={data.reminders} />
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <RevenueChart />
+        <OrderVolumeChart />
       </section>
-      {areAlertsLoading ? (
-        <Card>
-          <CardContent className="flex items-center gap-2 py-8 text-muted-foreground">
-            <Loader2 className="animate-spin" size={18} />
-            Loading recent alerts...
-          </CardContent>
-        </Card>
-      ) : alertsError || !alertData ? (
-        <Card>
-          <CardContent className="py-8 text-sm font-medium text-destructive">
-            Could not load alert summary.
-          </CardContent>
-        </Card>
-      ) : (
-        <AlertList alerts={alertData.alerts.slice(0, 2)} />
-      )}
+
+      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <KPIComparisonChart />
+        <MonthlyGoalsRadialChart />
+      </section>
     </div>
   )
 }
