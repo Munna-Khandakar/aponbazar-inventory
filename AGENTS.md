@@ -1,19 +1,22 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This is a Next.js App Router workspace: `app/layout.tsx` defines shared shells, while each route (for now `app/page.tsx`) owns its own server component tree. Shared UI lives in `components/ui/` (shadcn-style primitives such as `button.tsx`, `card.tsx`, `chart.tsx`), and cross-cutting helpers stay in `lib/utils.ts`. Static assets (logos, favicons, Lottie files) belong in `public/`. Tailwind and animation tokens are centralized in `app/globals.css`, driven by `components.json` so that new components generated with `npx shadcn-ui@latest` inherit the same aliases defined in `tsconfig.json` (`@/*`).
+This workspace uses the Next.js App Router: `app/layout.tsx` holds the shared shell while routes under `app/` (currently `app/page.tsx`) manage their own server component trees. Shared primitives live in `components/ui/`, feature composites in `components/`, hooks in `hooks/`, and helpers such as `lib/utils.ts` in `lib/`. Place logos, favicons, and Lottie files inside `public/`. Tailwind tokens sit in `app/globals.css`, and `components.json` keeps shadcn generators aligned with the `@/*` aliases defined in `tsconfig.json`.
 
 ## Build, Test, and Development Commands
-- `npm run dev` – Starts the Next.js dev server with hot reloading on http://localhost:3000.
-- `npm run build` – Creates the production bundle; run locally before pushing to catch type or route errors.
-- `npm run start` – Serves the optimized build (useful for verifying Vercel parity).
-- `npm run lint` – Runs the Next + TypeScript ESLint config; lint before every PR.
+- `npm run dev` – Launch the hot-reloading dev server at http://localhost:3000.
+- `npm run build` – Generate the production bundle; run before every PR to catch type or route regressions.
+- `npm run start` – Serve the compiled `.next` output for production parity checks.
+- `npm run lint` – Run the TypeScript-aware ESLint config (`eslint.config.mjs`).
 
 ## Coding Style & Naming Conventions
-Use TypeScript everywhere (`allowJs` is on only for gradual adoption) and keep `strict` clean. Favor 2-space indentation and small, pure React components. Component files are PascalCase (`SalesChart.tsx`), hooks go in `hooks/` (add the folder if missing) with `useCamelCase` names, and utilities in `lib` export lowercase functions. Compose styling through Tailwind utility classes plus theme tokens defined in `globals.css`; fall back to inline styles only for one-off vendor embeds. Always import via aliases (`@/components/ui/button`).
+Use strict TypeScript with 2-space indentation and keep components small and pure. Component files are PascalCase (`DashboardHero.tsx`); hooks follow `useCamelCase` inside `hooks/`; utilities export lowercase helpers from `lib/`. Import via `@/*` aliases, and compose styling with Tailwind classes plus tokens from `globals.css` (inline styles only for vendor embeds). ESLint and editor-integrated Prettier guard formatting—lint before committing.
 
 ## Testing Guidelines
-The repo does not yet ship automated tests, so new contributions should introduce them alongside features. Co-locate component specs as `ComponentName.test.tsx` next to their source or inside a `__tests__` folder, and use React Testing Library plus Vitest (add the dependency the first time). For data helpers, prefer `.spec.ts` files under `lib/`. Every testable change should at least run `npm run lint` and `npm run build` before submission.
+The repo currently lacks tests, so every feature should add coverage where practical. Co-locate React specs as `ComponentName.test.tsx` next to the component or in a sibling `__tests__/` folder, and use Vitest with React Testing Library (add the deps the first time they are needed). Library helpers should receive `.spec.ts` files in `lib/`. Run `npm run lint` and `npm run build` on each change; once Vitest is configured, gate PRs with `npx vitest run`.
 
 ## Commit & Pull Request Guidelines
-History currently only shows the scaffold message `Initial commit from Create Next App`; continue using short, imperative messages that mention the scope (e.g., `feat: add KPI chart card`). Bundle related work and keep commits under ~150 lines when possible. PRs must include: a one-paragraph summary, linked Linear/Jira issue or `Fixes #id`, screenshots for UI updates (light/dark), and a checklist of commands executed (`dev`, `build`, `lint`, tests). Label breaking changes clearly and request review from another contributor before merging.
+Write short, imperative commit messages scoped by feature (e.g., `feat: add KPI chart card`) and keep diffs focused (~150 LOC). Pull requests must include a summary paragraph, a linked Linear/Jira issue or `Fixes #id`, light/dark screenshots for UI work, and a checklist covering `dev`, `build`, `lint`, and any tests executed. Flag breaking changes explicitly and request review from another contributor before merging.
+
+## Security & Configuration Tips
+Store API keys and secrets in `.env.local` (ignored by git) and document any required vars in the PR description. Never commit credentials; rotate and note when tokens change. Wrap third-party embeds with `next/script` and record CSP or configuration updates in the PR when applicable.

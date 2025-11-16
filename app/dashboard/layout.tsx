@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { Menu } from "lucide-react"
 
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DashboardNav } from "@/components/dashboard/dashboard-nav"
+import { Button } from "@/components/ui/button"
 import { useRequireAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { auth, isChecking, signOut } = useRequireAuth()
+  const { isChecking, signOut } = useRequireAuth()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   if (isChecking) {
@@ -38,10 +39,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           />
         </div>
         <div className="flex-1 space-y-6">
-          <DashboardHeader
-            user={auth?.user}
-            onToggleNav={() => setMobileNavOpen((prev) => !prev)}
-          />
+          <div className="flex justify-end md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="inline-flex items-center gap-2 rounded-full border-border/60 bg-white shadow-sm"
+              onClick={() => setMobileNavOpen((prev) => !prev)}
+            >
+              <Menu size={16} />
+              Menu
+            </Button>
+          </div>
           <main className="space-y-6">{children}</main>
         </div>
       </div>

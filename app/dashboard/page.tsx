@@ -1,70 +1,51 @@
 "use client"
 
-import { Loader2 } from "lucide-react"
-
-import { AlertList } from "@/components/dashboard/alert-list"
+import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { InsightList } from "@/components/dashboard/insight-list"
+import { InventoryHealthChart } from "@/components/dashboard/inventory-health-chart"
 import { MetricCard } from "@/components/dashboard/metric-card"
-import { ReminderList } from "@/components/dashboard/reminder-list"
-import { Card, CardContent } from "@/components/ui/card"
-import { useDashboardStats, usePageTwoAlerts } from "@/hooks/use-dashboard"
+import { MonthlyGoalsRadialChart } from "@/components/dashboard/monthly-goals-radial-chart"
+import { OrderVolumeChart } from "@/components/dashboard/order-volume-chart"
+import { PromoImpactChart } from "@/components/dashboard/promo-impact-chart"
+import { RevenueChart } from "@/components/dashboard/revenue-chart"
+import { SalesForecastChart } from "@/components/dashboard/sales-forecast-chart"
+import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
+import { useDashboardStats } from "@/hooks/use-dashboard"
 
 export default function DashboardHomePage() {
-  const { data, isLoading, isError } = useDashboardStats()
-  const {
-    data: alertData,
-    isLoading: areAlertsLoading,
-    isError: alertsError,
-  } = usePageTwoAlerts()
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center gap-2 py-10 text-muted-foreground">
-          <Loader2 className="animate-spin" size={18} />
-          Loading dashboard metrics...
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (isError || !data) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-sm font-medium text-destructive">
-          Unable to load dashboard data. Please refresh.
-        </CardContent>
-      </Card>
-    )
-  }
+  const { data } = useDashboardStats()
+  const metrics = data?.metrics ?? []
+  const insights = data?.insights ?? []
 
   return (
     <div className="space-y-6">
+      <DashboardFilters />
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {data.metrics.map((metric) => (
+        {metrics.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
       </section>
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <InsightList insights={data.insights} />
-        <ReminderList reminders={data.reminders} />
+
+      <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <SalesForecastChart />
+        <div className="space-y-6">
+          <MonthlyGoalsRadialChart />
+          <InventoryHealthChart />
+        </div>
       </section>
-      {areAlertsLoading ? (
-        <Card>
-          <CardContent className="flex items-center gap-2 py-8 text-muted-foreground">
-            <Loader2 className="animate-spin" size={18} />
-            Loading recent alerts...
-          </CardContent>
-        </Card>
-      ) : alertsError || !alertData ? (
-        <Card>
-          <CardContent className="py-8 text-sm font-medium text-destructive">
-            Could not load alert summary.
-          </CardContent>
-        </Card>
-      ) : (
-        <AlertList alerts={alertData.alerts.slice(0, 2)} />
-      )}
+
+      <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <PromoImpactChart />
+        <InsightList insights={insights} />
+      </section>
+
+      <StorePerformanceTable />
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <RevenueChart />
+        <OrderVolumeChart />
+      </section>
     </div>
   )
 }
