@@ -6,7 +6,6 @@ import {useMutation} from "@tanstack/react-query"
 import {useForm} from "react-hook-form"
 import {LockKeyhole, Mail, Shield} from "lucide-react"
 
-import {DashboardHeader} from "@/components/dashboard/dashboard-header"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import {Input} from "@/components/ui/input"
@@ -60,8 +59,10 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-grid-slate-100/60 [mask-image:radial-gradient(white,transparent_65%)]"/>
             <div
                 className="relative z-10 flex w-full max-w-5xl flex-col gap-8 rounded-3xl border border-border/60 bg-background/70 p-10 shadow-2xl backdrop-blur">
-                <DashboardHeader user={{id: 0, name: "Operations Panel", role: "Secure access"}}
-                                 onToggleNav={() => undefined}/>
+                <div className="rounded-2xl border border-border/60 bg-card/70 px-6 py-4 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Operations panel</p>
+                    <p className="text-lg font-semibold text-foreground">Secure access</p>
+                </div>
                 <div className="grid gap-10 lg:grid-cols-2">
                     <div className="space-y-5">
                         <div

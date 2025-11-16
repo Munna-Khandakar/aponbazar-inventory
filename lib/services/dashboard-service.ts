@@ -8,24 +8,27 @@ import type {
   DemandForecastRow,
   Insight,
   InventoryPredictionData,
+  InventoryHealthData,
   KPIComparisonData,
   Metric,
   MonthlyGoalData,
   MonthlyRevenueData,
   OrderVolumeData,
+  PromoImpactData,
   ProductPerformanceData,
   Reminder,
   RetentionCohortData,
   SalesForecastData,
   SalesTargetData,
   StockLevelData,
+  StorePerformanceData,
 } from "@/lib/types/dashboard"
 
 const metrics: Metric[] = [
-  { id: "revenue", label: "Monthly revenue", value: "$128.4k", trend: "+12.4%", trendDirection: "up" },
-  { id: "orders", label: "Orders fulfilled", value: "982", trend: "+4.1%", trendDirection: "up" },
-  { id: "returns", label: "Returns", value: "32", trend: "-2.3%", trendDirection: "down" },
-  { id: "nps", label: "Customer NPS", value: "67", trend: "+3pts", trendDirection: "up" },
+  { id: "sales", label: "Sales vs Target", value: "$1.28M", trend: "+6.2%", trendDirection: "up" },
+  { id: "accuracy", label: "Forecast accuracy", value: "94.1%", trend: "+2.1pts", trendDirection: "up" },
+  { id: "coverage", label: "Inventory cover days", value: "27 days", trend: "-3 days", trendDirection: "down" },
+  { id: "shrink", label: "Shrink rate", value: "2.4%", trend: "-0.6pts", trendDirection: "up" },
 ]
 
 const reminders: Reminder[] = [
@@ -37,20 +40,20 @@ const reminders: Reminder[] = [
 const insights: Insight[] = [
   {
     id: 1,
-    title: "Subscriptions up 18%",
-    description: "Consider unlocking the new retention campaign to keep the cohort engaged.",
+    title: "Restock perishables in Gulshan",
+    description: "Fresh dairy inventory will dip below 2.5 days of cover by tomorrow afternoon.",
     status: "new",
   },
   {
     id: 2,
-    title: "Logistics SLA slipping",
-    description: "Average fulfillment time exceeded target by 14 minutes across two hubs.",
+    title: "Approve weekend promo tiles",
+    description: "Projected to lift basket size +9% in Mirpur once approved by Friday 3 PM.",
     status: "in-progress",
   },
   {
     id: 3,
-    title: "Checkout revamp shipped",
-    description: "Monitor conversion impact throughout the next two deploy windows.",
+    title: "Close shrink investigation",
+    description: "CCTV review complete for Uttara store; update audit log before EOD.",
     status: "done",
   },
 ]
@@ -175,6 +178,59 @@ const stockLevelData: StockLevelData[] = [
   { category: "Home Goods", inStock: 2300, lowStock: 95, outOfStock: 15 },
 ]
 
+const inventoryHealthData: InventoryHealthData[] = [
+  { category: "Fresh Food", healthy: 3120, atRisk: 460, overstock: 90, coverDays: 3 },
+  { category: "Pantry Staples", healthy: 5480, atRisk: 310, overstock: 420, coverDays: 16 },
+  { category: "Household Care", healthy: 2740, atRisk: 190, overstock: 160, coverDays: 14 },
+  { category: "Health & Beauty", healthy: 2180, atRisk: 150, overstock: 85, coverDays: 9 },
+]
+
+const promoImpactData: PromoImpactData[] = [
+  { campaign: "Eid Family Basket", baseline: 42000, forecast: 61000, upliftPct: 38, marginPct: 21 },
+  { campaign: "Weekend Essentials", baseline: 28500, forecast: 36000, upliftPct: 26, marginPct: 17 },
+  { campaign: "Hyper Saver Days", baseline: 19400, forecast: 31000, upliftPct: 60, marginPct: 15 },
+  { campaign: "Fresh Express", baseline: 15800, forecast: 26200, upliftPct: 66, marginPct: 24 },
+]
+
+const storePerformanceData: StorePerformanceData[] = [
+  {
+    store: "Gulshan Flagship",
+    region: "Dhaka",
+    sales: 420000,
+    target: 400000,
+    footfall: 52000,
+    forecastAccuracy: 97,
+    inventoryRisk: "low",
+  },
+  {
+    store: "Dhanmondi Super",
+    region: "Dhaka",
+    sales: 365000,
+    target: 380000,
+    footfall: 47000,
+    forecastAccuracy: 93,
+    inventoryRisk: "medium",
+  },
+  {
+    store: "Uttara Mega",
+    region: "Dhaka",
+    sales: 298000,
+    target: 310000,
+    footfall: 41000,
+    forecastAccuracy: 91,
+    inventoryRisk: "medium",
+  },
+  {
+    store: "Chattogram Hub",
+    region: "Chattogram",
+    sales: 255000,
+    target: 240000,
+    footfall: 36000,
+    forecastAccuracy: 88,
+    inventoryRisk: "high",
+  },
+]
+
 // Page 2: Customer Behavior Data
 
 const customerSegmentData: CustomerSegmentData[] = [
@@ -255,31 +311,36 @@ const customerSatisfactionData: CustomerSatisfactionData[] = [
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 
 export const dashboardService = {
-  getStats: async () => clone({ metrics, reminders, insights }),
-  getPageOneItems: async () => clone({ items: pageOneTasks }),
-  getPageTwoAlerts: async () => clone({ alerts }),
+  getStats: () => clone({ metrics, reminders, insights }),
+  getPageOneItems: () => clone({ items: pageOneTasks }),
+  getPageTwoAlerts: () => clone({ alerts }),
 
   // Dashboard Charts
-  getMonthlyRevenue: async () => clone(monthlyRevenueData),
-  getOrderVolume: async () => clone(orderVolumeData),
-  getSalesTarget: async () => clone(salesTargetData),
-  getKPIComparison: async () => clone(kpiComparisonData),
+  getMonthlyRevenue: () => clone(monthlyRevenueData),
+  getOrderVolume: () => clone(orderVolumeData),
+  getSalesTarget: () => clone(salesTargetData),
+  getKPIComparison: () => clone(kpiComparisonData),
 
   // Page 1: Predictive Sales & Inventory
-  getSalesForecast: async () => clone(salesForecastData),
-  getInventoryPrediction: async () => clone(inventoryPredictionData),
-  getDemandForecast: async () => clone(demandForecastData),
-  getStockLevels: async () => clone(stockLevelData),
+  getSalesForecast: () => clone(salesForecastData),
+  getInventoryPrediction: () => clone(inventoryPredictionData),
+  getDemandForecast: () => clone(demandForecastData),
+  getStockLevels: () => clone(stockLevelData),
+  getInventoryHealth: () => clone(inventoryHealthData),
+
+  // Promotions & Store Ops
+  getPromoImpact: () => clone(promoImpactData),
+  getStorePerformance: () => clone(storePerformanceData),
 
   // Page 2: Customer Behavior
-  getCustomerSegments: async () => clone(customerSegmentData),
-  getChurnPrediction: async () => clone(churnPredictionData),
-  getBehaviorMetrics: async () => clone(behaviorMetricsData),
-  getRetentionCohorts: async () => clone(retentionCohortData),
-  getCustomerLTV: async () => clone(customerLTVData),
+  getCustomerSegments: () => clone(customerSegmentData),
+  getChurnPrediction: () => clone(churnPredictionData),
+  getBehaviorMetrics: () => clone(behaviorMetricsData),
+  getRetentionCohorts: () => clone(retentionCohortData),
+  getCustomerLTV: () => clone(customerLTVData),
 
   // Radial & Radar Charts
-  getMonthlyGoals: async () => clone(monthlyGoalData),
-  getProductPerformance: async () => clone(productPerformanceData),
-  getCustomerSatisfaction: async () => clone(customerSatisfactionData),
+  getMonthlyGoals: () => clone(monthlyGoalData),
+  getProductPerformance: () => clone(productPerformanceData),
+  getCustomerSatisfaction: () => clone(customerSatisfactionData),
 }

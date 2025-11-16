@@ -85,6 +85,32 @@ export type StockLevelData = {
   outOfStock: number
 }
 
+export type InventoryHealthData = {
+  category: string
+  healthy: number
+  atRisk: number
+  overstock: number
+  coverDays: number
+}
+
+export type PromoImpactData = {
+  campaign: string
+  baseline: number
+  forecast: number
+  upliftPct: number
+  marginPct: number
+}
+
+export type StorePerformanceData = {
+  store: string
+  region: string
+  sales: number
+  target: number
+  footfall: number
+  forecastAccuracy: number
+  inventoryRisk: "low" | "medium" | "high"
+}
+
 // Customer Behavior Types (Page 2)
 
 export type CustomerSegmentData = {

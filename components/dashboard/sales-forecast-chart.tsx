@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { Area, ComposedChart, CartesianGrid, Line, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ChartContainer,
@@ -11,67 +11,50 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { useSalesForecast } from "@/hooks/use-dashboard"
-import { Loader2 } from "lucide-react"
 
 const chartConfig = {
   actual: {
     label: "Actual Sales",
-    color: "#3b82f6",
+    color: "#2563eb",
   },
   predicted: {
     label: "Predicted Sales",
-    color: "#f59e0b",
+    color: "#f97316",
   },
-  confidence_low: {
-    label: "Low Confidence",
-    color: "#94a3b8",
-  },
-  confidence_high: {
-    label: "High Confidence",
-    color: "#cbd5e1",
+  confidenceRange: {
+    label: "90% Confidence",
+    color: "#93c5fd",
   },
 } satisfies ChartConfig
 
 export function SalesForecastChart() {
-  const { data, isLoading, error } = useSalesForecast()
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Sales Forecast</CardTitle>
-          <CardDescription>Predicted vs Actual with Confidence Intervals</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Sales Forecast</CardTitle>
-          <CardDescription>Predicted vs Actual with Confidence Intervals</CardDescription>
-        </CardHeader>
-        <CardContent className="py-12 text-center text-sm text-destructive">
-          Failed to load sales forecast data
-        </CardContent>
-      </Card>
-    )
-  }
+  const { data } = useSalesForecast()
+  const chartData =
+    data?.map((point) => {
+      const low = point.confidence_low ?? Math.round(point.predicted * 0.96)
+      const high = point.confidence_high ?? Math.round(point.predicted * 1.04)
+      return {
+        ...point,
+        confidenceBase: low,
+        confidenceRange: Math.max(high - low, 0),
+      }
+    }) ?? []
+  const projectionStart = chartData.find((point) => typeof point.actual !== "number")?.month
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Sales Forecast</CardTitle>
-        <CardDescription>Predicted vs Actual with Confidence Intervals</CardDescription>
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <CardTitle>Sales Forecast</CardTitle>
+          <CardDescription>Actuals vs projections with 90% confidence band</CardDescription>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Scenario assumes base merchandising calendar without weather disruption.
+        </p>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <LineChart data={data}>
+          <ComposedChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="month"
@@ -88,16 +71,60 @@ export function SalesForecastChart() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => `Month: ${value}`}
-                  formatter={(value) => `$${Number(value).toLocaleString()}`}
+                  formatter={(value, name, item) => {
+                    if (name === "confidenceRange") {
+                      const low = item?.payload?.confidenceBase ?? 0
+                      const high = low + Number(value)
+                      return (
+                        <div className="flex flex-col">
+                          <span>Low: ${low.toLocaleString()}</span>
+                          <span>High: ${high.toLocaleString()}</span>
+                        </div>
+                      )
+                    }
+                    return `$${Number(value).toLocaleString()}`
+                  }}
                 />
               }
             />
             <ChartLegend content={<ChartLegendContent />} />
+            {projectionStart ? (
+              <ReferenceLine
+                x={projectionStart}
+                stroke="hsl(var(--muted-foreground))"
+                strokeDasharray="4 4"
+                label={{
+                  value: "Projection window",
+                  position: "insideTopRight",
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 11,
+                }}
+              />
+            ) : null}
+            <Area
+              type="monotone"
+              dataKey="confidenceBase"
+              stackId="confidence"
+              stroke="transparent"
+              fill="transparent"
+              activeDot={false}
+              isAnimationActive={false}
+              legendType="none"
+            />
+            <Area
+              type="monotone"
+              dataKey="confidenceRange"
+              stackId="confidence"
+              stroke="none"
+              fill="var(--color-confidenceRange)"
+              fillOpacity={0.25}
+              activeDot={false}
+            />
             <Line
               type="monotone"
               dataKey="actual"
               stroke="var(--color-actual)"
-              strokeWidth={2}
+              strokeWidth={2.5}
               dot={{ r: 4 }}
             />
             <Line
@@ -105,26 +132,10 @@ export function SalesForecastChart() {
               dataKey="predicted"
               stroke="var(--color-predicted)"
               strokeWidth={2}
-              strokeDasharray="5 5"
+              strokeDasharray="6 4"
               dot={{ r: 4 }}
             />
-            <Line
-              type="monotone"
-              dataKey="confidence_low"
-              stroke="var(--color-confidence_low)"
-              strokeWidth={1}
-              strokeDasharray="3 3"
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="confidence_high"
-              stroke="var(--color-confidence_high)"
-              strokeWidth={1}
-              strokeDasharray="3 3"
-              dot={false}
-            />
-          </LineChart>
+          </ComposedChart>
         </ChartContainer>
       </CardContent>
     </Card>
