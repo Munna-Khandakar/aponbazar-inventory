@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, LogOut, TrendingUp, Package, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 
 type DashboardNavProps = {
@@ -43,6 +44,10 @@ export const DashboardNav = ({ onSignOut }: DashboardNavProps) => {
             </Link>
           )
         })}
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-muted-foreground">Theme</p>
+        <ThemeToggle />
       </div>
       <Button variant="outline" size="lg" className="justify-center gap-2" onClick={onSignOut}>
         <LogOut size={16} />
