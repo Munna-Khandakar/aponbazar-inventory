@@ -58,15 +58,15 @@ export function CustomerSatisfactionRadarChart() {
       <CardContent>
         <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[300px]">
           <RadarChart data={data}>
-            <PolarGrid gridType="circle" stroke="#e5e7eb" />
+            <PolarGrid gridType="circle" className="stroke-border" />
             <PolarAngleAxis
               dataKey="category"
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
             />
             <Radar
               dataKey="score"
-              stroke="#8b5cf6"
-              fill="#8b5cf6"
+              stroke="var(--color-score)"
+              fill="var(--color-score)"
               fillOpacity={0.6}
               strokeWidth={2}
             />

@@ -5,7 +5,13 @@ import {useRouter} from "next/navigation"
 import {AuthPayload, clearAuthPayload, getAuthPayload, saveAuthPayload} from "@/lib/auth-storage"
 
 export const useAuth = () => {
-    const [auth, setAuth] = useState<AuthPayload | null>(() => getAuthPayload())
+    const [auth, setAuth] = useState<AuthPayload | null>(null)
+
+    useEffect(() => {
+        // Hydrate auth state from localStorage after mount to avoid SSR hydration mismatch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setAuth(getAuthPayload())
+    }, [])
 
     const setAuthData = useCallback((payload: AuthPayload) => {
         saveAuthPayload(payload)
@@ -22,13 +28,20 @@ export const useAuth = () => {
 
 export const useRequireAuth = () => {
     const router = useRouter()
-    const [auth, setAuth] = useState<AuthPayload | null>(() => getAuthPayload())
+    const [auth, setAuth] = useState<AuthPayload | null>(null)
+    const [isChecking, setIsChecking] = useState(true)
 
     useEffect(() => {
-        if (!auth) {
+        const authData = getAuthPayload()
+        // Hydrate auth state from localStorage after mount to avoid SSR hydration mismatch
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setAuth(authData)
+        setIsChecking(false)
+
+        if (!authData) {
             router.replace("/login")
         }
-    }, [auth, router])
+    }, [router])
 
     const signOut = useCallback(() => {
         clearAuthPayload()
@@ -36,5 +49,5 @@ export const useRequireAuth = () => {
         router.replace("/login")
     }, [router])
 
-    return {auth, isChecking: auth === null, signOut}
+    return {auth, isChecking, signOut}
 }

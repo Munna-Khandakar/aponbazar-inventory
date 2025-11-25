@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, LogOut, PanelsTopLeft, Workflow } from "lucide-react"
+import { LayoutDashboard, LogOut, TrendingUp, Package, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 
 type DashboardNavProps = {
@@ -12,9 +13,10 @@ type DashboardNavProps = {
 }
 
 const links = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/page1", label: "Page One", icon: Workflow },
-  { href: "/dashboard/page2", label: "Page Two", icon: PanelsTopLeft },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/sales-prediction", label: "Sales Prediction", icon: TrendingUp },
+  { href: "/dashboard/inventory-management", label: "Inventory Management", icon: Package },
+  { href: "/dashboard/customer-behavior", label: "Customer Behavior", icon: Users },
 ]
 
 export const DashboardNav = ({ onSignOut }: DashboardNavProps) => {
@@ -42,6 +44,10 @@ export const DashboardNav = ({ onSignOut }: DashboardNavProps) => {
             </Link>
           )
         })}
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-muted-foreground">Theme</p>
+        <ThemeToggle />
       </div>
       <Button variant="outline" size="lg" className="justify-center gap-2" onClick={onSignOut}>
         <LogOut size={16} />
