@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, LogOut, PanelsTopLeft, Workflow } from "lucide-react"
+import { LayoutDashboard, LogOut, TrendingUp, Package, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -12,9 +12,10 @@ type DashboardNavProps = {
 }
 
 const links = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/page1", label: "Page One", icon: Workflow },
-  { href: "/dashboard/page2", label: "Page Two", icon: PanelsTopLeft },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/sales-prediction", label: "Sales Prediction", icon: TrendingUp },
+  { href: "/dashboard/inventory-management", label: "Inventory Management", icon: Package },
+  { href: "/dashboard/customer-behavior", label: "Customer Behavior", icon: Users },
 ]
 
 export const DashboardNav = ({ onSignOut }: DashboardNavProps) => {
