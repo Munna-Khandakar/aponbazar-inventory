@@ -45,10 +45,10 @@ export const DashboardNav = ({ onSignOut }: DashboardNavProps) => {
           )
         })}
       </div>
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-muted-foreground">Theme</p>
-        <ThemeToggle />
-      </div>
+      {/*<div className="flex items-center justify-between">*/}
+      {/*  <p className="text-sm font-medium text-muted-foreground">Theme</p>*/}
+      {/*  <ThemeToggle />*/}
+      {/*</div>*/}
       <Button variant="outline" size="lg" className="justify-center gap-2" onClick={onSignOut}>
         <LogOut size={16} />
         Sign out
