@@ -89,7 +89,7 @@ export function StackedBarChart<TData extends object>({
 
   return (
     <ChartContainer config={chartConfig} className="aspect-auto w-full" style={{ height }}>
-      <ComposedChart data={normalizedData} barGap={6} barCategoryGap="16%">
+      <ComposedChart data={normalizedData} stackOffset="sign" barGap={6} barCategoryGap="16%">
         {showGrid ? <CartesianGrid vertical={false} strokeDasharray="3 3" /> : null}
         <XAxis dataKey={xKey} tickLine={false} axisLine={false} tickMargin={8} />
         <YAxis
@@ -118,11 +118,7 @@ export function StackedBarChart<TData extends object>({
             dataKey={seriesItem.key}
             stackId={seriesItem.stackId ?? DEFAULT_STACK_ID}
             fill={`var(--color-${seriesItem.key})`}
-            radius={
-              negativeSeriesKeys.includes(seriesItem.key)
-                ? [0, 0, 4, 4]
-                : [4, 4, 0, 0]
-            }
+            radius={[4, 4, 0, 0]}
             barSize={20}
           />
         ))}
