@@ -38,19 +38,22 @@ All data fetching follows this structure:
 2. **React Query hooks** (`hooks/use-dashboard.ts`) – Wrap services with `useQuery` for caching/state
 3. **Components** – Call hooks and render data
 
+**Note**: Current implementation uses `createStaticHook` in `use-dashboard.ts` which creates static hooks that synchronously return mock data. This is a placeholder pattern.
+
 Example:
 ```ts
-// Service
+// Service (lib/services/dashboard-service.ts)
 dashboardService.getStats() → Promise<{metrics, reminders, insights}>
 
-// Hook
-useDashboardStats() → useQuery wrapping the service
+// Hook (hooks/use-dashboard.ts)
+useDashboardStats() → Static hook returning mock data
 
 // Component
 const { data } = useDashboardStats()
 ```
 
 When adding real API endpoints:
+- Replace `createStaticHook` with real `useQuery` hooks from `@tanstack/react-query`
 - Keep services in `lib/services/`
 - Use `apiClient` from `lib/api-client.ts` (pre-configured Axios instance)
 - API base URL configured via `NEXT_PUBLIC_API_BASE_URL` env var
@@ -59,11 +62,12 @@ When adding real API endpoints:
 - `/` – Landing/home page
 - `/login` – Login form (uses `authService`)
 - `/dashboard` – Protected dashboard layout with:
-  - `/dashboard` (index) – Main metrics/insights view
-  - `/dashboard/page1` – Additional tasks view
-  - `/dashboard/page2` – Alerts view
+  - `/dashboard` (index) – Main metrics/insights view (Sales forecast, revenue, store performance)
+  - `/dashboard/sales-prediction` – Sales forecasting, revenue patterns, KPI comparison
+  - `/dashboard/inventory-management` – Stock levels, inventory predictions, demand forecasting
+  - `/dashboard/customer-behavior` – Customer segments, churn prediction, LTV analysis
 
-Dashboard routes share a layout (`app/dashboard/layout.tsx`) with sticky sidebar navigation.
+Dashboard routes share a layout (`app/dashboard/layout.tsx`) with sticky sidebar navigation (defined in `components/dashboard/dashboard-nav.tsx`).
 
 ### Component Organization
 - `components/ui/` – Reusable primitives from shadcn/ui (button, card, input, label, chart)
@@ -100,9 +104,11 @@ This uses settings from `components.json` to maintain consistent aliases and sty
 
 ## Environment Variables
 
-- `NEXT_PUBLIC_API_BASE_URL` – API endpoint base URL (defaults to "https://placeholder.api")
+- `NEXT_PUBLIC_API_BASE_URL` – API endpoint base URL (defaults to "https://placeholder.api" if not set)
 
-## Code Style (from AGENTS.md)
+Create a `.env.local` file to override this for local development.
+
+## Code Style
 
 - TypeScript everywhere with `strict` mode
 - 2-space indentation
@@ -134,3 +140,4 @@ No test setup currently exists. When adding tests:
 2. **Auth is localStorage-based** – no server-side validation currently
 3. **No tests exist yet** – add testing infrastructure with first test contribution
 4. Run `npm run build` before every PR to catch type/build errors early
+5. **Dashboard navigation** is centralized in `components/dashboard/dashboard-nav.tsx` – update the `links` array when adding new routes
