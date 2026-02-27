@@ -16,11 +16,10 @@ import type {
   PromoImpactData,
   Reminder,
   RetentionCohortData,
-  SalesForecastData,
-  SalesTargetData,
   StockLevelData,
   StorePerformanceData,
 } from "@/lib/types/dashboard"
+import type { SalesForecastData } from "@/lib/types/SalesForecastData"
 
 const metrics: Metric[] = [
   { id: "sales", label: "Sales vs Target", value: "$1.28M", trend: "+6.2%", trendDirection: "up" },
@@ -118,27 +117,15 @@ const orderVolumeData: OrderVolumeData[] = [
   { month: "Jun", orders: 982 },
 ]
 
-const salesTargetData: SalesTargetData[] = [
-  { month: "Jan", actual: 98500, target: 95000 },
-  { month: "Feb", actual: 105200, target: 100000 },
-  { month: "Mar", actual: 112800, target: 105000 },
-  { month: "Apr", actual: 118600, target: 110000 },
-  { month: "May", actual: 125300, target: 115000 },
-  { month: "Jun", actual: 128400, target: 120000 },
-]
-
 // Page 1: Predictive Sales & Inventory Data
 
 const salesForecastData: SalesForecastData[] = [
-  { month: "Jan", actual: 98500, predicted: 98200, confidence_low: 95000, confidence_high: 101000 },
-  { month: "Feb", actual: 105200, predicted: 104800, confidence_low: 102000, confidence_high: 108000 },
-  { month: "Mar", actual: 112800, predicted: 113200, confidence_low: 110000, confidence_high: 116000 },
-  { month: "Apr", actual: 118600, predicted: 119000, confidence_low: 115000, confidence_high: 123000 },
-  { month: "May", actual: 125300, predicted: 124800, confidence_low: 121000, confidence_high: 129000 },
-  { month: "Jun", actual: 128400, predicted: 128900, confidence_low: 125000, confidence_high: 133000 },
-  { month: "Jul", predicted: 135200, confidence_low: 131000, confidence_high: 140000 },
-  { month: "Aug", predicted: 142500, confidence_low: 137000, confidence_high: 148000 },
-  { month: "Sep", predicted: 148900, confidence_low: 143000, confidence_high: 155000 },
+  { month: "Jan", actualSales: 11800, forecastedSales: 11000, targetedSales: 15200 },
+  { month: "Feb", actualSales: 12350, forecastedSales: 11500, targetedSales: 15600 },
+  { month: "Mar", actualSales: 13120, forecastedSales: 11000, targetedSales: 15900 },
+  { month: "Apr", actualSales: 13980, forecastedSales: 11850, targetedSales: 15600 },
+  { month: "May", actualSales: 14860, forecastedSales: 11700, targetedSales: 15350 },
+  { month: "Jun", actualSales: 15790, forecastedSales: 11550, targetedSales: 15100 },
 ]
 
 const inventoryPredictionData: InventoryPredictionData[] = [
@@ -298,7 +285,6 @@ export const dashboardService = {
   // Dashboard Charts
   getMonthlyRevenue: () => clone(monthlyRevenueData),
   getOrderVolume: () => clone(orderVolumeData),
-  getSalesTarget: () => clone(salesTargetData),
 
   // Page 1: Predictive Sales & Inventory
   getSalesForecast: () => clone(salesForecastData),

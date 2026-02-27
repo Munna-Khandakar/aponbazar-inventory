@@ -23,7 +23,6 @@ export const usePageTwoAlerts = createStaticHook(dashboardService.getPageTwoAler
 // Dashboard Chart Hooks
 export const useMonthlyRevenue = createStaticHook(dashboardService.getMonthlyRevenue)
 export const useOrderVolume = createStaticHook(dashboardService.getOrderVolume)
-export const useSalesTarget = createStaticHook(dashboardService.getSalesTarget)
 
 // Page 1: Predictive Sales & Inventory Hooks
 export const useSalesForecast = createStaticHook(dashboardService.getSalesForecast)

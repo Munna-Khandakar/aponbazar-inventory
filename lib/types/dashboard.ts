@@ -39,21 +39,7 @@ export type OrderVolumeData = {
   orders: number
 }
 
-export type SalesTargetData = {
-  month: string
-  actual: number
-  target: number
-}
-
 // Predictive Sales & Inventory Types (Page 1)
-
-export type SalesForecastData = {
-  month: string
-  actual?: number
-  predicted: number
-  confidence_low?: number
-  confidence_high?: number
-}
 
 export type InventoryPredictionData = {
   month: string
