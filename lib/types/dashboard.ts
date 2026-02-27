@@ -45,12 +45,6 @@ export type SalesTargetData = {
   target: number
 }
 
-export type KPIComparisonData = {
-  category: string
-  current: number
-  previous: number
-}
-
 // Predictive Sales & Inventory Types (Page 1)
 
 export type SalesForecastData = {
@@ -155,14 +149,6 @@ export type MonthlyGoalData = {
   month: string
   goal: number
   actual: number
-}
-
-// Radar Chart Types
-
-export type ProductPerformanceData = {
-  metric: string
-  score: number
-  maxScore: number
 }
 
 export type CustomerSatisfactionData = {

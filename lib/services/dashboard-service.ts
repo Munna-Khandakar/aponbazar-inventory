@@ -9,13 +9,11 @@ import type {
   Insight,
   InventoryPredictionData,
   InventoryHealthData,
-  KPIComparisonData,
   Metric,
   MonthlyGoalData,
   MonthlyRevenueData,
   OrderVolumeData,
   PromoImpactData,
-  ProductPerformanceData,
   Reminder,
   RetentionCohortData,
   SalesForecastData,
@@ -127,13 +125,6 @@ const salesTargetData: SalesTargetData[] = [
   { month: "Apr", actual: 118600, target: 110000 },
   { month: "May", actual: 125300, target: 115000 },
   { month: "Jun", actual: 128400, target: 120000 },
-]
-
-const kpiComparisonData: KPIComparisonData[] = [
-  { category: "Revenue", current: 128400, previous: 114200 },
-  { category: "Orders", current: 982, previous: 943 },
-  { category: "Customers", current: 1842, previous: 1756 },
-  { category: "Avg Order", current: 131, previous: 121 },
 ]
 
 // Page 1: Predictive Sales & Inventory Data
@@ -288,17 +279,6 @@ const monthlyGoalData: MonthlyGoalData[] = [
   { month: "Jun", goal: 100, actual: 102 },
 ]
 
-// Radar Chart Data
-
-const productPerformanceData: ProductPerformanceData[] = [
-  { metric: "Quality", score: 92, maxScore: 100 },
-  { metric: "Availability", score: 88, maxScore: 100 },
-  { metric: "Price Competitiveness", score: 75, maxScore: 100 },
-  { metric: "Customer Reviews", score: 85, maxScore: 100 },
-  { metric: "Delivery Speed", score: 78, maxScore: 100 },
-  { metric: "Return Rate", score: 68, maxScore: 100 },
-]
-
 const customerSatisfactionData: CustomerSatisfactionData[] = [
   { category: "Product Quality", score: 88, maxScore: 100 },
   { category: "Customer Service", score: 92, maxScore: 100 },
@@ -319,7 +299,6 @@ export const dashboardService = {
   getMonthlyRevenue: () => clone(monthlyRevenueData),
   getOrderVolume: () => clone(orderVolumeData),
   getSalesTarget: () => clone(salesTargetData),
-  getKPIComparison: () => clone(kpiComparisonData),
 
   // Page 1: Predictive Sales & Inventory
   getSalesForecast: () => clone(salesForecastData),
@@ -341,6 +320,5 @@ export const dashboardService = {
 
   // Radial & Radar Charts
   getMonthlyGoals: () => clone(monthlyGoalData),
-  getProductPerformance: () => clone(productPerformanceData),
   getCustomerSatisfaction: () => clone(customerSatisfactionData),
 }
