@@ -1,6 +1,5 @@
 "use client"
 
-import { DashboardFilters } from "@/components/dashboard/dashboard-filters"
 import { CustomerSegmentsChart } from "@/components/dashboard/customer-segments-chart"
 import { ChurnPredictionChart } from "@/components/dashboard/churn-prediction-chart"
 import { BehaviorMetricsTable } from "@/components/dashboard/behavior-metrics-table"
@@ -16,8 +15,6 @@ export default function CustomerBehaviorPage() {
           Analyze customer segments, predict churn, and understand lifetime value
         </p>
       </div>
-
-      <DashboardFilters />
 
       <section className="grid gap-6 lg:grid-cols-2">
         <CustomerSegmentsChart />

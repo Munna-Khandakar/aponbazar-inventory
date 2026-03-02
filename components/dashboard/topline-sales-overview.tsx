@@ -29,7 +29,7 @@ const overviewMetrics: KpiMetricDataset[] = [
 
 export function ToplineSalesOverview() {
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-5 text-slate-900 shadow-sm sm:p-6">
+    <section className="overflow-hidden rounded-xl border bg-white border-slate-200 p-5 text-slate-900 shadow-sm sm:p-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Topline Sales Overview</h2>

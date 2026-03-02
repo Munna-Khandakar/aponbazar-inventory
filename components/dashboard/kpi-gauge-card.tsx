@@ -137,7 +137,7 @@ export function KpiGaugeCard(props: KpiGaugeCardProps) {
   const styles = config.styles
 
   return (
-    <article className={cn("flex min-h-60 flex-col rounded-2xl border p-4 sm:p-5", styles.panel)}>
+    <article className={cn("flex flex-col rounded-xl border p-4 sm:p-5", styles.panel)}>
       <p className="text-sm font-medium text-slate-700">{config.label}</p>
 
       <div className="mt-4 flex grow flex-col justify-between">
@@ -157,17 +157,6 @@ export function KpiGaugeCard(props: KpiGaugeCardProps) {
             </p>
           </div>
         </div>
-
-        {metric.summary ? (
-          <p
-            className={cn(
-              "mt-4 inline-flex w-fit rounded-full border px-3 py-1 text-xs font-medium",
-              styles.pill
-            )}
-          >
-            {metric.summary}
-          </p>
-        ) : null}
       </div>
     </article>
   )
