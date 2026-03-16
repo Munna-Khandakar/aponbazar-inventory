@@ -44,7 +44,7 @@ export function StorePerformanceTable() {
         <CardTitle>Shop performance snapshot</CardTitle>
         <CardDescription>Actual vs base sales and deliveries by shop</CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent className="max-h-[420px] overflow-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
