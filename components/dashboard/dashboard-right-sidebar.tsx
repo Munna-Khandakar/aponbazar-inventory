@@ -11,6 +11,7 @@ type SortDirection = "desc" | "asc"
 type PerformanceTone = {
   text: string
   fill: string
+  surface: string
 }
 
 const getPerformanceTone = (value: number | null): PerformanceTone => {
@@ -18,6 +19,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-slate-400",
       fill: "bg-slate-300/70",
+      surface: "bg-slate-50",
     }
   }
 
@@ -25,6 +27,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-emerald-700",
       fill: "bg-emerald-700",
+      surface: "bg-emerald-50",
     }
   }
 
@@ -32,6 +35,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-emerald-600",
       fill: "bg-emerald-600",
+      surface: "bg-emerald-50/80",
     }
   }
 
@@ -39,6 +43,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-emerald-500",
       fill: "bg-emerald-500",
+      surface: "bg-emerald-50/60",
     }
   }
 
@@ -46,6 +51,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-slate-500",
       fill: "bg-slate-400",
+      surface: "bg-slate-50",
     }
   }
 
@@ -53,6 +59,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-rose-400",
       fill: "bg-rose-400",
+      surface: "bg-rose-50/60",
     }
   }
 
@@ -60,6 +67,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-rose-500",
       fill: "bg-rose-500",
+      surface: "bg-rose-50/80",
     }
   }
 
@@ -67,12 +75,14 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     return {
       text: "text-rose-600",
       fill: "bg-rose-600",
+      surface: "bg-rose-50",
     }
   }
 
   return {
     text: "text-rose-700",
     fill: "bg-rose-700",
+    surface: "bg-rose-100/70",
   }
 }
 
@@ -95,6 +105,11 @@ export function DashboardRightSidebar() {
         ? rightValue - leftValue
         : leftValue - rightValue
     })
+  const performanceValues = filteredInsights
+    .map((item) => item.salesPerformance)
+    .filter((value): value is number => value !== undefined)
+  const maxPerformance = performanceValues.length ? Math.max(...performanceValues) : null
+  const minPerformance = performanceValues.length ? Math.min(...performanceValues) : null
 
   return (
     <aside className="rounded-xl border border-border/70 bg-card/90 p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
@@ -130,7 +145,7 @@ export function DashboardRightSidebar() {
           className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
         />
 
-        <ul className="flex-1 min-h-0 space-y-1.5 overflow-y-auto pr-1">
+        <ul className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
           {isLoading ? (
             <li className="rounded-md border border-dashed border-border/60 px-2 py-3 text-center text-xs text-muted-foreground">
               Loading shops...
@@ -139,28 +154,28 @@ export function DashboardRightSidebar() {
           {filteredInsights.map((item) => {
             const salesPerformance = item.salesPerformance ?? null
             const tone = getPerformanceTone(salesPerformance)
-            const filledSegments =
-              salesPerformance === null
+            const fillWidth =
+              salesPerformance === null || maxPerformance === null || minPerformance === null
                 ? 0
-                : Math.max(0, Math.min(10, Math.round(salesPerformance / 10)))
+                : maxPerformance === minPerformance
+                  ? 100
+                  : ((salesPerformance - minPerformance) / (maxPerformance - minPerformance)) * 100
 
             return (
               <li
                 key={item.shopName}
-                className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-xs"
+                className={cn(
+                  "space-y-2 rounded-md border border-border/60 px-3 py-2 text-xs",
+                  tone.surface
+                )}
               >
-                <span className="truncate text-foreground">{item.shopName}</span>
-                <div className="flex shrink-0 items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 3 }, (_, index) => (
-                      <span
-                        key={`${item.shopName}-${index}`}
-                        className={cn(
-                          "h-4 w-1 rounded-full bg-slate-200 transition-colors",
-                          index < filledSegments && tone.fill
-                        )}
-                      />
-                    ))}
+                <div className="truncate bold text-foreground">{item.shopName}</div>
+                <div className="flex items-center gap-2">
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className={cn("h-full rounded-full bold transition-[width]", tone.fill)}
+                      style={{ width: `${Math.max(0, Math.min(100, fillWidth))}%` }}
+                    />
                   </div>
                   <span className={cn("min-w-14 text-right font-medium", tone.text)}>
                     {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
