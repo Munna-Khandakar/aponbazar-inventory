@@ -24,7 +24,7 @@ import type { SalesForecastData } from "@/lib/types/SalesForecastData"
 import type {
   ExecuteReportRequest,
   SalesForecastReportResponse,
-  ShopWiseSalesReportResponse,
+  ShopWiseSalesAggregateReportResponse,
   ShopPerformanceReportResponse,
 } from "@/lib/types/report"
 import { SalesReportType } from "@/lib/types/report"
@@ -210,53 +210,351 @@ const inventoryHealthData: InventoryHealthData[] = [
   { category: "Health & Beauty", healthy: 2180, atRisk: 150, overstock: 85, coverDays: 9 },
 ]
 
-const shopWiseSalesApiResponse: ShopWiseSalesReportResponse = {
+const shopWiseSalesAggregateApiResponse: ShopWiseSalesAggregateReportResponse = {
   success: true,
   data: {
-    reportName: SalesReportType.SHOP_WISE_SALES,
-    series: {
-      base: [
-        { periodLabel: "October 2025", numTotalNetSales: 37882203.08 },
-        { periodLabel: "November 2025", numTotalNetSales: 44589124.45 },
-        { periodLabel: "December 2025", numTotalNetSales: 43813531.38 },
-        { periodLabel: "January 2026", numTotalNetSales: 52358785.07 },
-        { periodLabel: "February 2026", numTotalNetSales: 49232851.46 },
-        { periodLabel: "March 2026", numTotalNetSales: 23764087.2 },
-      ],
-      actual: [
-        { periodLabel: "October 2025", numTotalNetSales: 55649541.01 },
-        { periodLabel: "November 2025", numTotalNetSales: 56362584.76 },
-        { periodLabel: "December 2025", numTotalNetSales: 54716948.57 },
-        { periodLabel: "January 2026", numTotalNetSales: 59598570.73 },
-        { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
-        { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
-      ],
-    },
-    granularity: "MONTH",
-    totalRows: 12,
+    reportName: SalesReportType.SHOP_WISE_SALES_AGGREGATE,
+    data: [
+      {
+        strShopName: "Khulshi Mart",
+        actualSales: 83915322.87,
+        baseSales: 0,
+        actualDeliveries: 11405,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Liz Fashion Industry Ltd.",
+        actualSales: 27493249.61,
+        baseSales: 8805389.12,
+        actualDeliveries: 26245,
+        baseDeliveries: 8019,
+        salesPerformance: 312.23,
+        deliveryPerformance: 327.29,
+      },
+      {
+        strShopName: "Lida Textile & Dyeing Limited",
+        actualSales: 24657578.65,
+        baseSales: 16983605.47,
+        actualDeliveries: 29158,
+        baseDeliveries: 22471.56,
+        salesPerformance: 145.18,
+        deliveryPerformance: 129.76,
+      },
+      {
+        strShopName: "Silken Sewing Ltd.",
+        actualSales: 21579914.54,
+        baseSales: 23849503.81,
+        actualDeliveries: 22966,
+        baseDeliveries: 23898.24,
+        salesPerformance: 90.48,
+        deliveryPerformance: 96.1,
+      },
+      {
+        strShopName: "Interstoff Apparels Ltd.",
+        actualSales: 18856212.32,
+        baseSales: 20556397.98,
+        actualDeliveries: 18512,
+        baseDeliveries: 30216.24,
+        salesPerformance: 91.73,
+        deliveryPerformance: 61.27,
+      },
+      {
+        strShopName: "Alim Knit (BD) Ltd.",
+        actualSales: 15743168.23,
+        baseSales: 15072722.92,
+        actualDeliveries: 12773,
+        baseDeliveries: 11959.92,
+        salesPerformance: 104.45,
+        deliveryPerformance: 106.8,
+      },
+      {
+        strShopName: "Silver Line Composite Mills Ltd.",
+        actualSales: 15435842.48,
+        baseSales: 12623524.08,
+        actualDeliveries: 14192,
+        baseDeliveries: 11969.64,
+        salesPerformance: 122.28,
+        deliveryPerformance: 118.57,
+      },
+      {
+        strShopName: "The Rose Dresses Limited",
+        actualSales: 15029378.74,
+        baseSales: 12126185.41,
+        actualDeliveries: 16932,
+        baseDeliveries: 13101.48,
+        salesPerformance: 123.94,
+        deliveryPerformance: 129.24,
+      },
+      {
+        strShopName: "Majumder Garments Limited",
+        actualSales: 14021545.17,
+        baseSales: 10471821.43,
+        actualDeliveries: 13165,
+        baseDeliveries: 10920.96,
+        salesPerformance: 133.9,
+        deliveryPerformance: 120.55,
+      },
+      {
+        strShopName: "Dekko Designs Limited",
+        actualSales: 13871754.48,
+        baseSales: 14823624.72,
+        actualDeliveries: 14382,
+        baseDeliveries: 14853.24,
+        salesPerformance: 93.58,
+        deliveryPerformance: 96.83,
+      },
+      {
+        strShopName: "Agami Apparels Ltd.",
+        actualSales: 11301875.38,
+        baseSales: 2506890.71,
+        actualDeliveries: 15104,
+        baseDeliveries: 3286.44,
+        salesPerformance: 450.83,
+        deliveryPerformance: 459.59,
+      },
+      {
+        strShopName: "Saturn Textiles Ltd.",
+        actualSales: 8708997.4,
+        baseSales: 7202715.67,
+        actualDeliveries: 12780,
+        baseDeliveries: 9057.96,
+        salesPerformance: 120.91,
+        deliveryPerformance: 141.09,
+      },
+      {
+        strShopName: "KDS IDR Limited",
+        actualSales: 8312839.19,
+        baseSales: 8261684.93,
+        actualDeliveries: 6755,
+        baseDeliveries: 7683.12,
+        salesPerformance: 100.62,
+        deliveryPerformance: 87.92,
+      },
+      {
+        strShopName: "GoodEarth Apparels Ltd.",
+        actualSales: 8150426.95,
+        baseSales: 10356730.99,
+        actualDeliveries: 9050,
+        baseDeliveries: 12252.6,
+        salesPerformance: 78.7,
+        deliveryPerformance: 73.86,
+      },
+      {
+        strShopName: "Renaissance Apparels Ltd.",
+        actualSales: 7442799.34,
+        baseSales: 11728161.97,
+        actualDeliveries: 10024,
+        baseDeliveries: 12027.96,
+        salesPerformance: 63.46,
+        deliveryPerformance: 83.34,
+      },
+      {
+        strShopName: "Southern Garments Ltd.",
+        actualSales: 7349162.75,
+        baseSales: 8386575.97,
+        actualDeliveries: 9926,
+        baseDeliveries: 13004.28,
+        salesPerformance: 87.63,
+        deliveryPerformance: 76.33,
+      },
+      {
+        strShopName: "Evitex Dress Shirt Limited",
+        actualSales: 6952091.94,
+        baseSales: 8065504.61,
+        actualDeliveries: 6770,
+        baseDeliveries: 8852.76,
+        salesPerformance: 86.2,
+        deliveryPerformance: 76.47,
+      },
+      {
+        strShopName: "Continental Garments Ind. (Pvt.) Ltd.",
+        actualSales: 6826383.71,
+        baseSales: 9358576.26,
+        actualDeliveries: 8669,
+        baseDeliveries: 12106.8,
+        salesPerformance: 72.94,
+        deliveryPerformance: 71.6,
+      },
+      {
+        strShopName: "EcoFab Limited",
+        actualSales: 6290494.55,
+        baseSales: 7244143.23,
+        actualDeliveries: 6563,
+        baseDeliveries: 6559.92,
+        salesPerformance: 86.84,
+        deliveryPerformance: 100.05,
+      },
+      {
+        strShopName: "Interfab Shirt Manufacturing Limited Unit-02 (Viyellatex Group).",
+        actualSales: 6247001.85,
+        baseSales: 6254802.22,
+        actualDeliveries: 5898,
+        baseDeliveries: 6127.92,
+        salesPerformance: 99.88,
+        deliveryPerformance: 96.25,
+      },
+      {
+        strShopName: "Mehmud Industries Limited",
+        actualSales: 5875069.27,
+        baseSales: 2447345.34,
+        actualDeliveries: 6430,
+        baseDeliveries: 3308.04,
+        salesPerformance: 240.06,
+        deliveryPerformance: 194.37,
+      },
+      {
+        strShopName: "Global Fit (Bangladesh) Limited",
+        actualSales: 5585101.36,
+        baseSales: 0,
+        actualDeliveries: 6784,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Millenneium Textiles (Southern) Ltd.",
+        actualSales: 5332393.71,
+        baseSales: 3156524.86,
+        actualDeliveries: 6762,
+        baseDeliveries: 4974.48,
+        salesPerformance: 168.93,
+        deliveryPerformance: 135.93,
+      },
+      {
+        strShopName: "Setara Group",
+        actualSales: 4585105.61,
+        baseSales: 0,
+        actualDeliveries: 5826,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Picard Bangladesh Limited",
+        actualSales: 4439726.32,
+        baseSales: 4342857.72,
+        actualDeliveries: 7835,
+        baseDeliveries: 5763.96,
+        salesPerformance: 102.23,
+        deliveryPerformance: 135.93,
+      },
+      {
+        strShopName: "Interfab Shirt Manufacturing Limited Unit-01",
+        actualSales: 3585825.97,
+        baseSales: 7178212.54,
+        actualDeliveries: 3382,
+        baseDeliveries: 5644.08,
+        salesPerformance: 49.95,
+        deliveryPerformance: 59.92,
+      },
+      {
+        strShopName: "Eco Couture",
+        actualSales: 2868949.76,
+        baseSales: 0,
+        actualDeliveries: 3683,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Karim Textiles Ltd.",
+        actualSales: 2786028.86,
+        baseSales: 0,
+        actualDeliveries: 1914,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Concorde Garments Ltd.",
+        actualSales: 2670948.38,
+        baseSales: 8625758.75,
+        actualDeliveries: 2161,
+        baseDeliveries: 7596.72,
+        salesPerformance: 30.96,
+        deliveryPerformance: 28.45,
+      },
+      {
+        strShopName: "Aus-Bangla Jutex",
+        actualSales: 2568488.88,
+        baseSales: 2522007.8,
+        actualDeliveries: 3037,
+        baseDeliveries: 2879.28,
+        salesPerformance: 101.84,
+        deliveryPerformance: 105.48,
+      },
+      {
+        strShopName: "Amigo Bangladesh Limited",
+        actualSales: 1986715.13,
+        baseSales: 0,
+        actualDeliveries: 3505,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Pioneer Knitwears (BD) Ltd.",
+        actualSales: 1965928.45,
+        baseSales: 1481712.37,
+        actualDeliveries: 3377,
+        baseDeliveries: 3162.24,
+        salesPerformance: 132.68,
+        deliveryPerformance: 106.79,
+      },
+      {
+        strShopName: "Simco Spinning & Textiles Limited",
+        actualSales: 1644423.45,
+        baseSales: 0,
+        actualDeliveries: 2989,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Impress-Newtex Knit Fashions Ltd.",
+        actualSales: 635370.97,
+        baseSales: 0,
+        actualDeliveries: 502,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Karnaphuli EPZ",
+        actualSales: 482306.5,
+        baseSales: 0,
+        actualDeliveries: 545,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "MG Niche Stitch Limited",
+        actualSales: 271939.94,
+        baseSales: 6095120.38,
+        actualDeliveries: 433,
+        baseDeliveries: 6499.44,
+        salesPerformance: 4.46,
+        deliveryPerformance: 6.66,
+      },
+      {
+        strShopName: "Tropical Knitex Limited",
+        actualSales: 155173,
+        baseSales: 0,
+        actualDeliveries: 294,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Apon Central Warehouse",
+        actualSales: 309.76,
+        baseSales: 0,
+        actualDeliveries: 9,
+        baseDeliveries: 0,
+      },
+    ],
+    totalRows: 38,
     page: 0,
     pageSize: 0,
     totalPages: 0,
-    executionTimeMs: 3247,
-    generatedAt: "2026-03-16T16:28:43.109599",
+    executionTimeMs: 6270,
+    generatedAt: "2026-03-16T23:13:33.938764",
   },
-  timestamp: "2026-03-16T16:28:43.111624",
+  timestamp: "2026-03-16T23:13:33.94115",
 }
 
 const mapShopWiseSalesReport = (
-  response: ShopWiseSalesReportResponse
+  response: ShopWiseSalesAggregateReportResponse
 ): PromoImpactData[] =>
-  response.data.series.base.map((basePoint) => {
-    const actualPoint = response.data.series.actual.find(
-      (point) => point.periodLabel === basePoint.periodLabel
-    )
-
-    return {
-      periodLabel: basePoint.periodLabel,
-      baseSales: basePoint.numTotalNetSales,
-      actualSales: actualPoint?.numTotalNetSales ?? 0,
-    }
-  })
+  response.data.data.map((shop) => ({
+    shopName: shop.strShopName,
+    baseSales: shop.baseSales,
+    actualSales: shop.actualSales,
+    salesPerformance: shop.salesPerformance,
+  }))
 
 const storePerformanceApiResponse: ShopPerformanceReportResponse = {
   success: true,
@@ -678,12 +976,15 @@ const useMockReportResponses = true
 
 const getMockReportResponse = (
   request: ExecuteReportRequest
-): SalesForecastReportResponse | ShopWiseSalesReportResponse | ShopPerformanceReportResponse => {
+):
+  | SalesForecastReportResponse
+  | ShopWiseSalesAggregateReportResponse
+  | ShopPerformanceReportResponse => {
   switch (request.reportName) {
     case SalesReportType.MONTH_WISE_SALES:
       return clone(salesForecastApiResponse)
-    case SalesReportType.SHOP_WISE_SALES:
-      return clone(shopWiseSalesApiResponse)
+    case SalesReportType.SHOP_WISE_SALES_AGGREGATE:
+      return clone(shopWiseSalesAggregateApiResponse)
     case SalesReportType.SHOP_WISE_SALES_PERFORMANCE:
       return clone(storePerformanceApiResponse)
     default:
@@ -694,7 +995,7 @@ const getMockReportResponse = (
 const executeReport = async <
   TResponse extends
     | SalesForecastReportResponse
-    | ShopWiseSalesReportResponse
+    | ShopWiseSalesAggregateReportResponse
     | ShopPerformanceReportResponse,
 >(
   request: ExecuteReportRequest
@@ -728,10 +1029,10 @@ export const dashboardService = {
 
   // Promotions & Store Ops
   getPromoImpact: async (
-    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES>
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_AGGREGATE>
   ) =>
     mapShopWiseSalesReport(
-      await executeReport<ShopWiseSalesReportResponse>(request)
+      await executeReport<ShopWiseSalesAggregateReportResponse>(request)
     ),
   getStorePerformance: async (
     request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_PERFORMANCE>

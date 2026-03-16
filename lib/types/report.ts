@@ -64,6 +64,22 @@ export type ShopWiseSalesReportResponse = ReportResponse<
   SeriesReportData<SalesReportType.SHOP_WISE_SALES>
 >
 
+export type ShopWiseSalesAggregateReportRow = {
+  strShopName: string
+  actualSales: number
+  baseSales: number
+  actualDeliveries: number
+  baseDeliveries: number
+  salesPerformance?: number
+  deliveryPerformance?: number
+}
+
+export type ShopWiseSalesAggregateReportResponse = ReportResponse<
+  BaseReportData<SalesReportType.SHOP_WISE_SALES_AGGREGATE> & {
+    data: ShopWiseSalesAggregateReportRow[]
+  }
+>
+
 export type ShopPerformanceReportRow = {
   strShopName: string
   actualSales: number

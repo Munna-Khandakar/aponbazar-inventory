@@ -74,7 +74,7 @@ export const useInventoryHealth = createStaticHook(dashboardService.getInventory
 
 // Promotions & Store Ops
 export const usePromoImpact = () => {
-  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES, {
+  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_AGGREGATE, {
     includeGrowthTarget: false,
   })
 

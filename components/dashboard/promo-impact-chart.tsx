@@ -1,6 +1,6 @@
 "use client"
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -14,9 +14,17 @@ import {
 import { usePromoImpact } from "@/hooks/use-dashboard"
 
 const chartConfig = {
+  baseSales: {
+    label: "Base Sales",
+    color: "#94a3b8",
+  },
   actualSales: {
     label: "Actual Sales",
     color: "#0f766e",
+  },
+  salesPerformance: {
+    label: "Sales Performance",
+    color: "#ea580c",
   },
 } satisfies ChartConfig
 
@@ -27,7 +35,9 @@ const formatBdtCompact = (value: number) => {
 }
 
 const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
-const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
+const formatPerformance = (value: number) => `${value.toFixed(2)}%`
+const formatShopTick = (value: string) =>
+  value.length > 12 ? `${value.slice(0, 12)}…` : value
 
 export function PromoImpactChart() {
   const { data, isLoading } = usePromoImpact()
@@ -37,7 +47,7 @@ export function PromoImpactChart() {
     <Card>
       <CardHeader>
         <CardTitle>Shop Wise Sales</CardTitle>
-        <CardDescription>Actual net sales by month</CardDescription>
+        <CardDescription>Base sales, actual sales, and sales performance by shop</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -45,39 +55,67 @@ export function PromoImpactChart() {
             Loading shop wise sales...
           </div>
         ) : (
-          <ChartContainer config={chartConfig}>
-            <LineChart data={chartData}>
+          <ChartContainer config={chartConfig} className="aspect-auto h-[380px] w-full">
+            <ComposedChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
-                dataKey="periodLabel"
+                dataKey="shopName"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                minTickGap={24}
-                tickFormatter={formatPeriodTick}
+                minTickGap={18}
+                tickFormatter={formatShopTick}
               />
               <YAxis
+                yAxisId="sales"
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => formatBdtCompact(Number(value))}
               />
+              <YAxis
+                yAxisId="performance"
+                orientation="right"
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${Number(value)}%`}
+              />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
-                    labelFormatter={(value) => `Period: ${value}`}
-                    formatter={(value) => formatBdt(Number(value))}
+                    labelFormatter={(value) => `Shop: ${value}`}
+                    formatter={(value, name) =>
+                      name === "Sales Performance"
+                        ? formatPerformance(Number(value))
+                        : formatBdt(Number(value))
+                    }
                   />
                 }
               />
               <ChartLegend content={<ChartLegendContent />} />
-              <Line
-                type="monotone"
-                dataKey="actualSales"
-                stroke="var(--color-actualSales)"
-                strokeWidth={2.5}
-                dot={{ r: 4 }}
+              <Bar
+                yAxisId="sales"
+                dataKey="baseSales"
+                fill="var(--color-baseSales)"
+                radius={[4, 4, 0, 0]}
+                barSize={14}
               />
-            </LineChart>
+              <Bar
+                yAxisId="sales"
+                dataKey="actualSales"
+                fill="var(--color-actualSales)"
+                radius={[4, 4, 0, 0]}
+                barSize={14}
+              />
+              <Line
+                yAxisId="performance"
+                type="monotone"
+                dataKey="salesPerformance"
+                stroke="var(--color-salesPerformance)"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+                connectNulls={false}
+              />
+            </ComposedChart>
           </ChartContainer>
         )}
       </CardContent>
