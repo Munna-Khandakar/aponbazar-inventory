@@ -9,11 +9,78 @@ import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
 
 type SortDirection = "desc" | "asc"
+type PerformanceTone = {
+  text: string
+  fill: string
+}
 
 const getPerformance = (actual: number, base: number, provided?: number) => {
   if (provided !== undefined) return provided
   if (base <= 0) return null
   return (actual / base) * 100
+}
+
+const getPerformanceTone = (value: number | null): PerformanceTone => {
+  if (value === null) {
+    return {
+      text: "text-slate-400",
+      fill: "bg-slate-300/70",
+    }
+  }
+
+  if (value >= 90) {
+    return {
+      text: "text-emerald-700",
+      fill: "bg-emerald-700",
+    }
+  }
+
+  if (value >= 80) {
+    return {
+      text: "text-emerald-600",
+      fill: "bg-emerald-600",
+    }
+  }
+
+  if (value >= 70) {
+    return {
+      text: "text-emerald-500",
+      fill: "bg-emerald-500",
+    }
+  }
+
+  if (value >= 60) {
+    return {
+      text: "text-emerald-400",
+      fill: "bg-emerald-400",
+    }
+  }
+
+  if (value >= 50) {
+    return {
+      text: "text-amber-500",
+      fill: "bg-amber-500",
+    }
+  }
+
+  if (value >= 40) {
+    return {
+      text: "text-amber-400",
+      fill: "bg-amber-400",
+    }
+  }
+
+  if (value >= 20) {
+    return {
+      text: "text-rose-500",
+      fill: "bg-rose-500",
+    }
+  }
+
+  return {
+    text: "text-rose-600",
+    fill: "bg-rose-600",
+  }
 }
 
 export function DashboardRightSidebar() {
@@ -162,16 +229,34 @@ export function DashboardRightSidebar() {
               item.baseSales,
               item.salesPerformance
             )
+            const tone = getPerformanceTone(salesPerformance)
+            const filledSegments =
+              salesPerformance === null
+                ? 0
+                : Math.max(0, Math.min(10, Math.round(salesPerformance / 10)))
 
             return (
               <li
                 key={item.shopName}
-                className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-xs"
+                className="flex items-center justify-between gap-3 rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-xs"
               >
                 <span className="truncate text-foreground">{item.shopName}</span>
-                <span className="shrink-0 font-medium text-muted-foreground">
-                  {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <span
+                        key={`${item.shopName}-${index}`}
+                        className={cn(
+                          "h-4 w-1 rounded-full bg-slate-200 transition-colors",
+                          index < filledSegments && tone.fill
+                        )}
+                      />
+                    ))}
+                  </div>
+                  <span className={cn("min-w-14 text-right font-medium", tone.text)}>
+                    {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
+                  </span>
+                </div>
               </li>
             )
           })}
