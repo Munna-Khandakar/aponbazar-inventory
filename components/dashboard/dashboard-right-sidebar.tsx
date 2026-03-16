@@ -142,7 +142,7 @@ export function DashboardRightSidebar() {
           placeholder="Search shop..."
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
-          className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
+          className="w-full rounded-md border border-border/70 bg-background p-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
         />
 
         <ul className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
@@ -165,7 +165,7 @@ export function DashboardRightSidebar() {
               <li
                 key={item.shopName}
                 className={cn(
-                  "space-y-2 rounded-md border border-border/60 px-3 py-2 text-xs",
+                  "space-y-1 rounded-md border border-border/60 p-2 text-xs",
                   tone.surface
                 )}
               >
