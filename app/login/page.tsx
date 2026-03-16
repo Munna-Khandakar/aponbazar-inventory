@@ -55,8 +55,8 @@ export default function LoginPage() {
 
     return (
         <div
-            className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-10">
-            <div className="absolute inset-0 bg-grid-slate-100/60 dark:bg-grid-slate-800/60 [mask-image:radial-gradient(white,transparent_65%)]"/>
+            className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 px-4 py-10">
+            <div className="absolute inset-0 bg-grid-slate-100/60 [mask-image:radial-gradient(white,transparent_65%)]"/>
             <div
                 className="relative z-10 flex w-full max-w-5xl flex-col gap-8 rounded-3xl border border-border/60 bg-background/70 p-10 shadow-2xl backdrop-blur">
                 <div className="rounded-2xl border border-border/60 bg-card/70 px-6 py-4 shadow-sm">

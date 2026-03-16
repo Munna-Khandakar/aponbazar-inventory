@@ -20,18 +20,18 @@ const getPerformance = (actual: number, base: number, provided?: number) => {
 
 const getPerformanceTone = (value: number | null) => {
   if (value === null) {
-    return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+    return "bg-slate-100 text-slate-600"
   }
 
   if (value >= 100) {
-    return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+    return "bg-emerald-100 text-emerald-700"
   }
 
   if (value >= 75) {
-    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+    return "bg-amber-100 text-amber-700"
   }
 
-  return "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+  return "bg-rose-100 text-rose-700"
 }
 
 export function StorePerformanceTable() {

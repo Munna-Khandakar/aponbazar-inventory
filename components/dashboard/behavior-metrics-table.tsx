@@ -70,8 +70,8 @@ export function BehaviorMetricsTable() {
                     <div
                       className={cn(
                         "inline-flex items-center gap-1 font-medium tabular-nums",
-                        row.trend === "up" && "text-green-600 dark:text-green-400",
-                        row.trend === "down" && "text-red-600 dark:text-red-400",
+                        row.trend === "up" && "text-green-600",
+                        row.trend === "down" && "text-red-600",
                         row.trend === "stable" && "text-muted-foreground"
                       )}
                     >

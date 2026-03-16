@@ -79,7 +79,7 @@ export function DemandForecastTable() {
                   <td
                     className={cn(
                       "py-3 pr-4 text-right font-medium tabular-nums",
-                      row.recommendedOrder > 0 ? "text-orange-600 dark:text-orange-400" : ""
+                      row.recommendedOrder > 0 ? "text-orange-600" : ""
                     )}
                   >
                     {row.recommendedOrder > 0 ? `+${row.recommendedOrder}` : "-"}
@@ -88,12 +88,9 @@ export function DemandForecastTable() {
                     <span
                       className={cn(
                         "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-                        row.confidence === "high" &&
-                          "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-                        row.confidence === "medium" &&
-                          "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-                        row.confidence === "low" &&
-                          "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        row.confidence === "high" && "bg-green-100 text-green-700",
+                        row.confidence === "medium" && "bg-yellow-100 text-yellow-700",
+                        row.confidence === "low" && "bg-red-100 text-red-700"
                       )}
                     >
                       {row.confidence}

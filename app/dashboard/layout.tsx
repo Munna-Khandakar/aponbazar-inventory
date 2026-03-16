@@ -16,8 +16,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (isChecking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="rounded-2xl border border-border/60 bg-white px-10 py-8 text-sm font-medium text-muted-foreground dark:bg-slate-900">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="rounded-2xl border border-border/60 bg-white px-10 py-8 text-sm font-medium text-muted-foreground">
           Verifying session...
         </div>
       </div>
@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50">
       <ReportFiltersProvider>
         <div className="space-y-4 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
           <div className="flex justify-end lg:hidden">
