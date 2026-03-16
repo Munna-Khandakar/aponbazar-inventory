@@ -3,21 +3,11 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
 
-const insightItems = Array.from({ length: 64 }, (_, index) => {
-  if (index === 0) {
-    return { shopName: "Mirpur Branch", performance: "77.67%" }
-  }
-
-  const score = 70 + ((index * 37) % 30) + ((index * 11) % 100) / 100
-  return {
-    shopName: `Shop ${String(index + 1).padStart(2, "0")}`,
-    performance: `${score.toFixed(2)}%`,
-  }
-})
-
 type DateMode = "30d" | "90d" | "custom"
+type PerformanceFilter = "all" | "high" | "mid" | "low"
 
 const formatDateInputValue = (date: Date) => {
   const year = date.getFullYear()
@@ -41,10 +31,43 @@ const getDateBeforeValue = (days: number) => {
   return formatDateInputValue(base)
 }
 
+const getPerformance = (actual: number, base: number, provided?: number) => {
+  if (provided !== undefined) return provided
+  if (base <= 0) return null
+  return (actual / base) * 100
+}
+
+const matchesPerformanceFilter = (
+  value: number | null,
+  filter: PerformanceFilter
+) => {
+  if (filter === "all") return true
+  if (value === null) return false
+  if (filter === "high") return value >= 100
+  if (filter === "mid") return value >= 75 && value < 100
+  return value < 75
+}
+
 export function DashboardRightSidebar() {
+  const { data } = useStorePerformance()
   const [dateMode, setDateMode] = useState<DateMode>("custom")
+  const [performanceFilter, setPerformanceFilter] = useState<PerformanceFilter>("all")
+  const [searchTerm, setSearchTerm] = useState("")
   const [startDate, setStartDate] = useState(() => getStartOfCurrentYearValue())
   const [endDate, setEndDate] = useState(() => getTodayValue())
+
+  const filteredInsights = (data ?? []).filter((item) => {
+    const salesPerformance = getPerformance(
+      item.actualSales,
+      item.baseSales,
+      item.salesPerformance
+    )
+
+    return (
+      item.shopName.toLowerCase().includes(searchTerm.trim().toLowerCase()) &&
+      matchesPerformanceFilter(salesPerformance, performanceFilter)
+    )
+  })
 
   const setPresetRange = (mode: Exclude<DateMode, "custom">) => {
     setDateMode(mode)
@@ -122,10 +145,15 @@ export function DashboardRightSidebar() {
 
         <label className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
           Performance
-          <select className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/60">
-            <option>High</option>
-            <option>Mid</option>
-            <option>Low</option>
+          <select
+            value={performanceFilter}
+            onChange={(event) => setPerformanceFilter(event.target.value as PerformanceFilter)}
+            className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+          >
+            <option value="all">All</option>
+            <option value="high">High</option>
+            <option value="mid">Mid</option>
+            <option value="low">Low</option>
           </select>
         </label>
       </section>
@@ -136,19 +164,36 @@ export function DashboardRightSidebar() {
         <input
           type="text"
           placeholder="Search shop..."
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
           className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
         />
 
         <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
-          {insightItems.map((item) => (
-            <li
-              key={item.shopName}
-              className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-xs"
-            >
-              <span className="truncate text-foreground">{item.shopName}</span>
-              <span className="shrink-0 font-medium text-muted-foreground">{item.performance}</span>
+          {filteredInsights.map((item) => {
+            const salesPerformance = getPerformance(
+              item.actualSales,
+              item.baseSales,
+              item.salesPerformance
+            )
+
+            return (
+              <li
+                key={item.shopName}
+                className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-2 py-1.5 text-xs"
+              >
+                <span className="truncate text-foreground">{item.shopName}</span>
+                <span className="shrink-0 font-medium text-muted-foreground">
+                  {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
+                </span>
+              </li>
+            )
+          })}
+          {filteredInsights.length === 0 ? (
+            <li className="rounded-md border border-dashed border-border/60 px-2 py-3 text-center text-xs text-muted-foreground">
+              No shops match the current filters.
             </li>
-          ))}
+          ) : null}
         </ul>
       </section>
     </aside>

@@ -212,44 +212,72 @@ const promoImpactData: PromoImpactData[] = [
   { campaign: "Fresh Express", baseline: 15800, forecast: 26200, upliftPct: 66, marginPct: 24 },
 ]
 
-const storePerformanceData: StorePerformanceData[] = [
-  {
-    store: "Gulshan Flagship",
-    region: "Dhaka",
-    sales: 420000,
-    target: 400000,
-    footfall: 52000,
-    forecastAccuracy: 97,
-    inventoryRisk: "low",
+type StorePerformanceApiResponse = {
+  success: boolean
+  data: {
+    reportName: SalesReportType
+    data: Array<{
+      strShopName: string
+      actualSales: number
+      baseSales: number
+      actualDeliveries: number
+      baseDeliveries: number
+      salesPerformance?: number
+      deliveryPerformance?: number
+    }>
+    totalRows: number
+    page: number
+    pageSize: number
+    totalPages: number
+    executionTimeMs: number
+    generatedAt: string
+  }
+  timestamp: string
+}
+
+const storePerformanceApiResponse: StorePerformanceApiResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
+    data: [
+      {
+        strShopName: "Khulshi Mart",
+        actualSales: 83913790.87,
+        baseSales: 0,
+        actualDeliveries: 11405,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Liz Fashion Industry Ltd.",
+        actualSales: 27492849.59,
+        baseSales: 8153138.07,
+        actualDeliveries: 26245,
+        baseDeliveries: 7425,
+        salesPerformance: 337.21,
+        deliveryPerformance: 353.47,
+      },
+    ],
+    totalRows: 38,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 6601,
+    generatedAt: "2026-03-16T02:07:37.734742",
   },
-  {
-    store: "Dhanmondi Super",
-    region: "Dhaka",
-    sales: 365000,
-    target: 380000,
-    footfall: 47000,
-    forecastAccuracy: 93,
-    inventoryRisk: "medium",
-  },
-  {
-    store: "Uttara Mega",
-    region: "Dhaka",
-    sales: 298000,
-    target: 310000,
-    footfall: 41000,
-    forecastAccuracy: 91,
-    inventoryRisk: "medium",
-  },
-  {
-    store: "Chattogram Hub",
-    region: "Chattogram",
-    sales: 255000,
-    target: 240000,
-    footfall: 36000,
-    forecastAccuracy: 88,
-    inventoryRisk: "high",
-  },
-]
+  timestamp: "2026-03-16T02:07:37.736563",
+}
+
+const storePerformanceData: StorePerformanceData[] = storePerformanceApiResponse.data.data.map(
+  (shop) => ({
+    shopName: shop.strShopName,
+    actualSales: shop.actualSales,
+    baseSales: shop.baseSales,
+    actualDeliveries: shop.actualDeliveries,
+    baseDeliveries: shop.baseDeliveries,
+    salesPerformance: shop.salesPerformance,
+    deliveryPerformance: shop.deliveryPerformance,
+  })
+)
 
 // Page 2: Customer Behavior Data
 
