@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api-client"
 import type {
   Alert,
   BehaviorMetricRow,
@@ -20,6 +21,13 @@ import type {
   StorePerformanceData,
 } from "@/lib/types/dashboard"
 import type { SalesForecastData } from "@/lib/types/SalesForecastData"
+import type {
+  ExecuteReportRequest,
+  SalesForecastReportResponse,
+  ShopWiseSalesReportResponse,
+  ShopPerformanceReportResponse,
+} from "@/lib/types/report"
+import { SalesReportType } from "@/lib/types/report"
 
 const metrics: Metric[] = [
   { id: "sales", label: "Sales vs Target", value: "$1.28M", trend: "+6.2%", trendDirection: "up" },
@@ -119,14 +127,53 @@ const orderVolumeData: OrderVolumeData[] = [
 
 // Page 1: Predictive Sales & Inventory Data
 
-const salesForecastData: SalesForecastData[] = [
-  { month: "Jan", actualSales: 11800, forecastedSales: 11000, targetedSales: 15200 },
-  { month: "Feb", actualSales: 12350, forecastedSales: 11500, targetedSales: 15600 },
-  { month: "Mar", actualSales: 13120, forecastedSales: 11000, targetedSales: 15900 },
-  { month: "Apr", actualSales: 13980, forecastedSales: 11850, targetedSales: 15600 },
-  { month: "May", actualSales: 14860, forecastedSales: 11700, targetedSales: 15350 },
-  { month: "Jun", actualSales: 15790, forecastedSales: 11550, targetedSales: 15100 },
-]
+const salesForecastApiResponse: SalesForecastReportResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.MONTH_WISE_SALES,
+    series: {
+      base: [
+        { periodLabel: "October 2025", numTotalNetSales: 37882203.08 },
+        { periodLabel: "November 2025", numTotalNetSales: 44589124.45 },
+        { periodLabel: "December 2025", numTotalNetSales: 43813531.38 },
+        { periodLabel: "January 2026", numTotalNetSales: 52358785.07 },
+        { periodLabel: "February 2026", numTotalNetSales: 49232851.46 },
+        { periodLabel: "March 2026", numTotalNetSales: 23764087.2 },
+      ],
+      actual: [
+        { periodLabel: "October 2025", numTotalNetSales: 55649541.01 },
+        { periodLabel: "November 2025", numTotalNetSales: 56362584.76 },
+        { periodLabel: "December 2025", numTotalNetSales: 54716948.57 },
+        { periodLabel: "January 2026", numTotalNetSales: 59598570.73 },
+        { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
+        { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
+      ],
+    },
+    granularity: "MONTH",
+    totalRows: 12,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 3247,
+    generatedAt: "2026-03-16T16:28:43.109599",
+  },
+  timestamp: "2026-03-16T16:28:43.111624",
+}
+
+const mapSalesForecastReport = (
+  response: SalesForecastReportResponse
+): SalesForecastData[] =>
+  response.data.series.base.map((forecastPoint) => {
+    const actualPoint = response.data.series.actual.find(
+      (point) => point.periodLabel === forecastPoint.periodLabel
+    )
+
+    return {
+      periodLabel: forecastPoint.periodLabel,
+      forecastedSales: forecastPoint.numTotalNetSales,
+      actualSales: actualPoint?.numTotalNetSales ?? 0,
+    }
+  })
 
 const inventoryPredictionData: InventoryPredictionData[] = [
   { month: "Jan", electronics: 1250, clothing: 2100, groceries: 3400, homeGoods: 1800 },
@@ -163,51 +210,98 @@ const inventoryHealthData: InventoryHealthData[] = [
   { category: "Health & Beauty", healthy: 2180, atRisk: 150, overstock: 85, coverDays: 9 },
 ]
 
-const promoImpactData: PromoImpactData[] = [
-  { campaign: "Eid Family Basket", baseline: 42000, forecast: 61000, upliftPct: 38, marginPct: 21 },
-  { campaign: "Weekend Essentials", baseline: 28500, forecast: 36000, upliftPct: 26, marginPct: 17 },
-  { campaign: "Hyper Saver Days", baseline: 19400, forecast: 31000, upliftPct: 60, marginPct: 15 },
-  { campaign: "Fresh Express", baseline: 15800, forecast: 26200, upliftPct: 66, marginPct: 24 },
-]
+const shopWiseSalesApiResponse: ShopWiseSalesReportResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.SHOP_WISE_SALES,
+    series: {
+      base: [
+        { periodLabel: "October 2025", numTotalNetSales: 37882203.08 },
+        { periodLabel: "November 2025", numTotalNetSales: 44589124.45 },
+        { periodLabel: "December 2025", numTotalNetSales: 43813531.38 },
+        { periodLabel: "January 2026", numTotalNetSales: 52358785.07 },
+        { periodLabel: "February 2026", numTotalNetSales: 49232851.46 },
+        { periodLabel: "March 2026", numTotalNetSales: 23764087.2 },
+      ],
+      actual: [
+        { periodLabel: "October 2025", numTotalNetSales: 55649541.01 },
+        { periodLabel: "November 2025", numTotalNetSales: 56362584.76 },
+        { periodLabel: "December 2025", numTotalNetSales: 54716948.57 },
+        { periodLabel: "January 2026", numTotalNetSales: 59598570.73 },
+        { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
+        { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
+      ],
+    },
+    granularity: "MONTH",
+    totalRows: 12,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 3247,
+    generatedAt: "2026-03-16T16:28:43.109599",
+  },
+  timestamp: "2026-03-16T16:28:43.111624",
+}
 
-const storePerformanceData: StorePerformanceData[] = [
-  {
-    store: "Gulshan Flagship",
-    region: "Dhaka",
-    sales: 420000,
-    target: 400000,
-    footfall: 52000,
-    forecastAccuracy: 97,
-    inventoryRisk: "low",
+const mapShopWiseSalesReport = (
+  response: ShopWiseSalesReportResponse
+): PromoImpactData[] =>
+  response.data.series.base.map((basePoint) => {
+    const actualPoint = response.data.series.actual.find(
+      (point) => point.periodLabel === basePoint.periodLabel
+    )
+
+    return {
+      periodLabel: basePoint.periodLabel,
+      baseSales: basePoint.numTotalNetSales,
+      actualSales: actualPoint?.numTotalNetSales ?? 0,
+    }
+  })
+
+const storePerformanceApiResponse: ShopPerformanceReportResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
+    data: [
+      {
+        strShopName: "Khulshi Mart",
+        actualSales: 83913790.87,
+        baseSales: 0,
+        actualDeliveries: 11405,
+        baseDeliveries: 0,
+      },
+      {
+        strShopName: "Liz Fashion Industry Ltd.",
+        actualSales: 27492849.59,
+        baseSales: 8153138.07,
+        actualDeliveries: 26245,
+        baseDeliveries: 7425,
+        salesPerformance: 337.21,
+        deliveryPerformance: 353.47,
+      },
+    ],
+    totalRows: 38,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 6601,
+    generatedAt: "2026-03-16T02:07:37.734742",
   },
-  {
-    store: "Dhanmondi Super",
-    region: "Dhaka",
-    sales: 365000,
-    target: 380000,
-    footfall: 47000,
-    forecastAccuracy: 93,
-    inventoryRisk: "medium",
-  },
-  {
-    store: "Uttara Mega",
-    region: "Dhaka",
-    sales: 298000,
-    target: 310000,
-    footfall: 41000,
-    forecastAccuracy: 91,
-    inventoryRisk: "medium",
-  },
-  {
-    store: "Chattogram Hub",
-    region: "Chattogram",
-    sales: 255000,
-    target: 240000,
-    footfall: 36000,
-    forecastAccuracy: 88,
-    inventoryRisk: "high",
-  },
-]
+  timestamp: "2026-03-16T02:07:37.736563",
+}
+
+const mapStorePerformanceReport = (
+  response: ShopPerformanceReportResponse
+): StorePerformanceData[] =>
+  response.data.data.map((shop) => ({
+    shopName: shop.strShopName,
+    actualSales: shop.actualSales,
+    baseSales: shop.baseSales,
+    actualDeliveries: shop.actualDeliveries,
+    baseDeliveries: shop.baseDeliveries,
+    salesPerformance: shop.salesPerformance,
+    deliveryPerformance: shop.deliveryPerformance,
+  }))
 
 // Page 2: Customer Behavior Data
 
@@ -276,6 +370,38 @@ const customerSatisfactionData: CustomerSatisfactionData[] = [
 ]
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
+const useMockReportResponses = true
+
+const getMockReportResponse = (
+  request: ExecuteReportRequest
+): SalesForecastReportResponse | ShopWiseSalesReportResponse | ShopPerformanceReportResponse => {
+  switch (request.reportName) {
+    case SalesReportType.MONTH_WISE_SALES:
+      return clone(salesForecastApiResponse)
+    case SalesReportType.SHOP_WISE_SALES:
+      return clone(shopWiseSalesApiResponse)
+    case SalesReportType.SHOP_WISE_SALES_PERFORMANCE:
+      return clone(storePerformanceApiResponse)
+    default:
+      throw new Error(`No mock response configured for report "${request.reportName}"`)
+  }
+}
+
+const executeReport = async <
+  TResponse extends
+    | SalesForecastReportResponse
+    | ShopWiseSalesReportResponse
+    | ShopPerformanceReportResponse,
+>(
+  request: ExecuteReportRequest
+): Promise<TResponse> => {
+  if (useMockReportResponses) {
+    return getMockReportResponse(request) as TResponse
+  }
+
+  const { data } = await apiClient.post<TResponse>("/api/reports/execute", request)
+  return data
+}
 
 export const dashboardService = {
   getStats: () => clone({ metrics, reminders, insights }),
@@ -287,15 +413,28 @@ export const dashboardService = {
   getOrderVolume: () => clone(orderVolumeData),
 
   // Page 1: Predictive Sales & Inventory
-  getSalesForecast: () => clone(salesForecastData),
+  getSalesForecast: async (request: ExecuteReportRequest<SalesReportType.MONTH_WISE_SALES>) =>
+    mapSalesForecastReport(
+      await executeReport<SalesForecastReportResponse>(request)
+    ),
   getInventoryPrediction: () => clone(inventoryPredictionData),
   getDemandForecast: () => clone(demandForecastData),
   getStockLevels: () => clone(stockLevelData),
   getInventoryHealth: () => clone(inventoryHealthData),
 
   // Promotions & Store Ops
-  getPromoImpact: () => clone(promoImpactData),
-  getStorePerformance: () => clone(storePerformanceData),
+  getPromoImpact: async (
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES>
+  ) =>
+    mapShopWiseSalesReport(
+      await executeReport<ShopWiseSalesReportResponse>(request)
+    ),
+  getStorePerformance: async (
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_PERFORMANCE>
+  ) =>
+    mapStorePerformanceReport(
+      await executeReport<ShopPerformanceReportResponse>(request)
+    ),
 
   // Page 2: Customer Behavior
   getCustomerSegments: () => clone(customerSegmentData),

@@ -1,6 +1,5 @@
 export type SalesForecastData = {
-  month: string
+  periodLabel: string
   actualSales: number
   forecastedSales: number
-  targetedSales: number
 }

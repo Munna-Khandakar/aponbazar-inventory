@@ -21,10 +21,6 @@ const chartConfig = {
     label: "Forecasted Sales",
     color: "#f97316",
   },
-  targetedSales: {
-    label: "Targeted Sales",
-    color: "#10b981",
-  },
 } satisfies ChartConfig
 
 const formatBdtCompact = (value: number) => {
@@ -34,68 +30,72 @@ const formatBdtCompact = (value: number) => {
 }
 
 const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
+const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
-  const { data } = useSalesForecast()
+  const { data, isLoading } = useSalesForecast()
+  const chartData = data ?? []
 
   return (
     <Card>
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Sales Forecast</CardTitle>
-          <CardDescription>Actuals vs predicted trend and target baseline</CardDescription>
+          <CardDescription>Actual vs forecasted monthly net sales</CardDescription>
         </div>
         <p className="text-xs text-muted-foreground">
-          Scenario assumes base merchandising calendar without weather disruption.
+          Comparing actual and forecasted net sales across the selected date range.
         </p>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatBdtCompact(Number(value))}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => `Month: ${value}`}
-                  formatter={(value) => formatBdt(Number(value))}
-                />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Line
-              type="monotone"
-              dataKey="actualSales"
-              stroke="var(--color-actualSales)"
-              strokeWidth={2.5}
-              dot={{ r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecastedSales"
-              stroke="var(--color-forecastedSales)"
-              strokeWidth={2}
-              dot={{ r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="targetedSales"
-              stroke="var(--color-targetedSales)"
-              strokeWidth={2}
-              dot={{ r: 3 }}
-            />
-          </LineChart>
-        </ChartContainer>
+        {isLoading ? (
+          <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
+            Loading sales forecast...
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="periodLabel"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={24}
+                tickFormatter={formatPeriodTick}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatBdtCompact(Number(value))}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => `Period: ${value}`}
+                    formatter={(value) => formatBdt(Number(value))}
+                  />
+                }
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Line
+                type="monotone"
+                dataKey="actualSales"
+                stroke="var(--color-actualSales)"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="forecastedSales"
+                stroke="var(--color-forecastedSales)"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                strokeDasharray="6 4"
+              />
+            </LineChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )

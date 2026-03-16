@@ -74,21 +74,19 @@ export type InventoryHealthData = {
 }
 
 export type PromoImpactData = {
-  campaign: string
-  baseline: number
-  forecast: number
-  upliftPct: number
-  marginPct: number
+  periodLabel: string
+  actualSales: number
+  baseSales: number
 }
 
 export type StorePerformanceData = {
-  store: string
-  region: string
-  sales: number
-  target: number
-  footfall: number
-  forecastAccuracy: number
-  inventoryRisk: "low" | "medium" | "high"
+  shopName: string
+  actualSales: number
+  baseSales: number
+  actualDeliveries: number
+  baseDeliveries: number
+  salesPerformance?: number
+  deliveryPerformance?: number
 }
 
 // Customer Behavior Types (Page 2)
