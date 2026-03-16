@@ -79,6 +79,8 @@ const metricConfig: Record<KpiMetricType, KpiMetricConfig> = {
 
 export interface KpiGaugeCardProps {
   metric: KpiMetricDataset
+  sliderValue?: number
+  onSliderChange?: (value: number) => void
 }
 
 const clampPercentage = (value: number) => Math.max(0, Math.min(100, value))
@@ -132,9 +134,13 @@ function ProgressIndicator({ progressValue, tone }: { progressValue: number; ton
 }
 
 export function KpiGaugeCard(props: KpiGaugeCardProps) {
-  const { metric } = props
+  const { metric, sliderValue, onSliderChange } = props
   const config = metricConfig[metric.metricType]
   const styles = config.styles
+  const isGrowthTargetSlider =
+    metric.metricType === KpiMetricType.GROWTH_TARGET &&
+    sliderValue !== undefined &&
+    onSliderChange !== undefined
 
   return (
     <article className={cn("flex flex-col rounded-xl border p-4 sm:p-5", styles.panel)}>
@@ -142,7 +148,24 @@ export function KpiGaugeCard(props: KpiGaugeCardProps) {
 
       <div className="mt-4 flex grow flex-col justify-between">
         <div className="space-y-3">
-          {config.type === "gauge" ? (
+          {isGrowthTargetSlider ? (
+            <div className="space-y-3">
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={1}
+                value={sliderValue}
+                onChange={(event) => onSliderChange(Number(event.target.value))}
+                className="h-2 w-full cursor-pointer appearance-none rounded-full bg-fuchsia-200 accent-fuchsia-500"
+                aria-label="Growth Target"
+              />
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>0%</span>
+                <span>20%</span>
+              </div>
+            </div>
+          ) : config.type === "gauge" ? (
             <GaugeIndicator progressValue={metric.progressValue} tone={styles} />
           ) : (
             <ProgressIndicator progressValue={metric.progressValue} tone={styles} />

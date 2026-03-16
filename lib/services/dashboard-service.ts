@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api-client"
 import type {
   Alert,
   BehaviorMetricRow,
@@ -19,11 +20,13 @@ import type {
   StockLevelData,
   StorePerformanceData,
 } from "@/lib/types/dashboard"
+import type { SalesForecastData } from "@/lib/types/SalesForecastData"
 import type {
-  SalesForecastApiResponse,
-  SalesForecastData,
-} from "@/lib/types/SalesForecastData"
-import { SalesReportType } from "@/lib/types/SalesForecastData"
+  ExecuteReportRequest,
+  SalesForecastReportResponse,
+  ShopPerformanceReportResponse,
+} from "@/lib/types/report"
+import { SalesReportType } from "@/lib/types/report"
 
 const metrics: Metric[] = [
   { id: "sales", label: "Sales vs Target", value: "$1.28M", trend: "+6.2%", trendDirection: "up" },
@@ -123,7 +126,7 @@ const orderVolumeData: OrderVolumeData[] = [
 
 // Page 1: Predictive Sales & Inventory Data
 
-const salesForecastApiResponse: SalesForecastApiResponse = {
+const salesForecastApiResponse: SalesForecastReportResponse = {
   success: true,
   data: {
     reportName: SalesReportType.MONTH_WISE_SALES,
@@ -156,9 +159,11 @@ const salesForecastApiResponse: SalesForecastApiResponse = {
   timestamp: "2026-03-16T16:28:43.111624",
 }
 
-const salesForecastData: SalesForecastData[] = salesForecastApiResponse.data.series.base.map(
-  (forecastPoint) => {
-    const actualPoint = salesForecastApiResponse.data.series.actual.find(
+const mapSalesForecastReport = (
+  response: SalesForecastReportResponse
+): SalesForecastData[] =>
+  response.data.series.base.map((forecastPoint) => {
+    const actualPoint = response.data.series.actual.find(
       (point) => point.periodLabel === forecastPoint.periodLabel
     )
 
@@ -167,8 +172,7 @@ const salesForecastData: SalesForecastData[] = salesForecastApiResponse.data.ser
       forecastedSales: forecastPoint.numTotalNetSales,
       actualSales: actualPoint?.numTotalNetSales ?? 0,
     }
-  }
-)
+  })
 
 const inventoryPredictionData: InventoryPredictionData[] = [
   { month: "Jan", electronics: 1250, clothing: 2100, groceries: 3400, homeGoods: 1800 },
@@ -212,30 +216,7 @@ const promoImpactData: PromoImpactData[] = [
   { campaign: "Fresh Express", baseline: 15800, forecast: 26200, upliftPct: 66, marginPct: 24 },
 ]
 
-type StorePerformanceApiResponse = {
-  success: boolean
-  data: {
-    reportName: SalesReportType
-    data: Array<{
-      strShopName: string
-      actualSales: number
-      baseSales: number
-      actualDeliveries: number
-      baseDeliveries: number
-      salesPerformance?: number
-      deliveryPerformance?: number
-    }>
-    totalRows: number
-    page: number
-    pageSize: number
-    totalPages: number
-    executionTimeMs: number
-    generatedAt: string
-  }
-  timestamp: string
-}
-
-const storePerformanceApiResponse: StorePerformanceApiResponse = {
+const storePerformanceApiResponse: ShopPerformanceReportResponse = {
   success: true,
   data: {
     reportName: SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
@@ -267,8 +248,10 @@ const storePerformanceApiResponse: StorePerformanceApiResponse = {
   timestamp: "2026-03-16T02:07:37.736563",
 }
 
-const storePerformanceData: StorePerformanceData[] = storePerformanceApiResponse.data.data.map(
-  (shop) => ({
+const mapStorePerformanceReport = (
+  response: ShopPerformanceReportResponse
+): StorePerformanceData[] =>
+  response.data.data.map((shop) => ({
     shopName: shop.strShopName,
     actualSales: shop.actualSales,
     baseSales: shop.baseSales,
@@ -276,8 +259,7 @@ const storePerformanceData: StorePerformanceData[] = storePerformanceApiResponse
     baseDeliveries: shop.baseDeliveries,
     salesPerformance: shop.salesPerformance,
     deliveryPerformance: shop.deliveryPerformance,
-  })
-)
+  }))
 
 // Page 2: Customer Behavior Data
 
@@ -346,6 +328,33 @@ const customerSatisfactionData: CustomerSatisfactionData[] = [
 ]
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
+const useMockReportResponses = true
+
+const getMockReportResponse = (
+  request: ExecuteReportRequest
+): SalesForecastReportResponse | ShopPerformanceReportResponse => {
+  switch (request.reportName) {
+    case SalesReportType.MONTH_WISE_SALES:
+      return clone(salesForecastApiResponse)
+    case SalesReportType.SHOP_WISE_SALES_PERFORMANCE:
+      return clone(storePerformanceApiResponse)
+    default:
+      throw new Error(`No mock response configured for report "${request.reportName}"`)
+  }
+}
+
+const executeReport = async <
+  TResponse extends SalesForecastReportResponse | ShopPerformanceReportResponse,
+>(
+  request: ExecuteReportRequest
+): Promise<TResponse> => {
+  if (useMockReportResponses) {
+    return getMockReportResponse(request) as TResponse
+  }
+
+  const { data } = await apiClient.post<TResponse>("/api/reports/execute", request)
+  return data
+}
 
 export const dashboardService = {
   getStats: () => clone({ metrics, reminders, insights }),
@@ -357,7 +366,10 @@ export const dashboardService = {
   getOrderVolume: () => clone(orderVolumeData),
 
   // Page 1: Predictive Sales & Inventory
-  getSalesForecast: () => clone(salesForecastData),
+  getSalesForecast: async (request: ExecuteReportRequest<SalesReportType.MONTH_WISE_SALES>) =>
+    mapSalesForecastReport(
+      await executeReport<SalesForecastReportResponse>(request)
+    ),
   getInventoryPrediction: () => clone(inventoryPredictionData),
   getDemandForecast: () => clone(demandForecastData),
   getStockLevels: () => clone(stockLevelData),
@@ -365,7 +377,12 @@ export const dashboardService = {
 
   // Promotions & Store Ops
   getPromoImpact: () => clone(promoImpactData),
-  getStorePerformance: () => clone(storePerformanceData),
+  getStorePerformance: async (
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_PERFORMANCE>
+  ) =>
+    mapStorePerformanceReport(
+      await executeReport<ShopPerformanceReportResponse>(request)
+    ),
 
   // Page 2: Customer Behavior
   getCustomerSegments: () => clone(customerSegmentData),

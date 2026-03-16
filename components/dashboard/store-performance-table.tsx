@@ -35,7 +35,7 @@ const getPerformanceTone = (value: number | null) => {
 }
 
 export function StorePerformanceTable() {
-  const { data } = useStorePerformance()
+  const { data, isLoading } = useStorePerformance()
   const rows = data ?? []
 
   return (
@@ -58,6 +58,16 @@ export function StorePerformanceTable() {
             </tr>
           </thead>
           <tbody>
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="py-6 text-center text-sm text-muted-foreground"
+                >
+                  Loading shop performance...
+                </td>
+              </tr>
+            ) : null}
             {rows.map((store) => {
               const salesPerformance = getPerformance(
                 store.actualSales,
