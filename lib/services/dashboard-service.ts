@@ -19,7 +19,11 @@ import type {
   StockLevelData,
   StorePerformanceData,
 } from "@/lib/types/dashboard"
-import type { SalesForecastData } from "@/lib/types/SalesForecastData"
+import type {
+  SalesForecastApiResponse,
+  SalesForecastData,
+} from "@/lib/types/SalesForecastData"
+import { SalesReportType } from "@/lib/types/SalesForecastData"
 
 const metrics: Metric[] = [
   { id: "sales", label: "Sales vs Target", value: "$1.28M", trend: "+6.2%", trendDirection: "up" },
@@ -119,14 +123,52 @@ const orderVolumeData: OrderVolumeData[] = [
 
 // Page 1: Predictive Sales & Inventory Data
 
-const salesForecastData: SalesForecastData[] = [
-  { month: "Jan", actualSales: 11800, forecastedSales: 11000, targetedSales: 15200 },
-  { month: "Feb", actualSales: 12350, forecastedSales: 11500, targetedSales: 15600 },
-  { month: "Mar", actualSales: 13120, forecastedSales: 11000, targetedSales: 15900 },
-  { month: "Apr", actualSales: 13980, forecastedSales: 11850, targetedSales: 15600 },
-  { month: "May", actualSales: 14860, forecastedSales: 11700, targetedSales: 15350 },
-  { month: "Jun", actualSales: 15790, forecastedSales: 11550, targetedSales: 15100 },
-]
+const salesForecastApiResponse: SalesForecastApiResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.MONTH_WISE_SALES,
+    series: {
+      base: [
+        { periodLabel: "October 2025", numTotalNetSales: 37882203.08 },
+        { periodLabel: "November 2025", numTotalNetSales: 44589124.45 },
+        { periodLabel: "December 2025", numTotalNetSales: 43813531.38 },
+        { periodLabel: "January 2026", numTotalNetSales: 52358785.07 },
+        { periodLabel: "February 2026", numTotalNetSales: 49232851.46 },
+        { periodLabel: "March 2026", numTotalNetSales: 23764087.2 },
+      ],
+      actual: [
+        { periodLabel: "October 2025", numTotalNetSales: 55649541.01 },
+        { periodLabel: "November 2025", numTotalNetSales: 56362584.76 },
+        { periodLabel: "December 2025", numTotalNetSales: 54716948.57 },
+        { periodLabel: "January 2026", numTotalNetSales: 59598570.73 },
+        { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
+        { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
+      ],
+    },
+    granularity: "MONTH",
+    totalRows: 12,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 3247,
+    generatedAt: "2026-03-16T16:28:43.109599",
+  },
+  timestamp: "2026-03-16T16:28:43.111624",
+}
+
+const salesForecastData: SalesForecastData[] = salesForecastApiResponse.data.series.base.map(
+  (forecastPoint) => {
+    const actualPoint = salesForecastApiResponse.data.series.actual.find(
+      (point) => point.periodLabel === forecastPoint.periodLabel
+    )
+
+    return {
+      periodLabel: forecastPoint.periodLabel,
+      forecastedSales: forecastPoint.numTotalNetSales,
+      actualSales: actualPoint?.numTotalNetSales ?? 0,
+    }
+  }
+)
 
 const inventoryPredictionData: InventoryPredictionData[] = [
   { month: "Jan", electronics: 1250, clothing: 2100, groceries: 3400, homeGoods: 1800 },

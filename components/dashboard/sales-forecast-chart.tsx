@@ -21,10 +21,6 @@ const chartConfig = {
     label: "Forecasted Sales",
     color: "#f97316",
   },
-  targetedSales: {
-    label: "Targeted Sales",
-    color: "#10b981",
-  },
 } satisfies ChartConfig
 
 const formatBdtCompact = (value: number) => {
@@ -34,6 +30,7 @@ const formatBdtCompact = (value: number) => {
 }
 
 const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
+const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
   const { data } = useSalesForecast()
@@ -43,10 +40,10 @@ export function SalesForecastChart() {
       <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle>Sales Forecast</CardTitle>
-          <CardDescription>Actuals vs predicted trend and target baseline</CardDescription>
+          <CardDescription>Actual vs forecasted monthly net sales</CardDescription>
         </div>
         <p className="text-xs text-muted-foreground">
-          Scenario assumes base merchandising calendar without weather disruption.
+          Using mocked API response data until the forecast endpoint is available.
         </p>
       </CardHeader>
       <CardContent>
@@ -54,10 +51,12 @@ export function SalesForecastChart() {
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="periodLabel"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              minTickGap={24}
+              tickFormatter={formatPeriodTick}
             />
             <YAxis
               tickLine={false}
@@ -67,7 +66,7 @@ export function SalesForecastChart() {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => `Month: ${value}`}
+                  labelFormatter={(value) => `Period: ${value}`}
                   formatter={(value) => formatBdt(Number(value))}
                 />
               }
@@ -86,13 +85,6 @@ export function SalesForecastChart() {
               stroke="var(--color-forecastedSales)"
               strokeWidth={2}
               dot={{ r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="targetedSales"
-              stroke="var(--color-targetedSales)"
-              strokeWidth={2}
-              dot={{ r: 3 }}
             />
           </LineChart>
         </ChartContainer>
