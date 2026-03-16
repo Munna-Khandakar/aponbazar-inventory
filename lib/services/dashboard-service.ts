@@ -24,6 +24,7 @@ import type { SalesForecastData } from "@/lib/types/SalesForecastData"
 import type {
   ExecuteReportRequest,
   SalesForecastReportResponse,
+  ShopWiseSalesReportResponse,
   ShopPerformanceReportResponse,
 } from "@/lib/types/report"
 import { SalesReportType } from "@/lib/types/report"
@@ -209,12 +210,53 @@ const inventoryHealthData: InventoryHealthData[] = [
   { category: "Health & Beauty", healthy: 2180, atRisk: 150, overstock: 85, coverDays: 9 },
 ]
 
-const promoImpactData: PromoImpactData[] = [
-  { campaign: "Eid Family Basket", baseline: 42000, forecast: 61000, upliftPct: 38, marginPct: 21 },
-  { campaign: "Weekend Essentials", baseline: 28500, forecast: 36000, upliftPct: 26, marginPct: 17 },
-  { campaign: "Hyper Saver Days", baseline: 19400, forecast: 31000, upliftPct: 60, marginPct: 15 },
-  { campaign: "Fresh Express", baseline: 15800, forecast: 26200, upliftPct: 66, marginPct: 24 },
-]
+const shopWiseSalesApiResponse: ShopWiseSalesReportResponse = {
+  success: true,
+  data: {
+    reportName: SalesReportType.SHOP_WISE_SALES,
+    series: {
+      base: [
+        { periodLabel: "October 2025", numTotalNetSales: 37882203.08 },
+        { periodLabel: "November 2025", numTotalNetSales: 44589124.45 },
+        { periodLabel: "December 2025", numTotalNetSales: 43813531.38 },
+        { periodLabel: "January 2026", numTotalNetSales: 52358785.07 },
+        { periodLabel: "February 2026", numTotalNetSales: 49232851.46 },
+        { periodLabel: "March 2026", numTotalNetSales: 23764087.2 },
+      ],
+      actual: [
+        { periodLabel: "October 2025", numTotalNetSales: 55649541.01 },
+        { periodLabel: "November 2025", numTotalNetSales: 56362584.76 },
+        { periodLabel: "December 2025", numTotalNetSales: 54716948.57 },
+        { periodLabel: "January 2026", numTotalNetSales: 59598570.73 },
+        { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
+        { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
+      ],
+    },
+    granularity: "MONTH",
+    totalRows: 12,
+    page: 0,
+    pageSize: 0,
+    totalPages: 0,
+    executionTimeMs: 3247,
+    generatedAt: "2026-03-16T16:28:43.109599",
+  },
+  timestamp: "2026-03-16T16:28:43.111624",
+}
+
+const mapShopWiseSalesReport = (
+  response: ShopWiseSalesReportResponse
+): PromoImpactData[] =>
+  response.data.series.base.map((basePoint) => {
+    const actualPoint = response.data.series.actual.find(
+      (point) => point.periodLabel === basePoint.periodLabel
+    )
+
+    return {
+      periodLabel: basePoint.periodLabel,
+      baseSales: basePoint.numTotalNetSales,
+      actualSales: actualPoint?.numTotalNetSales ?? 0,
+    }
+  })
 
 const storePerformanceApiResponse: ShopPerformanceReportResponse = {
   success: true,
@@ -332,10 +374,12 @@ const useMockReportResponses = true
 
 const getMockReportResponse = (
   request: ExecuteReportRequest
-): SalesForecastReportResponse | ShopPerformanceReportResponse => {
+): SalesForecastReportResponse | ShopWiseSalesReportResponse | ShopPerformanceReportResponse => {
   switch (request.reportName) {
     case SalesReportType.MONTH_WISE_SALES:
       return clone(salesForecastApiResponse)
+    case SalesReportType.SHOP_WISE_SALES:
+      return clone(shopWiseSalesApiResponse)
     case SalesReportType.SHOP_WISE_SALES_PERFORMANCE:
       return clone(storePerformanceApiResponse)
     default:
@@ -344,7 +388,10 @@ const getMockReportResponse = (
 }
 
 const executeReport = async <
-  TResponse extends SalesForecastReportResponse | ShopPerformanceReportResponse,
+  TResponse extends
+    | SalesForecastReportResponse
+    | ShopWiseSalesReportResponse
+    | ShopPerformanceReportResponse,
 >(
   request: ExecuteReportRequest
 ): Promise<TResponse> => {
@@ -376,7 +423,12 @@ export const dashboardService = {
   getInventoryHealth: () => clone(inventoryHealthData),
 
   // Promotions & Store Ops
-  getPromoImpact: () => clone(promoImpactData),
+  getPromoImpact: async (
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES>
+  ) =>
+    mapShopWiseSalesReport(
+      await executeReport<ShopWiseSalesReportResponse>(request)
+    ),
   getStorePerformance: async (
     request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_PERFORMANCE>
   ) =>

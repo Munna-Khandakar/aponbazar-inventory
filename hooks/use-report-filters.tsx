@@ -11,8 +11,6 @@ import {
   type SetStateAction,
 } from "react"
 
-import type { ReportParameters } from "@/lib/types/report"
-
 export type DateMode = "30d" | "90d" | "custom"
 
 type ReportFiltersContextValue = {
@@ -26,7 +24,6 @@ type ReportFiltersContextValue = {
   setGrowthTarget: Dispatch<SetStateAction<string>>
   searchTerm: string
   setSearchTerm: Dispatch<SetStateAction<string>>
-  reportParameters: ReportParameters
   setPresetRange: (mode: Exclude<DateMode, "custom">) => void
   setCustomRange: () => void
 }
@@ -83,11 +80,6 @@ export function ReportFiltersProvider({ children }: { children: ReactNode }) {
       setGrowthTarget,
       searchTerm,
       setSearchTerm,
-      reportParameters: {
-        startDate,
-        endDate,
-        growthTarget,
-      },
       setPresetRange,
       setCustomRange,
     }),

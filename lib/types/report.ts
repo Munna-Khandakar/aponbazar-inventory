@@ -5,15 +5,23 @@ export enum SalesReportType {
   SHOP_WISE_SALES_PERFORMANCE = "shop_wise_sales_performance",
 }
 
-export type ReportParameters = {
+export type DateRangeReportParameters = {
   startDate: string
   endDate: string
+}
+
+export type ReportParameters = DateRangeReportParameters & {
   growthTarget: string
 }
 
-export type ExecuteReportRequest<TReportName extends SalesReportType = SalesReportType> = {
+export type ExecuteReportRequest<
+  TReportName extends SalesReportType = SalesReportType,
+  TParameters extends DateRangeReportParameters | ReportParameters =
+    | DateRangeReportParameters
+    | ReportParameters,
+> = {
   reportName: TReportName
-  parameters: ReportParameters
+  parameters: TParameters
   page: number
   size: number
 }
@@ -39,14 +47,21 @@ export type SalesForecastSeriesPoint = {
   numTotalNetSales: number
 }
 
-export type SalesForecastReportResponse = ReportResponse<
-  BaseReportData<SalesReportType.MONTH_WISE_SALES> & {
+type SeriesReportData<TReportName extends SalesReportType> =
+  BaseReportData<TReportName> & {
     series: {
       base: SalesForecastSeriesPoint[]
       actual: SalesForecastSeriesPoint[]
     }
     granularity: string
   }
+
+export type SalesForecastReportResponse = ReportResponse<
+  SeriesReportData<SalesReportType.MONTH_WISE_SALES>
+>
+
+export type ShopWiseSalesReportResponse = ReportResponse<
+  SeriesReportData<SalesReportType.SHOP_WISE_SALES>
 >
 
 export type ShopPerformanceReportRow = {

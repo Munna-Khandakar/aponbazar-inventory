@@ -4,7 +4,12 @@ import { useQuery } from "@tanstack/react-query"
 
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { dashboardService } from "@/lib/services/dashboard-service"
-import { SalesReportType, type ExecuteReportRequest } from "@/lib/types/report"
+import {
+  SalesReportType,
+  type DateRangeReportParameters,
+  type ExecuteReportRequest,
+  type ReportParameters,
+} from "@/lib/types/report"
 
 type StaticQueryResult<T> = {
   data: T
@@ -24,13 +29,18 @@ const createStaticHook = <T>(getter: () => T) => (): StaticQueryResult<T> => ({
 })
 
 const useReportRequest = <TReportName extends SalesReportType>(
-  reportName: TReportName
-): ExecuteReportRequest<TReportName> => {
-  const { reportParameters } = useReportFilters()
+  reportName: TReportName,
+  options?: { includeGrowthTarget?: boolean }
+): ExecuteReportRequest<TReportName, DateRangeReportParameters | ReportParameters> => {
+  const { startDate, endDate, growthTarget } = useReportFilters()
+  const parameters =
+    options?.includeGrowthTarget === false
+      ? { startDate, endDate }
+      : { startDate, endDate, growthTarget }
 
   return {
     reportName,
-    parameters: reportParameters,
+    parameters,
     page: reportPage,
     size: reportSize,
   }
@@ -46,7 +56,9 @@ export const useOrderVolume = createStaticHook(dashboardService.getOrderVolume)
 
 // Page 1: Predictive Sales & Inventory Hooks
 export const useSalesForecast = () => {
-  const request = useReportRequest(SalesReportType.MONTH_WISE_SALES)
+  const request = useReportRequest(SalesReportType.MONTH_WISE_SALES, {
+    includeGrowthTarget: true,
+  })
 
   return useQuery({
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
@@ -61,9 +73,21 @@ export const useStockLevels = createStaticHook(dashboardService.getStockLevels)
 export const useInventoryHealth = createStaticHook(dashboardService.getInventoryHealth)
 
 // Promotions & Store Ops
-export const usePromoImpact = createStaticHook(dashboardService.getPromoImpact)
+export const usePromoImpact = () => {
+  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES, {
+    includeGrowthTarget: false,
+  })
+
+  return useQuery({
+    queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
+    queryFn: () => dashboardService.getPromoImpact(request),
+    placeholderData: (previousData) => previousData,
+  })
+}
 export const useStorePerformance = () => {
-  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_PERFORMANCE)
+  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_PERFORMANCE, {
+    includeGrowthTarget: false,
+  })
 
   return useQuery({
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],

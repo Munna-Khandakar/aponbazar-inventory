@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -14,93 +14,72 @@ import {
 import { usePromoImpact } from "@/hooks/use-dashboard"
 
 const chartConfig = {
-  baseline: {
-    label: "Baseline",
-    color: "#94a3b8",
-  },
-  forecast: {
-    label: "Forecast",
-    color: "#0ea5e9",
-  },
-  upliftPct: {
-    label: "Uplift %",
-    color: "#14b8a6",
+  actualSales: {
+    label: "Actual Sales",
+    color: "#0f766e",
   },
 } satisfies ChartConfig
 
+const formatBdtCompact = (value: number) => {
+  if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`
+  if (value >= 100000) return `৳${(value / 100000).toFixed(1)}L`
+  return `৳${value.toLocaleString("en-BD")}`
+}
+
+const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
+const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
+
 export function PromoImpactChart() {
-  const { data } = usePromoImpact()
+  const { data, isLoading } = usePromoImpact()
   const chartData = data ?? []
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Promotion impact</CardTitle>
-        <CardDescription>Baseline vs forecasted lift per live campaign</CardDescription>
+        <CardTitle>Shop Wise Sales</CardTitle>
+        <CardDescription>Actual net sales by month</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="campaign" tickLine={false} axisLine={false} tickMargin={8} />
-            <YAxis
-              yAxisId="left"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-            />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${value}%`}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => value}
-                  formatter={(value, name) =>
-                    name === "upliftPct" ? `${value}% uplift` : `$${Number(value).toLocaleString()}`
-                  }
-                />
-              }
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar
-              yAxisId="left"
-              dataKey="baseline"
-              fill="var(--color-baseline)"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={20}
-            />
-            <Bar
-              yAxisId="left"
-              dataKey="forecast"
-              fill="var(--color-forecast)"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={20}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="upliftPct"
-              stroke="var(--color-upliftPct)"
-              strokeWidth={2}
-              dot={{ r: 4 }}
-            />
-          </ComposedChart>
-        </ChartContainer>
-        <div className="mt-4 grid gap-2 text-xs text-muted-foreground">
-          {chartData.map((row) => (
-            <div key={row.campaign} className="flex items-center justify-between rounded-lg border border-dashed border-border/70 px-3 py-2">
-              <span className="font-medium text-foreground">{row.campaign}</span>
-              <span>
-                Margin uplift {row.marginPct}% – target ${Math.round(row.forecast - row.baseline).toLocaleString()}
-              </span>
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
+            Loading shop wise sales...
+          </div>
+        ) : (
+          <ChartContainer config={chartConfig}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="periodLabel"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={24}
+                tickFormatter={formatPeriodTick}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatBdtCompact(Number(value))}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => `Period: ${value}`}
+                    formatter={(value) => formatBdt(Number(value))}
+                  />
+                }
+              />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Line
+                type="monotone"
+                dataKey="actualSales"
+                stroke="var(--color-actualSales)"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   )

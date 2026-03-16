@@ -74,11 +74,9 @@ export type InventoryHealthData = {
 }
 
 export type PromoImpactData = {
-  campaign: string
-  baseline: number
-  forecast: number
-  upliftPct: number
-  marginPct: number
+  periodLabel: string
+  actualSales: number
+  baseSales: number
 }
 
 export type StorePerformanceData = {
