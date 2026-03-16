@@ -12,11 +12,8 @@ export default function SalesPredictionPage() {
         <ToplineSalesOverview />
       </section>
 
-      <section>
+      <section className="grid gap-6 xl:grid-cols-2">
         <SalesForecastChart />
-      </section>
-
-      <section>
         <PromoImpactChart />
       </section>
 

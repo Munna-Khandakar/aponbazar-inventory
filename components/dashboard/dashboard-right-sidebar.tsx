@@ -3,7 +3,6 @@
 import { ArrowDownUp } from "lucide-react"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
@@ -85,17 +84,7 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
 
 export function DashboardRightSidebar() {
   const { data, isLoading } = useStorePerformance()
-  const {
-    dateMode,
-    startDate,
-    endDate,
-    searchTerm,
-    setStartDate,
-    setEndDate,
-    setSearchTerm,
-    setPresetRange,
-    setCustomRange,
-  } = useReportFilters()
+  const { searchTerm, setSearchTerm } = useReportFilters()
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
   const filteredInsights = [...(data ?? [])]
@@ -123,68 +112,6 @@ export function DashboardRightSidebar() {
 
   return (
     <aside className="space-y-4 rounded-xl border border-border/70 bg-card/90 p-4 shadow-sm">
-      <section className="space-y-3 rounded-lg border border-border/70 bg-background/80 p-3">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold">Filters</h3>
-          <p className="text-xs text-muted-foreground">Refine the dashboard view by date.</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={dateMode === "30d" ? "default" : "outline"}
-            className={cn("h-7 px-2 text-[11px]", dateMode !== "30d" && "bg-background")}
-            onClick={() => setPresetRange("30d")}
-          >
-            30 days
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={dateMode === "90d" ? "default" : "outline"}
-            className={cn("h-7 px-2 text-[11px]", dateMode !== "90d" && "bg-background")}
-            onClick={() => setPresetRange("90d")}
-          >
-            90 days
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={dateMode === "custom" ? "default" : "outline"}
-            className={cn("h-7 px-2 text-[11px]", dateMode !== "custom" && "bg-background")}
-            onClick={setCustomRange}
-          >
-            Custom
-          </Button>
-        </div>
-
-        {dateMode === "custom" ? (
-          <div className="space-y-3">
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
-              Start Date
-              <input
-                type="date"
-                value={startDate}
-                onChange={(event) => setStartDate(event.target.value)}
-                className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground">
-              End Date
-              <input
-                type="date"
-                value={endDate}
-                onChange={(event) => setEndDate(event.target.value)}
-                className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-              />
-            </label>
-          </div>
-        ) : null}
-
-      </section>
-
       <section className="space-y-2 rounded-lg border border-border/70 bg-background/80 p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
