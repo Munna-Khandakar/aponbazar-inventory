@@ -13,12 +13,6 @@ type PerformanceTone = {
   fill: string
 }
 
-const getPerformance = (actual: number, base: number, provided?: number) => {
-  if (provided !== undefined) return provided
-  if (base <= 0) return null
-  return (actual / base) * 100
-}
-
 const getPerformanceTone = (value: number | null): PerformanceTone => {
   if (value === null) {
     return {
@@ -92,16 +86,8 @@ export function DashboardRightSidebar() {
       item.shopName.toLowerCase().includes(searchTerm.trim().toLowerCase())
     )
     .sort((left, right) => {
-      const leftPerformance = getPerformance(
-        left.actualSales,
-        left.baseSales,
-        left.salesPerformance
-      )
-      const rightPerformance = getPerformance(
-        right.actualSales,
-        right.baseSales,
-        right.salesPerformance
-      )
+      const leftPerformance = left.salesPerformance ?? Number.NEGATIVE_INFINITY
+      const rightPerformance = right.salesPerformance ?? Number.NEGATIVE_INFINITY
       const leftValue = leftPerformance ?? Number.NEGATIVE_INFINITY
       const rightValue = rightPerformance ?? Number.NEGATIVE_INFINITY
 
@@ -111,8 +97,8 @@ export function DashboardRightSidebar() {
     })
 
   return (
-    <aside className="space-y-4 rounded-xl border border-border/70 bg-card/90 p-4 shadow-sm">
-      <section className="space-y-2 rounded-lg border border-border/70 bg-background/80 p-3">
+    <aside className="rounded-xl border border-border/70 bg-card/90 p-4 shadow-sm xl:h-[calc(100vh-6rem)]">
+      <section className="flex h-full flex-col gap-2 rounded-lg border border-border/70 bg-background/80 p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
           <button
@@ -144,18 +130,14 @@ export function DashboardRightSidebar() {
           className="w-full rounded-md border border-border/70 bg-background px-2 py-1.5 text-xs text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
         />
 
-        <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+        <ul className="flex-1 min-h-0 space-y-1.5 overflow-y-auto pr-1">
           {isLoading ? (
             <li className="rounded-md border border-dashed border-border/60 px-2 py-3 text-center text-xs text-muted-foreground">
               Loading shops...
             </li>
           ) : null}
           {filteredInsights.map((item) => {
-            const salesPerformance = getPerformance(
-              item.actualSales,
-              item.baseSales,
-              item.salesPerformance
-            )
+            const salesPerformance = item.salesPerformance ?? null
             const tone = getPerformanceTone(salesPerformance)
             const filledSegments =
               salesPerformance === null
@@ -170,7 +152,7 @@ export function DashboardRightSidebar() {
                 <span className="truncate text-foreground">{item.shopName}</span>
                 <div className="flex shrink-0 items-center gap-2">
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, index) => (
+                    {Array.from({ length: 3 }, (_, index) => (
                       <span
                         key={`${item.shopName}-${index}`}
                         className={cn(

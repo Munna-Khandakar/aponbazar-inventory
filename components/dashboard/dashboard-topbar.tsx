@@ -55,9 +55,9 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
 
   return (
     <>
-      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/95 px-4 py-4 shadow-sm backdrop-blur sm:px-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5 xl:h-16">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between xl:h-full">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:gap-2">
             <div className="relative min-w-[220px] sm:w-auto">
               <label htmlFor="dashboard-page-select" className="sr-only">
                 Navigate between dashboard pages
@@ -66,7 +66,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
                 id="dashboard-page-select"
                 value={pathname}
                 onChange={(event) => router.push(event.target.value)}
-                className="h-10 w-full appearance-none rounded-xl border border-border/70 bg-card px-4 pr-10 text-sm font-medium text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring/60"
+                className="h-9 w-full appearance-none rounded-xl border border-border/70 bg-card px-4 pr-10 text-sm font-medium text-foreground shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-ring/60"
               >
                 {dashboardPages.map((page) => (
                   <option key={page.href} value={page.href}>
@@ -82,7 +82,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
                 type="button"
                 size="sm"
                 variant={dateMode === "30d" ? "default" : "outline"}
-                className={cn("h-10 rounded-xl px-4", dateMode !== "30d" && "bg-background")}
+                className={cn("h-9 rounded-xl px-4", dateMode !== "30d" && "bg-background")}
                 onClick={() => setPresetRange("30d")}
               >
                 30 Days
@@ -91,7 +91,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
                 type="button"
                 size="sm"
                 variant={dateMode === "90d" ? "default" : "outline"}
-                className={cn("h-10 rounded-xl px-4", dateMode !== "90d" && "bg-background")}
+                className={cn("h-9 rounded-xl px-4", dateMode !== "90d" && "bg-background")}
                 onClick={() => setPresetRange("90d")}
               >
                 90 Days
@@ -100,7 +100,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
                 type="button"
                 size="sm"
                 variant={dateMode === "custom" ? "default" : "outline"}
-                className={cn("h-10 rounded-xl px-4", dateMode !== "custom" && "bg-background")}
+                className={cn("h-9 rounded-xl px-4", dateMode !== "custom" && "bg-background")}
                 onClick={openCustomRangeModal}
               >
                 Custom
@@ -110,7 +110,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
 
           <Button
             variant="outline"
-            className="h-10 rounded-xl justify-center gap-2 self-start lg:self-auto"
+            className="h-9 rounded-xl justify-center gap-2 self-start lg:self-auto"
             onClick={onSignOut}
           >
             <LogOut size={16} />

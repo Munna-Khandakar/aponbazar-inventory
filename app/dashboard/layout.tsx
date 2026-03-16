@@ -24,11 +24,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="pb-4 sm:pb-6 lg:pb-8">
           <DashboardTopbar onSignOut={signOut} />
 
-          <div className="grid gap-6 px-4 pt-6 sm:px-6 sm:pt-6 lg:px-8 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="grid gap-6 px-4 pt-4 sm:px-6 sm:pt-4 lg:px-8 xl:grid-cols-[320px_minmax(0,1fr)]">
             <main className="order-1 min-w-0 space-y-6 xl:order-2">{children}</main>
 
             <div className="order-2 min-w-0 xl:order-1">
-              <div className="xl:sticky xl:top-28">
+              <div className="xl:sticky xl:top-16">
                 <DashboardRightSidebar />
               </div>
             </div>
