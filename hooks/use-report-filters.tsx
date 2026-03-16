@@ -25,7 +25,7 @@ type ReportFiltersContextValue = {
   searchTerm: string
   setSearchTerm: Dispatch<SetStateAction<string>>
   setPresetRange: (mode: Exclude<DateMode, "custom">) => void
-  setCustomRange: () => void
+  setCustomRange: (startDate: string, endDate: string) => void
 }
 
 const ReportFiltersContext = createContext<ReportFiltersContextValue | null>(null)
@@ -62,10 +62,10 @@ export function ReportFiltersProvider({ children }: { children: ReactNode }) {
     setStartDate(mode === "30d" ? getDateBeforeValue(29) : getDateBeforeValue(89))
   }, [])
 
-  const setCustomRange = useCallback(() => {
+  const setCustomRange = useCallback((customStartDate: string, customEndDate: string) => {
     setDateMode("custom")
-    setStartDate(defaultStartDate)
-    setEndDate(defaultEndDate)
+    setStartDate(customStartDate)
+    setEndDate(customEndDate)
   }, [])
 
   const value = useMemo<ReportFiltersContextValue>(

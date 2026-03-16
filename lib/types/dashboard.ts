@@ -74,9 +74,10 @@ export type InventoryHealthData = {
 }
 
 export type PromoImpactData = {
-  periodLabel: string
+  shopName: string
   actualSales: number
   baseSales: number
+  salesPerformance?: number
 }
 
 export type StorePerformanceData = {

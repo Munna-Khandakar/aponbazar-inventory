@@ -13,14 +13,11 @@ export default function SalesPredictionPage() {
       </section>
 
       <section>
-        <SalesForecastChart />
-      </section>
-
-      <section>
         <PromoImpactChart />
       </section>
 
-      <section>
+      <section className="grid gap-6 xl:grid-cols-2">
+        <SalesForecastChart />
         <StorePerformanceTable />
       </section>
     </div>

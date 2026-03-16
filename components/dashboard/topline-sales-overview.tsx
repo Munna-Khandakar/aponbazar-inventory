@@ -30,6 +30,7 @@ export function ToplineSalesOverview() {
       metricType: KpiMetricType.FORECAST_ACCURACY,
       progressValue: 92,
       valueText: 92,
+      summary: "Strong consistency across projected demand cycles",
     },
   ]
 
