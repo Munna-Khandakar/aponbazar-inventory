@@ -21,58 +21,58 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
     }
   }
 
-  if (value >= 90) {
+  if (value > 140) {
     return {
       text: "text-emerald-700",
       fill: "bg-emerald-700",
     }
   }
 
-  if (value >= 80) {
+  if (value > 120) {
     return {
       text: "text-emerald-600",
       fill: "bg-emerald-600",
     }
   }
 
-  if (value >= 70) {
+  if (value > 100) {
     return {
       text: "text-emerald-500",
       fill: "bg-emerald-500",
     }
   }
 
-  if (value >= 60) {
+  if (value === 100) {
     return {
-      text: "text-emerald-400",
-      fill: "bg-emerald-400",
+      text: "text-slate-500",
+      fill: "bg-slate-400",
     }
   }
 
-  if (value >= 50) {
+  if (value >= 90) {
     return {
-      text: "text-amber-500",
-      fill: "bg-amber-500",
+      text: "text-rose-400",
+      fill: "bg-rose-400",
     }
   }
 
-  if (value >= 40) {
-    return {
-      text: "text-amber-400",
-      fill: "bg-amber-400",
-    }
-  }
-
-  if (value >= 20) {
+  if (value >= 75) {
     return {
       text: "text-rose-500",
       fill: "bg-rose-500",
     }
   }
 
+  if (value >= 50) {
+    return {
+      text: "text-rose-600",
+      fill: "bg-rose-600",
+    }
+  }
+
   return {
-    text: "text-rose-600",
-    fill: "bg-rose-600",
+    text: "text-rose-700",
+    fill: "bg-rose-700",
   }
 }
 
