@@ -1,7 +1,7 @@
 "use client"
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
 import {
   ChartContainer,
   ChartLegend,
@@ -38,9 +38,12 @@ export function SalesForecastChart() {
 
   return (
     <Card>
-      <CardHeader className="flex gap-2 justify-between align-items-center">
-          <span className="font-bold">Sales Forecast</span>
-          <span className="border px-2 py-1 rounded text-xs">Monthly</span>
+      <CardHeader className="flex flex-col justify-between align-items-center">
+         <CardTitle className='flex items-center gap-2 justify-between w-full'>
+             <span className="font-bold">Sales Forecast</span>
+             <span className="border px-2 py-1 rounded text-xs">Monthly</span>
+         </CardTitle>
+          <CardDescription className="text-sm text-gray-500">Actual Sales, Target Sales Comparism in line chart</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (

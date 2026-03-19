@@ -15,10 +15,26 @@ type DashboardTopbarProps = {
 }
 
 const dashboardPages = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/sales-prediction", label: "Sales Prediction" },
-  { href: "/dashboard/inventory-management", label: "Inventory Management" },
-  { href: "/dashboard/customer-behavior", label: "Customer Behavior" },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    description: "Track headline metrics, operational health, and current commercial signals.",
+  },
+  {
+    href: "/dashboard/sales-prediction",
+    label: "Sales Prediction",
+    description: "Review forecast performance, shop-level sales, and commercial momentum.",
+  },
+  {
+    href: "/dashboard/inventory-management",
+    label: "Inventory Management",
+    description: "Monitor inventory movement, stock mix, and planning coverage across shops.",
+  },
+  {
+    href: "/dashboard/customer-behavior",
+    label: "Customer Behavior",
+    description: "Analyze customer segments, churn risk, and retention performance patterns.",
+  },
 ]
 
 export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
@@ -52,12 +68,26 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
     setDraftEndDate(endDate)
     setIsCustomRangeOpen(true)
   }
+  const currentPage =
+    dashboardPages.find((page) => page.href === pathname) ?? dashboardPages[0]
 
   return (
     <>
-      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5 xl:h-16">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between xl:h-full">
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:gap-2">
+      <div className="sticky top-0 z-30 border-b border-border/70 bg-background/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-xl font-semibold tracking-tight text-foreground">
+                {currentPage.label}
+              </p>
+              <p className="max-w-2xl text-sm text-muted-foreground">
+                {currentPage.description}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:gap-2">
             <div className="relative min-w-[220px] sm:w-auto">
               <label htmlFor="dashboard-page-select" className="sr-only">
                 Navigate between dashboard pages
@@ -116,6 +146,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
             <LogOut size={16} />
             Sign out
           </Button>
+          </div>
         </div>
       </div>
 

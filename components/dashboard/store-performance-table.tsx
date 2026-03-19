@@ -49,12 +49,12 @@ export function StorePerformanceTable() {
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
               <th className="py-3 text-left">Shop</th>
+              <th className="py-3 text-center">Sales perf.</th>
+              <th className="py-3 text-center">Delivery perf.</th>
               <th className="py-3 text-right">Actual sales</th>
               <th className="py-3 text-right">Base sales</th>
               <th className="py-3 text-right">Actual deliveries</th>
               <th className="py-3 text-right">Base deliveries</th>
-              <th className="py-3 text-center">Sales perf.</th>
-              <th className="py-3 text-center">Delivery perf.</th>
             </tr>
           </thead>
           <tbody>
@@ -85,6 +85,26 @@ export function StorePerformanceTable() {
                   <td className="py-3 pr-3">
                     <div className="font-semibold text-foreground">{store.shopName}</div>
                   </td>
+                  <td className="py-3 text-center">
+                    <span
+                        className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                            getPerformanceTone(salesPerformance)
+                        )}
+                    >
+                      {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
+                    </span>
+                  </td>
+                  <td className="py-3 text-center">
+                    <span
+                        className={cn(
+                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                            getPerformanceTone(deliveryPerformance)
+                        )}
+                    >
+                      {deliveryPerformance === null ? "N/A" : `${deliveryPerformance.toFixed(2)}%`}
+                    </span>
+                  </td>
                   <td className="py-3 text-right font-mono text-sm">{formatCurrency(store.actualSales)}</td>
                   <td className="py-3 text-right font-mono text-sm">{formatCurrency(store.baseSales)}</td>
                   <td className="py-3 text-right text-xs text-muted-foreground">
@@ -92,26 +112,6 @@ export function StorePerformanceTable() {
                   </td>
                   <td className="py-3 text-right text-xs text-muted-foreground">
                     {formatCount(store.baseDeliveries)}
-                  </td>
-                  <td className="py-3 text-center">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
-                        getPerformanceTone(salesPerformance)
-                      )}
-                    >
-                      {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
-                    </span>
-                  </td>
-                  <td className="py-3 text-center">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
-                        getPerformanceTone(deliveryPerformance)
-                      )}
-                    >
-                      {deliveryPerformance === null ? "N/A" : `${deliveryPerformance.toFixed(2)}%`}
-                    </span>
                   </td>
                 </tr>
               )
