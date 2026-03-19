@@ -18,7 +18,7 @@ const chartConfig = {
     color: "#2563eb",
   },
   forecastedSales: {
-    label: "Forecasted Sales",
+    label: "Targeted Sales",
     color: "#f97316",
   },
 } satisfies ChartConfig
@@ -38,14 +38,9 @@ export function SalesForecastChart() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <CardTitle>Sales Forecast</CardTitle>
-          <CardDescription>Actual vs forecasted monthly net sales</CardDescription>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Comparing actual and forecasted net sales across the selected date range.
-        </p>
+      <CardHeader className="flex gap-2 justify-between align-items-center">
+          <span className="font-bold">Sales Forecast</span>
+          <span className="border px-2 py-1 rounded text-xs">Monthly</span>
       </CardHeader>
       <CardContent>
         {isLoading ? (

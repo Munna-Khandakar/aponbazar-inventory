@@ -35,7 +35,7 @@ export function ToplineSalesOverview() {
   ]
 
   return (
-    <section className="overflow-hidden rounded-xl border bg-white border-slate-200 p-5 text-slate-900 shadow-sm sm:p-6">
+    <section className="overflow-hidden text-slate-900">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Topline Sales Overview</h2>
