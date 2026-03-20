@@ -59,27 +59,40 @@ export interface KpiGaugeCardProps {
   metric: KpiMetricDataset
   sliderValue?: number
   onSliderChange?: (value: number) => void
+  labelOverride?: string
+  valuePrefixOverride?: string
+  valueFormatterOverride?: (value: number) => string
 }
 
 export function KpiGaugeCard(props: KpiGaugeCardProps) {
-  const { metric, sliderValue, onSliderChange } = props
+  const {
+    metric,
+    sliderValue,
+    onSliderChange,
+    labelOverride,
+    valuePrefixOverride,
+    valueFormatterOverride,
+  } = props
   const config = metricConfig[metric.metricType]
   const styles = config.styles
   const isGrowthTargetSlider =
     metric.metricType === KpiMetricType.GROWTH_TARGET &&
     sliderValue !== undefined &&
     onSliderChange !== undefined
+  const cardLabel = labelOverride ?? config.label
+  const valuePrefix = valuePrefixOverride ?? config.valuePrefix
+  const formatValue = valueFormatterOverride ?? config.formatValue
 
   return (
     <article className={cn("flex h-full flex-col rounded-xl border p-4 sm:p-5", styles.panel)}>
       <div className="space-y-4">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-slate-700">{config.label}</p>
-          {config.valuePrefix ? (
-            <p className="text-xs uppercase tracking-wide text-slate-500">{config.valuePrefix}</p>
+          <p className="text-sm font-medium text-slate-700">{cardLabel}</p>
+          {valuePrefix ? (
+            <p className="text-xs uppercase tracking-wide text-slate-500">{valuePrefix}</p>
           ) : null}
           <p className={cn("text-2xl font-semibold tracking-tight", styles.value)}>
-            {config.formatValue(metric.valueText)}
+            {formatValue(metric.valueText)}
           </p>
         </div>
 
