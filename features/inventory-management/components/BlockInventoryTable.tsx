@@ -8,6 +8,7 @@ import {
   inventoryBlockTableMock,
   type InventoryBlockTableBlock,
   type InventoryBlockTableCategory,
+  type InventoryBlockTableItem,
 } from "@/features/inventory-management/mocks/blockInventoryTable.mock"
 import { cn } from "@/lib/utils"
 
@@ -99,11 +100,262 @@ const sortRows = <
     )
   })
 
+const getUrgencyScore = (tone: StockHealth, days: number, lead: number) => {
+  if (tone === "crit") return Math.min(99, 86 + Math.max(0, lead - days) * 4)
+  if (tone === "warn") return Math.min(79, 48 + Math.max(0, lead - days) * 3)
+  return Math.min(42, 18 + lead)
+}
+
+const ItemDetailPanel = ({
+  item,
+  leadTime,
+}: {
+  item: InventoryBlockTableItem
+  leadTime: number
+}) => {
+  const tone = getStockHealth(item.days, leadTime)
+  const toneStyle = toneStyles[tone]
+  const reorder = getReorderMetrics(item.stockOut, item.pct, leadTime)
+  const throughput = Math.min(100, Math.round((item.lifting5d / Math.max(item.stockIn, 1)) * 100))
+  const stockoutMarker = Math.max(2, Math.min(100, Math.round((item.days / 30) * 100)))
+  const reorderMarker = Math.max(2, Math.min(100, Math.round((item.lead / 30) * 100)))
+  const deliveryDay = item.days + item.lead
+  const urgency = getUrgencyScore(tone, item.days, item.lead)
+  const currentStockOffset = Math.round(item.stockIn * (item.pct / 100))
+
+  return (
+    <div className="border-t border-slate-200 bg-white px-8 py-5">
+      <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-5">
+        <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-base font-semibold text-slate-900">{item.name}</div>
+            <div className="mt-1 font-mono text-[11px] text-slate-500">{item.code}</div>
+          </div>
+
+          <span
+            className={cn(
+              "inline-flex items-center rounded-md border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em]",
+              toneStyle.chipClass
+            )}
+          >
+            {tone === "crit" ? "Critical" : tone === "warn" ? "Low Stock" : "Healthy"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Current Stock
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-slate-900">
+              {formatCompactNumber(item.stockIn)}
+            </div>
+            <div className="mt-1 text-[11px] text-slate-500">units on hand</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Predicted Lift
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-sky-700">
+              {formatCompactNumber(item.lifting5d)}
+            </div>
+            <div className="mt-1 text-[11px] text-slate-500">next 5 days</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Days Left
+            </div>
+            <div className={cn("mt-2 text-2xl font-semibold", toneStyle.textClass)}>
+              {item.days === 0 ? "<1" : item.days}
+            </div>
+            <div className="mt-1 text-[11px] text-slate-500">days until stockout</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Reorder Qty
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-emerald-700">
+              {formatCompactNumber(reorder.quantity)}
+            </div>
+            <div className="mt-1 text-[11px] text-slate-500">recommended units</div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Supplier
+            </div>
+            <div className="mt-2 text-lg font-semibold text-slate-900">{item.supplier}</div>
+            <div className="mt-1 text-[11px] text-slate-500">{item.lead}d lead time</div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-5">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                Stock Runway
+              </div>
+              <div className="mt-3 rounded-full bg-slate-200">
+                <div className="relative h-3 overflow-visible rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full opacity-80"
+                    style={{
+                      width: `${stockoutMarker}%`,
+                      backgroundColor: toneStyle.accent,
+                    }}
+                  />
+                  <span
+                    className="absolute top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full"
+                    style={{ left: `${stockoutMarker}%`, backgroundColor: toneStyle.accent }}
+                  />
+                  <span
+                    className="absolute top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-amber-500"
+                    style={{ left: `${reorderMarker}%` }}
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <span className={toneStyle.textClass}>
+                  Stockout day {item.days === 0 ? "<1" : item.days}
+                </span>
+                <span className="text-amber-700">Reorder by day {item.lead}</span>
+                <span className="text-slate-500">30-day horizon</span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-4 py-3 text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                Key Events
+              </div>
+              <div className="space-y-0">
+                <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 text-sm last:border-b-0">
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: toneStyle.accent }}
+                  />
+                  <span className="flex-1 text-slate-500">Stockout</span>
+                  <span className={cn("font-semibold", toneStyle.textClass)}>
+                    Day {item.days === 0 ? "<1" : item.days}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 text-sm last:border-b-0">
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  <span className="flex-1 text-slate-500">Reorder deadline</span>
+                  <span className="font-semibold text-amber-700">
+                    Day {item.lead}
+                    {item.days <= item.lead ? " now" : ""}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3 text-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="flex-1 text-slate-500">Expected delivery if ordered today</span>
+                  <span className="font-semibold text-emerald-700">Day {deliveryDay}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                Utilisation
+              </div>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">Stock level</span>
+                    <span className="font-medium text-slate-700">{item.pct}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${item.pct}%`, backgroundColor: toneStyle.accent }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-1 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">5-day throughput</span>
+                    <span className="font-medium text-slate-700">{throughput}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-sky-500"
+                      style={{ width: `${throughput}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-4 py-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                  Reorder Recommendation
+                </div>
+                <div className={cn("mt-2 text-3xl font-semibold", toneStyle.textClass)}>
+                  {formatCompactNumber(reorder.quantity)}
+                </div>
+                <div className="mt-1 text-[11px] text-slate-500">
+                  units from {item.supplier}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                  Urgency
+                </div>
+                <div className={cn("mt-2 text-2xl font-semibold", toneStyle.textClass)}>
+                  {urgency}%
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 px-4 py-4 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-slate-500">{leadTime * 2}-day demand</span>
+                <span className="font-medium text-slate-900">
+                  {formatCompactNumber(reorder.demandWindow)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-slate-500">Safety buffer ({leadTime}d)</span>
+                <span className="font-medium text-slate-900">
+                  {formatCompactNumber(reorder.safetyBuffer)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-slate-500">Current stock offset</span>
+                <span className="font-medium text-slate-900">
+                  - {formatCompactNumber(currentStockOffset)}
+                </span>
+              </div>
+              <div className="border-t border-slate-200 pt-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium text-slate-900">Net reorder qty</span>
+                  <span className={cn("font-semibold", toneStyle.textClass)}>
+                    {formatCompactNumber(reorder.quantity)}
+                  </span>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${urgency}%`, backgroundColor: toneStyle.accent }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function BlockInventoryTable() {
   const [sortKey, setSortKey] = useState<SortKey>("days")
-  const [leadTime, setLeadTime] = useState(7)
+  const leadTime = 7
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
 
   const selectedBlock = useMemo(
     () => inventoryBlockTableMock.find((block) => block.id === selectedBlockId) ?? null,
@@ -141,6 +393,7 @@ export function BlockInventoryTable() {
             onClick={() => {
               setSelectedBlockId(null)
               setExpandedCategoryId(null)
+              setExpandedItemId(null)
             }}
             className={cn(
               "transition hover:text-slate-900",
@@ -158,6 +411,7 @@ export function BlockInventoryTable() {
                 onClick={() => {
                   setSelectedBlockId(null)
                   setExpandedCategoryId(null)
+                  setExpandedItemId(null)
                 }}
                 className="ml-auto inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-slate-600 transition hover:bg-slate-100"
               >
@@ -230,11 +484,16 @@ export function BlockInventoryTable() {
                         if (!selectedBlock) {
                           setSelectedBlockId(row.id)
                           setExpandedCategoryId(null)
+                          setExpandedItemId(null)
                           return
                         }
 
                         if ("products" in row) {
-                          setExpandedCategoryId((current) => (current === row.id ? null : row.id))
+                          setExpandedCategoryId((current) => {
+                            const nextCategoryId = current === row.id ? null : row.id
+                            setExpandedItemId(null)
+                            return nextCategoryId
+                          })
                         }
                       }}
                       className={cn(
@@ -323,55 +582,76 @@ export function BlockInventoryTable() {
                             product.pct,
                             leadTime
                           )
+                          const isExpandedItem = expandedItemId === product.id
 
                           return (
-                            <div
-                              key={product.id}
-                              className="grid border-t border-slate-200 text-[11px] text-slate-700"
-                              style={{ gridTemplateColumns: COLUMN_TEMPLATE }}
-                            >
-                              <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-3 pl-8">
-                                <span
-                                  className="h-1.5 w-1.5 shrink-0 rounded-full"
-                                  style={{ backgroundColor: toneStyles[productTone].accent }}
-                                />
-                                <div className="min-w-0">
-                                  <div className="truncate font-medium text-slate-900">
-                                    {product.name}
-                                  </div>
-                                  <div className="mt-1 font-mono text-[10px] text-slate-500">
-                                    {product.code}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                {formatCompactNumber(product.stockIn)}
-                              </div>
-                              <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                {formatCompactNumber(product.lifting5d)}
-                              </div>
-                              <div
+                            <div key={product.id} className="border-t border-slate-200">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedItemId((current) =>
+                                    current === product.id ? null : product.id
+                                  )
+                                }
                                 className={cn(
-                                  "flex items-center border-r border-slate-200 px-4 py-3 font-semibold",
-                                  toneStyles[productTone].textClass
+                                  "grid w-full text-[11px] text-slate-700 transition hover:bg-slate-100/80",
+                                  isExpandedItem && "bg-slate-100/70"
                                 )}
+                                style={{ gridTemplateColumns: COLUMN_TEMPLATE }}
                               >
-                                {product.days === 0 ? "<1d" : `${product.days}d`}
-                              </div>
-                              <div className="flex items-center border-r border-slate-200 px-4 py-3">
-                                <span
+                                <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-3 pl-8">
+                                  <span
+                                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                    style={{ backgroundColor: toneStyles[productTone].accent }}
+                                  />
+                                  <div className="min-w-0">
+                                    <div className="truncate font-medium text-slate-900">
+                                      {product.name}
+                                    </div>
+                                    <div className="mt-1 font-mono text-[10px] text-slate-500">
+                                      {product.code}
+                                    </div>
+                                  </div>
+                                  <ChevronRight
+                                    className={cn(
+                                      "ml-auto h-3.5 w-3.5 shrink-0 text-slate-400 transition",
+                                      isExpandedItem && "rotate-90 text-sky-600"
+                                    )}
+                                  />
+                                </div>
+
+                                <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
+                                  {formatCompactNumber(product.stockIn)}
+                                </div>
+                                <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
+                                  {formatCompactNumber(product.lifting5d)}
+                                </div>
+                                <div
                                   className={cn(
-                                    "rounded-md border px-2 py-1 text-[10px] font-semibold",
-                                    toneStyles[productTone].chipClass
+                                    "flex items-center border-r border-slate-200 px-4 py-3 font-semibold",
+                                    toneStyles[productTone].textClass
                                   )}
                                 >
-                                  {formatCompactNumber(productReorder.quantity)}
-                                </span>
-                              </div>
-                              <div className="flex items-center px-4 py-3 text-[10px] text-slate-500">
-                                {product.supplier} · {product.lead}d
-                              </div>
+                                  {product.days === 0 ? "<1d" : `${product.days}d`}
+                                </div>
+                                <div className="flex items-center border-r border-slate-200 px-4 py-3">
+                                  <span
+                                    className={cn(
+                                      "rounded-md border px-2 py-1 text-[10px] font-semibold",
+                                      toneStyles[productTone].chipClass
+                                    )}
+                                  >
+                                    {formatCompactNumber(productReorder.quantity)}
+                                  </span>
+                                </div>
+                                <div className="flex items-center px-4 py-3 text-[10px] text-slate-500">
+                                  {product.supplier} · {product.lead}d
+                                </div>
+                              </button>
+
+                              {isExpandedItem ? (
+                                <ItemDetailPanel item={product} leadTime={leadTime} />
+                              ) : null}
                             </div>
                           )
                         })}
