@@ -24,8 +24,6 @@ const TABLE_COLUMNS = [
   { key: "supplier", label: "Supplier", width: "1fr" },
 ] as const
 
-const COLUMN_TEMPLATE = TABLE_COLUMNS.map((column) => column.width).join(" ")
-
 const toneStyles: Record<
   StockHealth,
   {
@@ -212,6 +210,19 @@ export function BlockInventoryTable() {
     )
   }, [visibleRows])
 
+  const visibleColumns = useMemo(
+    () =>
+      selectedBlock
+        ? TABLE_COLUMNS
+        : TABLE_COLUMNS.filter((column) => column.key !== "supplier"),
+    [selectedBlock]
+  )
+
+  const columnTemplate = useMemo(
+    () => visibleColumns.map((column) => column.width).join(" "),
+    [visibleColumns]
+  )
+
   if (isLoading) {
     return (
       <Card className="border-border/70 bg-card shadow-sm">
@@ -292,9 +303,9 @@ export function BlockInventoryTable() {
           <div className="min-w-[940px]">
             <div
               className="grid border-b border-slate-200 bg-slate-50"
-              style={{ gridTemplateColumns: COLUMN_TEMPLATE }}
+              style={{ gridTemplateColumns: columnTemplate }}
             >
-              {TABLE_COLUMNS.map((column) => (
+              {visibleColumns.map((column) => (
                 <button
                   key={column.key}
                   type="button"
@@ -345,7 +356,7 @@ export function BlockInventoryTable() {
                         toneStyles[tone].rowBorderClass,
                         isExpandedCategory && "bg-sky-50"
                       )}
-                      style={{ gridTemplateColumns: COLUMN_TEMPLATE }}
+                      style={{ gridTemplateColumns: columnTemplate }}
                     >
                       <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-4">
                         <span
@@ -406,9 +417,11 @@ export function BlockInventoryTable() {
                         {formatDays(row.daysUntilStockout)}
                       </div>
 
-                      <div className="flex items-center px-4 py-4 text-xs text-slate-500">
-                        {"supplier" in row ? row.supplier ?? "—" : "—"}
-                      </div>
+                      {selectedBlock ? (
+                        <div className="flex items-center px-4 py-4 text-xs text-slate-500">
+                          {"supplier" in row ? row.supplier ?? "—" : "—"}
+                        </div>
+                      ) : null}
                     </button>
 
                     {isExpandedCategory ? (
@@ -430,7 +443,7 @@ export function BlockInventoryTable() {
                                   "grid w-full text-[11px] text-slate-700 transition hover:bg-slate-100/80",
                                   isExpandedItem && "bg-slate-100/70"
                                 )}
-                                style={{ gridTemplateColumns: COLUMN_TEMPLATE }}
+                                style={{ gridTemplateColumns: columnTemplate }}
                               >
                                 <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-3 pl-8">
                                   <span
@@ -470,9 +483,11 @@ export function BlockInventoryTable() {
                                 >
                                   {formatDays(item.daysUntilStockout)}
                                 </div>
-                                <div className="flex items-center px-4 py-3 text-[10px] text-slate-500">
-                                  {item.supplier ?? "—"}
-                                </div>
+                                {selectedBlock ? (
+                                  <div className="flex items-center px-4 py-3 text-[10px] text-slate-500">
+                                    {item.supplier ?? "—"}
+                                  </div>
+                                ) : null}
                               </button>
 
                               {isExpandedItem ? <ItemDetailPanel item={item} /> : null}
