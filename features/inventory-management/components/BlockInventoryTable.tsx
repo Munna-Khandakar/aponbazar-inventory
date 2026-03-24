@@ -95,6 +95,14 @@ const sortRows = (
 const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
   const tone = getStockHealth(item.daysUntilStockout)
   const toneStyle = toneStyles[tone]
+  const quantityVisuals = [
+    { label: "Stock In Qty", value: item.stockInQty, color: "bg-sky-500" },
+    { label: "Stock Out Qty", value: item.stockOutQty, color: "bg-violet-500" },
+    { label: "Current Stock", value: item.currentStock, color: "bg-emerald-500" },
+  ]
+  const maxQuantityValue = Math.max(...quantityVisuals.map((metric) => metric.value), 1)
+  const daysVisualPercent =
+    item.daysUntilStockout == null ? 0 : Math.min(100, Math.max(0, (item.daysUntilStockout / 30) * 100))
 
   return (
     <div className="border-t border-slate-200 bg-white px-8 py-5">
@@ -172,6 +180,70 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
             </div>
             <div className="mt-2 text-xl font-semibold text-slate-900">
               {item.supplier ?? "—"}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Quick Visuals
+            </div>
+            <div className="mt-4 space-y-4">
+              {quantityVisuals.map((metric) => (
+                <div key={metric.label}>
+                  <div className="mb-1 flex items-center justify-between gap-3 text-[11px]">
+                    <span className="text-slate-500">{metric.label}</span>
+                    <span className="font-medium text-slate-900">
+                      {formatCompactNumber(metric.value)}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className={cn("h-full rounded-full", metric.color)}
+                      style={{ width: `${(metric.value / maxQuantityValue) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Health Snapshot
+            </div>
+            <div className="mt-4 space-y-4">
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-3 text-[11px]">
+                  <span className="text-slate-500">Stock Percent</span>
+                  <span className="font-medium text-slate-900">{item.stockPct.toFixed(2)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-amber-500"
+                    style={{ width: `${Math.min(100, Math.max(0, item.stockPct))}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between gap-3 text-[11px]">
+                  <span className="text-slate-500">Days Until Stockout</span>
+                  <span className={cn("font-medium", toneStyle.textClass)}>
+                    {formatDays(item.daysUntilStockout)}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${daysVisualPercent}%`,
+                      backgroundColor: toneStyle.accent,
+                    }}
+                  />
+                </div>
+                <div className="mt-1 text-[10px] text-slate-400">Visualized against a 30-day cap</div>
+              </div>
             </div>
           </div>
         </div>
