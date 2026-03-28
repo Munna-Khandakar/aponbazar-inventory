@@ -226,7 +226,7 @@ function PromoImpactChartView({
 }
 
 export function PromoImpactChart() {
-  const { data, isLoading } = usePromoImpact()
+  const { data, isLoading, error } = usePromoImpact()
   const chartData = data ?? []
   const [orientation, setOrientation] = useState<ChartOrientation>("horizontal")
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -287,6 +287,10 @@ export function PromoImpactChart() {
           {isLoading ? (
             <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
               Loading shop wise sales...
+            </div>
+          ) : error ? (
+            <div className="flex aspect-video items-center justify-center text-sm text-destructive">
+              Failed to load shop wise sales data
             </div>
           ) : (
             <PromoImpactChartView chartData={chartData} orientation={orientation} />

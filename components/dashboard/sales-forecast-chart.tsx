@@ -33,7 +33,7 @@ const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
 const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
-  const { data, isLoading } = useSalesForecast()
+  const { data, isLoading, error } = useSalesForecast()
   const chartData = data ?? []
 
   return (
@@ -49,6 +49,10 @@ export function SalesForecastChart() {
         {isLoading ? (
           <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
             Loading sales forecast...
+          </div>
+        ) : error ? (
+          <div className="flex aspect-video items-center justify-center text-sm text-destructive">
+            Failed to load sales forecast data
           </div>
         ) : (
           <ChartContainer config={chartConfig}>

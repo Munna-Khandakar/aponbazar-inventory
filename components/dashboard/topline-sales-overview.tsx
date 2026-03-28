@@ -7,6 +7,7 @@ import { KpiMetricType, type KpiMetricDataset } from "@/lib/types/kpi-metric"
 export function ToplineSalesOverview() {
   const { growthTarget, setGrowthTarget } = useReportFilters()
   const growthTargetValue = Number(growthTarget) || 0
+
   const overviewMetrics: KpiMetricDataset[] = [
     {
       metricType: KpiMetricType.ACTUAL_SALES,

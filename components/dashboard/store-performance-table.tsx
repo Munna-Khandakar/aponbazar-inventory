@@ -35,7 +35,7 @@ const getPerformanceTone = (value: number | null) => {
 }
 
 export function StorePerformanceTable() {
-  const { data, isLoading } = useStorePerformance()
+  const { data, isLoading, error } = useStorePerformance()
   const rows = data ?? []
 
   return (
@@ -65,6 +65,15 @@ export function StorePerformanceTable() {
                   className="py-6 text-center text-sm text-muted-foreground"
                 >
                   Loading shop performance...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="py-6 text-center text-sm text-destructive"
+                >
+                  Failed to load shop performance data
                 </td>
               </tr>
             ) : null}

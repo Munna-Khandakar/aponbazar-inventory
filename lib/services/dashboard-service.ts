@@ -972,7 +972,11 @@ const customerSatisfactionData: CustomerSatisfactionData[] = [
 ]
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
-const useMockReportResponses = true
+const liveReportTypes = new Set<SalesReportType>([
+  SalesReportType.MONTH_WISE_SALES,
+  SalesReportType.SHOP_WISE_SALES_AGGREGATE,
+  SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
+])
 
 const getMockReportResponse = (
   request: ExecuteReportRequest
@@ -1000,7 +1004,7 @@ const executeReport = async <
 >(
   request: ExecuteReportRequest
 ): Promise<TResponse> => {
-  if (useMockReportResponses) {
+  if (!liveReportTypes.has(request.reportName)) {
     return getMockReportResponse(request) as TResponse
   }
 
