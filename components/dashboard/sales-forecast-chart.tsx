@@ -10,6 +10,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { SalesForecastChartSkeleton } from "@/components/dashboard/report-skeletons"
 import { useSalesForecast } from "@/hooks/use-dashboard"
 
 const chartConfig = {
@@ -47,9 +48,7 @@ export function SalesForecastChart() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
-            Loading sales forecast...
-          </div>
+          <SalesForecastChartSkeleton />
         ) : error ? (
           <div className="flex aspect-video items-center justify-center text-sm text-destructive">
             Failed to load sales forecast data

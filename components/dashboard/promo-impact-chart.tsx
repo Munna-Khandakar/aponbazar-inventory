@@ -6,6 +6,7 @@ import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PromoImpactChartSkeleton } from "@/components/dashboard/report-skeletons"
 import {
   ChartContainer,
   ChartLegend,
@@ -262,6 +263,7 @@ export function PromoImpactChart() {
               variant="outline"
               size="sm"
               className="gap-2"
+              disabled={isLoading}
               onClick={() =>
                 setOrientation((current) =>
                   current === "horizontal" ? "vertical" : "horizontal"
@@ -276,6 +278,7 @@ export function PromoImpactChart() {
               variant="outline"
               size="sm"
               className="gap-2"
+              disabled={isLoading}
               onClick={() => setIsFullscreen(true)}
             >
               <Maximize2 size={15} />
@@ -285,9 +288,7 @@ export function PromoImpactChart() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
-              Loading shop wise sales...
-            </div>
+            <PromoImpactChartSkeleton />
           ) : error ? (
             <div className="flex aspect-video items-center justify-center text-sm text-destructive">
               Failed to load shop wise sales data

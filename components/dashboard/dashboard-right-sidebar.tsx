@@ -3,6 +3,7 @@
 import { ArrowDownUp } from "lucide-react"
 import { useState } from "react"
 
+import { SidebarInsightsSkeleton } from "@/components/dashboard/report-skeletons"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
@@ -147,9 +148,7 @@ export function DashboardRightSidebar() {
 
         <ul className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
           {isLoading ? (
-            <li className="rounded-md border border-dashed border-border/60 px-2 py-3 text-center text-xs text-muted-foreground">
-              Loading shops...
-            </li>
+            <SidebarInsightsSkeleton />
           ) : null}
           {filteredInsights.map((item) => {
             const salesPerformance = item.salesPerformance ?? null

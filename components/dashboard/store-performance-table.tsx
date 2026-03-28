@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { StorePerformanceTableSkeleton } from "@/components/dashboard/report-skeletons"
 import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
 
@@ -59,14 +60,7 @@ export function StorePerformanceTable() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="py-6 text-center text-sm text-muted-foreground"
-                >
-                  Loading shop performance...
-                </td>
-              </tr>
+              <StorePerformanceTableSkeleton />
             ) : error ? (
               <tr>
                 <td
