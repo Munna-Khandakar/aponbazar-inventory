@@ -20,6 +20,13 @@ type StaticQueryResult<T> = {
 
 const reportPage = 0
 const reportSize = 200
+const liveReportStaleTimeMs = 5 * 60 * 1000
+
+const liveReportQueryOptions = {
+  staleTime: liveReportStaleTimeMs,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+} as const
 
 const createStaticHook = <T>(getter: () => T) => (): StaticQueryResult<T> => ({
   data: getter(),
@@ -64,6 +71,7 @@ export const useSalesForecast = () => {
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
     queryFn: () => dashboardService.getSalesForecast(request),
     placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
   })
 }
 
@@ -82,6 +90,7 @@ export const usePromoImpact = () => {
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
     queryFn: () => dashboardService.getPromoImpact(request),
     placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
   })
 }
 export const useStorePerformance = () => {
@@ -93,6 +102,7 @@ export const useStorePerformance = () => {
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
     queryFn: () => dashboardService.getStorePerformance(request),
     placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
   })
 }
 

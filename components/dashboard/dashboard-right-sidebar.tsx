@@ -88,9 +88,10 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
 }
 
 export function DashboardRightSidebar() {
-  const { data, isLoading } = useStorePerformance()
+  const { data, isLoading, isFetching } = useStorePerformance()
   const { searchTerm, setSearchTerm } = useReportFilters()
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+  const showLoadingState = isLoading || isFetching
 
   const filteredInsights = [...(data ?? [])]
     .filter((item) =>
@@ -147,7 +148,7 @@ export function DashboardRightSidebar() {
         />
 
         <ul className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-1">
-          {isLoading ? (
+          {showLoadingState ? (
             <SidebarInsightsSkeleton />
           ) : null}
           {filteredInsights.map((item) => {
@@ -183,7 +184,7 @@ export function DashboardRightSidebar() {
               </li>
             )
           })}
-          {!isLoading && filteredInsights.length === 0 ? (
+          {!showLoadingState && filteredInsights.length === 0 ? (
             <li className="rounded-md border border-dashed border-border/60 px-2 py-3 text-center text-xs text-muted-foreground">
               No shops match the current filters.
             </li>

@@ -34,8 +34,9 @@ const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
 const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
-  const { data, isLoading, error } = useSalesForecast()
+  const { data, isLoading, isFetching, error } = useSalesForecast()
   const chartData = data ?? []
+  const showLoadingState = isLoading || isFetching
 
   return (
     <Card>
@@ -47,7 +48,7 @@ export function SalesForecastChart() {
           <CardDescription className="text-sm text-gray-500">Actual Sales, Target Sales Comparism in line chart</CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {showLoadingState ? (
           <SalesForecastChartSkeleton />
         ) : error ? (
           <div className="flex aspect-video items-center justify-center text-sm text-destructive">

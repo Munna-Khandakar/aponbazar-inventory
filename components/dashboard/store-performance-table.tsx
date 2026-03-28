@@ -36,8 +36,9 @@ const getPerformanceTone = (value: number | null) => {
 }
 
 export function StorePerformanceTable() {
-  const { data, isLoading, error } = useStorePerformance()
+  const { data, isLoading, isFetching, error } = useStorePerformance()
   const rows = data ?? []
+  const showLoadingState = isLoading || isFetching
 
   return (
     <Card>
@@ -59,7 +60,7 @@ export function StorePerformanceTable() {
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
+            {showLoadingState ? (
               <StorePerformanceTableSkeleton />
             ) : error ? (
               <tr>

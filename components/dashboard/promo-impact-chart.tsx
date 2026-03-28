@@ -227,10 +227,11 @@ function PromoImpactChartView({
 }
 
 export function PromoImpactChart() {
-  const { data, isLoading, error } = usePromoImpact()
+  const { data, isLoading, isFetching, error } = usePromoImpact()
   const chartData = data ?? []
   const [orientation, setOrientation] = useState<ChartOrientation>("horizontal")
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const showLoadingState = isLoading || isFetching
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -263,7 +264,7 @@ export function PromoImpactChart() {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={isLoading}
+              disabled={showLoadingState}
               onClick={() =>
                 setOrientation((current) =>
                   current === "horizontal" ? "vertical" : "horizontal"
@@ -278,7 +279,7 @@ export function PromoImpactChart() {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={isLoading}
+              disabled={showLoadingState}
               onClick={() => setIsFullscreen(true)}
             >
               <Maximize2 size={15} />
@@ -287,7 +288,7 @@ export function PromoImpactChart() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {showLoadingState ? (
             <PromoImpactChartSkeleton />
           ) : error ? (
             <div className="flex aspect-video items-center justify-center text-sm text-destructive">
