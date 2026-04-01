@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import { inventoryManagementMockApi } from "@/features/inventory-management/api/inventory-management.mock-api"
+import { inventoryManagementApi } from "@/features/inventory-management/api/inventory-management.api"
 import { inventoryManagementQueryKeys } from "@/features/inventory-management/query-keys/inventoryManagementQueryKeys"
 import { useReportFilters } from "@/hooks/use-report-filters"
 
@@ -11,7 +11,11 @@ export const useInventoryCategoryDetailReport = () => {
 
   return useQuery({
     queryKey: inventoryManagementQueryKeys.categoryDetailReport(startDate, endDate),
-    queryFn: inventoryManagementMockApi.getInventoryCategoryDetailReport,
+    queryFn: () =>
+      inventoryManagementApi.getInventoryCategoryDetailReport(startDate, endDate),
     placeholderData: (previousData) => previousData,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 }

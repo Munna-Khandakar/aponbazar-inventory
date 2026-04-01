@@ -1,6 +1,6 @@
 import type { InventoryBigBlockReportResponse } from "@/features/inventory-management/types/InventoryBlockReports"
 
-export const inventoryBigBlockReportMock: InventoryBigBlockReportResponse = {
+export const inventoryBigBlockReportMock = {
   success: true,
   data: {
     reportName: "inventory_big_block",
@@ -124,4 +124,4 @@ export const inventoryBigBlockReportMock: InventoryBigBlockReportResponse = {
     generatedAt: "2026-03-20T10:24:58",
   },
   timestamp: "2026-03-20T10:24:58",
-}
+} as unknown as InventoryBigBlockReportResponse

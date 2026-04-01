@@ -12,16 +12,20 @@ import type {
 } from "@/features/inventory-management/types/InventoryBlockReports"
 import { cn } from "@/lib/utils"
 
-type SortKey = "days" | "currentStock" | "stockOut" | "stockInValue" | "name"
+type SortKey = "name" | "currentStockQty" | "stockOutQty" | "stockInValue" | "stockOutValue"
 type StockHealth = "ok" | "warn" | "crit"
 
+type TableRow =
+  | InventoryBlockTableBigBlockData
+  | InventoryBlockTableCategoryData
+  | InventoryBlockTableItemData
+
 const TABLE_COLUMNS = [
-  { key: "name", label: "Big Block / Category", width: "2.2fr" },
-  { key: "currentStock", label: "Current Stock", width: "1fr" },
-  { key: "stockOut", label: "Stock Out Qty", width: "1fr" },
+  { key: "name", label: "Block / Subcategory", width: "2.4fr" },
+  { key: "currentStockQty", label: "Current Stock", width: "1fr" },
+  { key: "stockOutQty", label: "Stock Out Qty", width: "1fr" },
   { key: "stockInValue", label: "Stock In Value", width: "1.1fr" },
-  { key: "days", label: "Days Until Stockout", width: "0.95fr" },
-  { key: "supplier", label: "Supplier", width: "1fr" },
+  { key: "stockOutValue", label: "Stock Out Value", width: "1.1fr" },
 ] as const
 
 const toneStyles: Record<
@@ -54,55 +58,64 @@ const toneStyles: Record<
 }
 
 const formatCompactNumber = (value: number) => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return Math.round(value).toLocaleString("en-BD")
+  const absoluteValue = Math.abs(value)
+  const prefix = value < 0 ? "-" : ""
+
+  if (absoluteValue >= 1_000_000) return `${prefix}${(absoluteValue / 1_000_000).toFixed(1)}M`
+  if (absoluteValue >= 1_000) return `${prefix}${(absoluteValue / 1_000).toFixed(1)}K`
+
+  return new Intl.NumberFormat("en-BD", {
+    maximumFractionDigits: 2,
+  }).format(value)
 }
 
 const formatCurrency = (value: number) => `৳${formatCompactNumber(value)}`
 
-const formatDays = (value: number | null) => {
-  if (value == null) return "—"
-  if (value < 1) return "<1d"
-  if (Number.isInteger(value)) return `${value}d`
-  return `${value.toFixed(1)}d`
+const getStockHealth = (currentStockQty: number, stockOutQty: number): StockHealth => {
+  if (currentStockQty <= 0) return "crit"
+
+  const stockCoverageRatio = stockOutQty <= 0 ? Number.POSITIVE_INFINITY : currentStockQty / stockOutQty
+  if (stockCoverageRatio < 0.02) return "warn"
+
+  return "ok"
 }
 
-const getStockHealth = (daysUntilStockout: number | null): StockHealth => {
-  if (daysUntilStockout == null || daysUntilStockout > 10) return "ok"
-  if (daysUntilStockout > 3) return "warn"
-  return "crit"
+const getCurrentStockPercent = (currentStockQty: number, stockInQty: number) => {
+  if (stockInQty <= 0) return 0
+  return Math.min(100, Math.max(0, (currentStockQty / stockInQty) * 100))
 }
 
-const sortRows = (
-  rows: Array<InventoryBlockTableBigBlockData | InventoryBlockTableCategoryData>,
-  sortKey: SortKey
-) =>
+const getRowName = (row: TableRow) => {
+  if ("itemName" in row) return row.itemName
+  if ("categoryName" in row) return row.categoryName
+  return row.bigBlockName
+}
+
+const sortRows = <TRow extends TableRow>(rows: TRow[], sortKey: SortKey) =>
   [...rows].sort((left, right) => {
-    const leftName = "categoryName" in left ? left.categoryName : left.bigBlockName
-    const rightName = "categoryName" in right ? right.categoryName : right.bigBlockName
+    if (sortKey === "name") {
+      return getRowName(left).localeCompare(getRowName(right))
+    }
 
-    if (sortKey === "name") return leftName.localeCompare(rightName)
-    if (sortKey === "currentStock") return right.currentStock - left.currentStock
-    if (sortKey === "stockOut") return right.stockOutQty - left.stockOutQty
-    if (sortKey === "stockInValue") return right.stockInValue - left.stockInValue
-
-    const leftDays = left.daysUntilStockout ?? Number.POSITIVE_INFINITY
-    const rightDays = right.daysUntilStockout ?? Number.POSITIVE_INFINITY
-    return leftDays - rightDays
+    return right[sortKey] - left[sortKey]
   })
 
 const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
-  const tone = getStockHealth(item.daysUntilStockout)
+  const tone = getStockHealth(item.currentStockQty, item.stockOutQty)
   const toneStyle = toneStyles[tone]
   const quantityVisuals = [
     { label: "Stock In Qty", value: item.stockInQty, color: "bg-sky-500" },
     { label: "Stock Out Qty", value: item.stockOutQty, color: "bg-violet-500" },
-    { label: "Current Stock", value: item.currentStock, color: "bg-emerald-500" },
+    {
+      label: "Current Stock Qty",
+      value: item.currentStockQty,
+      color: tone === "crit" ? "bg-red-500" : "bg-emerald-500",
+    },
   ]
-  const maxQuantityValue = Math.max(...quantityVisuals.map((metric) => metric.value), 1)
-  const daysVisualPercent =
-    item.daysUntilStockout == null ? 0 : Math.min(100, Math.max(0, (item.daysUntilStockout / 30) * 100))
+  const maxQuantityValue = Math.max(
+    ...quantityVisuals.map((metric) => Math.abs(metric.value)),
+    1
+  )
 
   return (
     <div className="border-t border-slate-200 bg-white px-8 py-5">
@@ -121,41 +134,41 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
               toneStyle.chipClass
             )}
           >
-            {tone === "crit" ? "Critical" : tone === "warn" ? "Low Stock" : "Healthy"}
+            {tone === "crit" ? "Negative Stock" : tone === "warn" ? "Low Coverage" : "Healthy"}
           </span>
         </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">Item ID</div>
             <div className="mt-2 text-xl font-semibold text-slate-900">{item.itemId}</div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">UOM</div>
-            <div className="mt-2 text-xl font-semibold text-slate-900">{item.unitOfMeasure}</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">Item Type</div>
+            <div className="mt-2 text-xl font-semibold text-slate-900">{item.itemTypeName}</div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Current Stock
+              Appears In Shops
             </div>
             <div className="mt-2 text-xl font-semibold text-slate-900">
-              {formatCompactNumber(item.currentStock)}
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Stock In Qty
-            </div>
-            <div className="mt-2 text-xl font-semibold text-slate-900">
-              {formatCompactNumber(item.stockInQty)}
+              {item.appearsInShopCount}
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Stock Out Qty
+              Current Stock Qty
+            </div>
+            <div className={cn("mt-2 text-xl font-semibold", toneStyle.textClass)}>
+              {formatCompactNumber(item.currentStockQty)}
+            </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Current Stock Value
             </div>
             <div className="mt-2 text-xl font-semibold text-slate-900">
-              {formatCompactNumber(item.stockOutQty)}
+              {formatCurrency(item.currentStockValue)}
             </div>
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
@@ -168,26 +181,24 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
           </div>
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Days Until Stockout
-            </div>
-            <div className={cn("mt-2 text-xl font-semibold", toneStyle.textClass)}>
-              {formatDays(item.daysUntilStockout)}
-            </div>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-3 md:col-span-2 xl:col-span-2">
-            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Supplier
+              Stock Out Value
             </div>
             <div className="mt-2 text-xl font-semibold text-slate-900">
-              {item.supplier ?? "—"}
+              {formatCurrency(item.stockOutValue)}
             </div>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
+              Broad Category
+            </div>
+            <div className="mt-2 text-xl font-semibold text-slate-900">{item.categoryName}</div>
           </div>
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Quick Visuals
+              Quantity Visuals
             </div>
             <div className="mt-4 space-y-4">
               {quantityVisuals.map((metric) => (
@@ -201,7 +212,7 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
                   <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                     <div
                       className={cn("h-full rounded-full", metric.color)}
-                      style={{ width: `${(metric.value / maxQuantityValue) * 100}%` }}
+                      style={{ width: `${(Math.abs(metric.value) / maxQuantityValue) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -211,38 +222,29 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
 
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="text-[10px] uppercase tracking-[0.16em] text-slate-400">
-              Health Snapshot
+              Footprint Snapshot
             </div>
             <div className="mt-4 space-y-4">
               <div>
                 <div className="mb-1 flex items-center justify-between gap-3 text-[11px]">
-                  <span className="text-slate-500">Stock Percent</span>
-                  <span className="font-medium text-slate-900">{item.stockPct.toFixed(2)}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className="h-full rounded-full bg-amber-500"
-                    style={{ width: `${Math.min(100, Math.max(0, item.stockPct))}%` }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="mb-1 flex items-center justify-between gap-3 text-[11px]">
-                  <span className="text-slate-500">Days Until Stockout</span>
-                  <span className={cn("font-medium", toneStyle.textClass)}>
-                    {formatDays(item.daysUntilStockout)}
+                  <span className="text-slate-500">Current Stock vs Stock In</span>
+                  <span className="font-medium text-slate-900">
+                    {getCurrentStockPercent(item.currentStockQty, item.stockInQty).toFixed(1)}%
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-200">
                   <div
                     className="h-full rounded-full"
                     style={{
-                      width: `${daysVisualPercent}%`,
+                      width: `${getCurrentStockPercent(item.currentStockQty, item.stockInQty)}%`,
                       backgroundColor: toneStyle.accent,
                     }}
                   />
                 </div>
-                <div className="mt-1 text-[10px] text-slate-400">Visualized against a 30-day cap</div>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] text-slate-600">
+                Current stock value is {formatCurrency(item.currentStockValue)} across{" "}
+                {item.appearsInShopCount} shops.
               </div>
             </div>
           </div>
@@ -253,7 +255,7 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
 }
 
 export function BlockInventoryTable() {
-  const [sortKey, setSortKey] = useState<SortKey>("days")
+  const [sortKey, setSortKey] = useState<SortKey>("currentStockQty")
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
@@ -265,16 +267,20 @@ export function BlockInventoryTable() {
     [data, selectedBlockId]
   )
 
-  const visibleRows = useMemo(
-    () =>
-      sortRows(selectedBlock ? selectedBlock.categories : data, sortKey),
-    [data, selectedBlock, sortKey]
-  )
+  const visibleRows = useMemo<
+    Array<InventoryBlockTableBigBlockData | InventoryBlockTableCategoryData>
+  >(() => {
+    if (selectedBlock) {
+      return sortRows<InventoryBlockTableCategoryData>(selectedBlock.categories, sortKey)
+    }
+
+    return sortRows<InventoryBlockTableBigBlockData>(data, sortKey)
+  }, [data, selectedBlock, sortKey])
 
   const summary = useMemo(() => {
     return visibleRows.reduce(
       (accumulator, row) => {
-        const tone = getStockHealth(row.daysUntilStockout)
+        const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
         accumulator[tone] += 1
         return accumulator
       },
@@ -282,17 +288,9 @@ export function BlockInventoryTable() {
     )
   }, [visibleRows])
 
-  const visibleColumns = useMemo(
-    () =>
-      selectedBlock
-        ? TABLE_COLUMNS
-        : TABLE_COLUMNS.filter((column) => column.key !== "supplier"),
-    [selectedBlock]
-  )
-
   const columnTemplate = useMemo(
-    () => visibleColumns.map((column) => column.width).join(" "),
-    [visibleColumns]
+    () => TABLE_COLUMNS.map((column) => column.width).join(" "),
+    []
   )
 
   if (isLoading) {
@@ -361,10 +359,10 @@ export function BlockInventoryTable() {
       <CardContent className="px-0 pb-0">
         <div className="flex flex-wrap items-center gap-2 border-y border-slate-200 bg-slate-50 px-6 py-2 text-[10px] uppercase tracking-[0.16em]">
           <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-red-700">
-            {summary.crit} Critical
+            {summary.crit} Negative Stock
           </span>
           <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700">
-            {summary.warn} Warning
+            {summary.warn} Low Coverage
           </span>
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700">
             {summary.ok} Healthy
@@ -372,34 +370,30 @@ export function BlockInventoryTable() {
         </div>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[940px]">
+          <div className="min-w-[980px]">
             <div
               className="grid border-b border-slate-200 bg-slate-50"
               style={{ gridTemplateColumns: columnTemplate }}
             >
-              {visibleColumns.map((column) => (
+              {TABLE_COLUMNS.map((column) => (
                 <button
                   key={column.key}
                   type="button"
-                  onClick={() => {
-                    if (column.key === "supplier") return
-                    setSortKey(column.key)
-                  }}
+                  onClick={() => setSortKey(column.key)}
                   className={cn(
-                    "flex items-center gap-2 border-r border-slate-200 px-4 py-3 text-left text-[10px] uppercase tracking-[0.16em] text-slate-500 transition last:border-r-0",
-                    column.key !== "supplier" && "hover:text-slate-900",
+                    "flex items-center gap-2 border-r border-slate-200 px-4 py-3 text-left text-[10px] uppercase tracking-[0.16em] text-slate-500 transition last:border-r-0 hover:text-slate-900",
                     sortKey === column.key && "text-sky-700"
                   )}
                 >
                   <span>{column.label}</span>
-                  {column.key !== "supplier" ? <ArrowUpDown className="h-3 w-3" /> : null}
+                  <ArrowUpDown className="h-3 w-3" />
                 </button>
               ))}
             </div>
 
             <div className="bg-white">
               {visibleRows.map((row) => {
-                const tone = getStockHealth(row.daysUntilStockout)
+                const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
                 const isExpandedCategory =
                   selectedBlock && expandedCategoryId === row.id && "items" in row
 
@@ -437,13 +431,11 @@ export function BlockInventoryTable() {
                         />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium text-slate-900">
-                            {"bigBlockName" in row && "totalCategories" in row
-                              ? row.bigBlockName
-                              : row.categoryName}
+                            {"categoryName" in row ? row.categoryName : row.bigBlockName}
                           </div>
                           <div className="mt-1 text-[11px] text-slate-500">
-                            {"totalCategories" in row
-                              ? `${row.totalCategories} categories · ${row.totalItems} items`
+                            {"totalSubCategories" in row
+                              ? `${row.totalCategories} categories · ${row.totalSubCategories} subcategories · ${row.totalItems} items`
                               : `${row.totalItems} items`}
                           </div>
                         </div>
@@ -461,13 +453,18 @@ export function BlockInventoryTable() {
                             <div
                               className="h-full rounded-full"
                               style={{
-                                width: `${row.stockPct}%`,
+                                width: `${getCurrentStockPercent(row.currentStockQty, row.stockInQty)}%`,
                                 backgroundColor: toneStyles[tone].accent,
                               }}
                             />
                           </div>
-                          <span className="text-xs tabular-nums text-slate-500">
-                            {formatCompactNumber(row.currentStock)}
+                          <span
+                            className={cn(
+                              "text-xs tabular-nums",
+                              tone === "crit" ? "text-red-700" : "text-slate-500"
+                            )}
+                          >
+                            {formatCompactNumber(row.currentStockQty)}
                           </span>
                         </div>
                       </div>
@@ -480,26 +477,15 @@ export function BlockInventoryTable() {
                         {formatCurrency(row.stockInValue)}
                       </div>
 
-                      <div
-                        className={cn(
-                          "flex items-center border-r border-slate-200 px-4 py-4 text-sm font-semibold tabular-nums",
-                          toneStyles[tone].textClass
-                        )}
-                      >
-                        {formatDays(row.daysUntilStockout)}
+                      <div className="flex items-center px-4 py-4 text-xs text-slate-700">
+                        {formatCurrency(row.stockOutValue)}
                       </div>
-
-                      {selectedBlock ? (
-                        <div className="flex items-center px-4 py-4 text-xs text-slate-500">
-                          {"supplier" in row ? row.supplier ?? "—" : "—"}
-                        </div>
-                      ) : null}
                     </button>
 
                     {isExpandedCategory ? (
                       <div className="bg-slate-50/70">
-                        {row.items.map((item) => {
-                          const itemTone = getStockHealth(item.daysUntilStockout)
+                        {sortRows(row.items, sortKey).map((item) => {
+                          const itemTone = getStockHealth(item.currentStockQty, item.stockOutQty)
                           const isExpandedItem = expandedItemId === item.id
 
                           return (
@@ -527,7 +513,8 @@ export function BlockInventoryTable() {
                                       {item.itemName}
                                     </div>
                                     <div className="mt-1 text-[10px] text-slate-500">
-                                      {item.subCategoryName} · ID {item.itemId} · {item.unitOfMeasure}
+                                      {item.categoryName} · {item.subCategoryName} ·{" "}
+                                      {item.appearsInShopCount} shops
                                     </div>
                                   </div>
                                   <ChevronRight
@@ -539,7 +526,7 @@ export function BlockInventoryTable() {
                                 </div>
 
                                 <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                  {formatCompactNumber(item.currentStock)}
+                                  {formatCompactNumber(item.currentStockQty)}
                                 </div>
                                 <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
                                   {formatCompactNumber(item.stockOutQty)}
@@ -547,19 +534,9 @@ export function BlockInventoryTable() {
                                 <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
                                   {formatCurrency(item.stockInValue)}
                                 </div>
-                                <div
-                                  className={cn(
-                                    "flex items-center border-r border-slate-200 px-4 py-3 font-semibold",
-                                    toneStyles[itemTone].textClass
-                                  )}
-                                >
-                                  {formatDays(item.daysUntilStockout)}
+                                <div className="flex items-center px-4 py-3 text-slate-500">
+                                  {formatCurrency(item.stockOutValue)}
                                 </div>
-                                {selectedBlock ? (
-                                  <div className="flex items-center px-4 py-3 text-[10px] text-slate-500">
-                                    {item.supplier ?? "—"}
-                                  </div>
-                                ) : null}
                               </button>
 
                               {isExpandedItem ? <ItemDetailPanel item={item} /> : null}

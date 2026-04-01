@@ -1,6 +1,6 @@
 import type { InventoryItemDetailReportResponse } from "@/features/inventory-management/types/InventoryBlockReports"
 
-export const inventoryItemDetailReportMock: InventoryItemDetailReportResponse = {
+export const inventoryItemDetailReportMock = {
   success: true,
   data: {
     reportName: "inventory_item_detail",
@@ -209,4 +209,4 @@ export const inventoryItemDetailReportMock: InventoryItemDetailReportResponse = 
     generatedAt: "2026-03-20T10:24:58",
   },
   timestamp: "2026-03-20T10:24:58",
-}
+} as unknown as InventoryItemDetailReportResponse

@@ -15,45 +15,54 @@ export interface InventoryExecuteReportResponse<TReportName extends string, TRow
   timestamp: string
 }
 
+export interface InventoryExecuteReportErrorResponse {
+  success: false
+  error: string
+  timestamp: string
+}
+
 export interface InventoryBigBlockReportRow {
+  reportName: "inventory_big_block"
+  generatedAt: string
   strBigBlock: string
-  intTotalCategories: number
-  intTotalItems: number
-  numStockInQty: number
-  numStockOutQty: number
-  numStockInValue: number
-  numCurrentStock: number
-  numStockPct: number
-  numDaysUntilStockout: number | null
+  totalCategories: number
+  totalSubCategories: number
+  totalItems: number
+  stockInQty: number
+  stockOutQty: number
+  stockInValue: number
+  stockOutValue: number
+  currentStockQty: number
 }
 
 export interface InventoryCategoryDetailReportRow {
+  reportName: "inventory_category_detail"
+  generatedAt: string
   strBigBlock: string
-  strCategoryName: string
-  intTotalItems: number
-  numStockInQty: number
-  numStockOutQty: number
-  numStockInValue: number
-  numCurrentStock: number
-  numStockPct: number
-  numDaysUntilStockout: number | null
-  strSupplier: string | null
+  subCategoryName: string
+  totalItems: number
+  stockInQty: number
+  stockOutQty: number
+  stockInValue: number
+  stockOutValue: number
+  currentStockQty: number
 }
 
 export interface InventoryItemDetailReportRow {
-  strBigBlock: string
-  strCategoryName: string
-  strSubCategoryName: string
-  intItemId: number
-  strItemName: string
-  strUOM: string
-  numStockInQty: number
-  numStockOutQty: number
-  numStockInValue: number
-  numCurrentStock: number
-  numStockPct: number
-  numDaysUntilStockout: number | null
-  strSupplier: string | null
+  reportName: "inventory_item_detail"
+  generatedAt: string
+  itemId: number
+  itemName: string
+  itemTypeName: string
+  categoryName: string
+  subCategoryName: string
+  appearsInShopCount: number
+  stockInQty: number
+  stockOutQty: number
+  stockInValue: number
+  stockOutValue: number
+  currentStockQty: number
+  currentStockValue: number
 }
 
 export type InventoryBigBlockReportResponse = InventoryExecuteReportResponse<
@@ -78,14 +87,14 @@ export interface InventoryBlockTableItemData {
   categoryName: string
   subCategoryName: string
   itemName: string
-  unitOfMeasure: string
+  itemTypeName: string
+  appearsInShopCount: number
   stockInQty: number
   stockOutQty: number
   stockInValue: number
-  currentStock: number
-  stockPct: number
-  daysUntilStockout: number | null
-  supplier: string | null
+  stockOutValue: number
+  currentStockQty: number
+  currentStockValue: number
 }
 
 export interface InventoryBlockTableCategoryData {
@@ -96,10 +105,8 @@ export interface InventoryBlockTableCategoryData {
   stockInQty: number
   stockOutQty: number
   stockInValue: number
-  currentStock: number
-  stockPct: number
-  daysUntilStockout: number | null
-  supplier: string | null
+  stockOutValue: number
+  currentStockQty: number
   items: InventoryBlockTableItemData[]
 }
 
@@ -107,12 +114,12 @@ export interface InventoryBlockTableBigBlockData {
   id: string
   bigBlockName: string
   totalCategories: number
+  totalSubCategories: number
   totalItems: number
   stockInQty: number
   stockOutQty: number
   stockInValue: number
-  currentStock: number
-  stockPct: number
-  daysUntilStockout: number | null
+  stockOutValue: number
+  currentStockQty: number
   categories: InventoryBlockTableCategoryData[]
 }

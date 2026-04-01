@@ -11,9 +11,8 @@ import type {
   InventoryBlockTableItemData,
 } from "@/features/inventory-management/types/InventoryBlockReports"
 
-const normalizeMatchKey = (value: string | null | undefined) => {
-  return (value ?? "").trim().toLocaleLowerCase()
-}
+const normalizeMatchKey = (value: string | null | undefined) =>
+  (value ?? "").trim().toLocaleLowerCase()
 
 const createBlockId = (value: string) => normalizeMatchKey(value).replace(/[^a-z0-9]+/g, "-")
 
@@ -27,68 +26,78 @@ export const useInventoryBlockTableData = () => {
     const categoryRows = categoriesQuery.data?.data.data ?? []
     const itemRows = itemsQuery.data?.data.data ?? []
 
+    const categoriesByBigBlock = new Map<string, typeof categoryRows>()
+    for (const categoryRow of categoryRows) {
+      const key = normalizeMatchKey(categoryRow.strBigBlock)
+      const existingRows = categoriesByBigBlock.get(key)
+      if (existingRows) {
+        existingRows.push(categoryRow)
+      } else {
+        categoriesByBigBlock.set(key, [categoryRow])
+      }
+    }
+
+    const itemsBySubCategory = new Map<string, typeof itemRows>()
+    for (const itemRow of itemRows) {
+      const key = normalizeMatchKey(itemRow.subCategoryName)
+      const existingRows = itemsBySubCategory.get(key)
+      if (existingRows) {
+        existingRows.push(itemRow)
+      } else {
+        itemsBySubCategory.set(key, [itemRow])
+      }
+    }
+
     return bigBlockRows.map((bigBlockRow) => {
-      const matchingCategories = categoryRows.filter(
-        (categoryRow) =>
-          normalizeMatchKey(categoryRow.strBigBlock) ===
-          normalizeMatchKey(bigBlockRow.strBigBlock)
-      )
+      const categories: InventoryBlockTableCategoryData[] =
+        categoriesByBigBlock
+          .get(normalizeMatchKey(bigBlockRow.strBigBlock))
+          ?.map((categoryRow) => {
+            const items: InventoryBlockTableItemData[] =
+              itemsBySubCategory
+                .get(normalizeMatchKey(categoryRow.subCategoryName))
+                ?.map((itemRow) => ({
+                  id: `${itemRow.itemId}:${createBlockId(itemRow.subCategoryName)}`,
+                  itemId: itemRow.itemId,
+                  bigBlockName: categoryRow.strBigBlock,
+                  categoryName: itemRow.categoryName,
+                  subCategoryName: itemRow.subCategoryName,
+                  itemName: itemRow.itemName,
+                  itemTypeName: itemRow.itemTypeName,
+                  appearsInShopCount: itemRow.appearsInShopCount,
+                  stockInQty: itemRow.stockInQty,
+                  stockOutQty: itemRow.stockOutQty,
+                  stockInValue: itemRow.stockInValue,
+                  stockOutValue: itemRow.stockOutValue,
+                  currentStockQty: itemRow.currentStockQty,
+                  currentStockValue: itemRow.currentStockValue,
+                })) ?? []
 
-      const categories: InventoryBlockTableCategoryData[] = matchingCategories.map(
-        (categoryRow) => {
-          const matchingItems = itemRows.filter(
-            (itemRow) =>
-              normalizeMatchKey(itemRow.strBigBlock) ===
-                normalizeMatchKey(categoryRow.strBigBlock) &&
-              normalizeMatchKey(itemRow.strCategoryName) ===
-                normalizeMatchKey(categoryRow.strCategoryName)
-          )
-
-          const items: InventoryBlockTableItemData[] = matchingItems.map((itemRow) => ({
-            id: String(itemRow.intItemId),
-            itemId: itemRow.intItemId,
-            bigBlockName: itemRow.strBigBlock,
-            categoryName: itemRow.strCategoryName,
-            subCategoryName: itemRow.strSubCategoryName,
-            itemName: itemRow.strItemName,
-            unitOfMeasure: itemRow.strUOM,
-            stockInQty: itemRow.numStockInQty,
-            stockOutQty: itemRow.numStockOutQty,
-            stockInValue: itemRow.numStockInValue,
-            currentStock: itemRow.numCurrentStock,
-            stockPct: itemRow.numStockPct,
-            daysUntilStockout: itemRow.numDaysUntilStockout,
-            supplier: itemRow.strSupplier,
-          }))
-
-          return {
-            id: `${createBlockId(categoryRow.strBigBlock)}:${createBlockId(categoryRow.strCategoryName)}`,
-            bigBlockName: categoryRow.strBigBlock,
-            categoryName: categoryRow.strCategoryName,
-            totalItems: categoryRow.intTotalItems,
-            stockInQty: categoryRow.numStockInQty,
-            stockOutQty: categoryRow.numStockOutQty,
-            stockInValue: categoryRow.numStockInValue,
-            currentStock: categoryRow.numCurrentStock,
-            stockPct: categoryRow.numStockPct,
-            daysUntilStockout: categoryRow.numDaysUntilStockout,
-            supplier: categoryRow.strSupplier,
-            items,
-          }
-        }
-      )
+            return {
+              id: `${createBlockId(categoryRow.strBigBlock)}:${createBlockId(categoryRow.subCategoryName)}`,
+              bigBlockName: categoryRow.strBigBlock,
+              categoryName: categoryRow.subCategoryName,
+              totalItems: categoryRow.totalItems,
+              stockInQty: categoryRow.stockInQty,
+              stockOutQty: categoryRow.stockOutQty,
+              stockInValue: categoryRow.stockInValue,
+              stockOutValue: categoryRow.stockOutValue,
+              currentStockQty: categoryRow.currentStockQty,
+              items,
+            }
+          }) ?? []
 
       return {
         id: createBlockId(bigBlockRow.strBigBlock),
         bigBlockName: bigBlockRow.strBigBlock,
-        totalCategories: bigBlockRow.intTotalCategories,
-        totalItems: bigBlockRow.intTotalItems,
-        stockInQty: bigBlockRow.numStockInQty,
-        stockOutQty: bigBlockRow.numStockOutQty,
-        stockInValue: bigBlockRow.numStockInValue,
-        currentStock: bigBlockRow.numCurrentStock,
-        stockPct: bigBlockRow.numStockPct,
-        daysUntilStockout: bigBlockRow.numDaysUntilStockout,
+        totalCategories: bigBlockRow.totalCategories,
+        totalSubCategories: bigBlockRow.totalSubCategories,
+        totalItems: bigBlockRow.totalItems,
+        stockInQty: bigBlockRow.stockInQty,
+        stockOutQty: bigBlockRow.stockOutQty,
+        stockInValue: bigBlockRow.stockInValue,
+        stockOutValue: bigBlockRow.stockOutValue,
+        currentStockQty: bigBlockRow.currentStockQty,
         categories,
       }
     })
