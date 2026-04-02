@@ -484,6 +484,12 @@ export function BlockInventoryTable() {
 
                     {isExpandedCategory ? (
                       <div className="bg-slate-50/70">
+                        {row.items.length === 0 ? (
+                          <div className="px-8 py-6 text-sm text-slate-500">
+                            No item rows available for this category.
+                          </div>
+                        ) : null}
+
                         {sortRows(row.items, sortKey).map((item) => {
                           const itemTone = getStockHealth(item.currentStockQty, item.stockOutQty)
                           const isExpandedItem = expandedItemId === item.id

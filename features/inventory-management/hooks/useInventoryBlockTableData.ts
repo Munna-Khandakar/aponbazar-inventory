@@ -39,12 +39,13 @@ export const useInventoryBlockTableData = () => {
 
     const itemsBySubCategory = new Map<string, typeof itemRows>()
     for (const itemRow of itemRows) {
-      const key = normalizeMatchKey(itemRow.subCategoryName)
-      const existingRows = itemsBySubCategory.get(key)
-      if (existingRows) {
-        existingRows.push(itemRow)
+      const subCategoryKey = normalizeMatchKey(itemRow.subCategoryName)
+
+      const subCategoryMatches = itemsBySubCategory.get(subCategoryKey)
+      if (subCategoryMatches) {
+        subCategoryMatches.push(itemRow)
       } else {
-        itemsBySubCategory.set(key, [itemRow])
+        itemsBySubCategory.set(subCategoryKey, [itemRow])
       }
     }
 
@@ -54,24 +55,24 @@ export const useInventoryBlockTableData = () => {
           .get(normalizeMatchKey(bigBlockRow.strBigBlock))
           ?.map((categoryRow) => {
             const items: InventoryBlockTableItemData[] =
-              itemsBySubCategory
+              (itemsBySubCategory
                 .get(normalizeMatchKey(categoryRow.subCategoryName))
                 ?.map((itemRow) => ({
-                  id: `${itemRow.itemId}:${createBlockId(itemRow.subCategoryName)}`,
-                  itemId: itemRow.itemId,
-                  bigBlockName: categoryRow.strBigBlock,
-                  categoryName: itemRow.categoryName,
-                  subCategoryName: itemRow.subCategoryName,
-                  itemName: itemRow.itemName,
-                  itemTypeName: itemRow.itemTypeName,
-                  appearsInShopCount: itemRow.appearsInShopCount,
-                  stockInQty: itemRow.stockInQty,
-                  stockOutQty: itemRow.stockOutQty,
-                  stockInValue: itemRow.stockInValue,
-                  stockOutValue: itemRow.stockOutValue,
-                  currentStockQty: itemRow.currentStockQty,
-                  currentStockValue: itemRow.currentStockValue,
-                })) ?? []
+                id: `${itemRow.itemId}:${createBlockId(itemRow.subCategoryName)}`,
+                itemId: itemRow.itemId,
+                bigBlockName: categoryRow.strBigBlock,
+                categoryName: itemRow.categoryName,
+                subCategoryName: itemRow.subCategoryName,
+                itemName: itemRow.itemName,
+                itemTypeName: itemRow.itemTypeName,
+                appearsInShopCount: itemRow.appearsInShopCount,
+                stockInQty: itemRow.stockInQty,
+                stockOutQty: itemRow.stockOutQty,
+                stockInValue: itemRow.stockInValue,
+                stockOutValue: itemRow.stockOutValue,
+                currentStockQty: itemRow.currentStockQty,
+                currentStockValue: itemRow.currentStockValue,
+                })) ?? [])
 
             return {
               id: `${createBlockId(categoryRow.strBigBlock)}:${createBlockId(categoryRow.subCategoryName)}`,
