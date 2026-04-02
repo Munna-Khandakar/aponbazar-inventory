@@ -4,21 +4,23 @@ import { useMemo, useState } from "react"
 import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useInventoryBlockTableData } from "@/features/inventory-management/hooks/useInventoryBlockTableData"
+import { useInventoryBigBlockReport } from "@/features/inventory-management/hooks/useInventoryBigBlockReport"
+import { useInventoryCategoryDetailReport } from "@/features/inventory-management/hooks/useInventoryCategoryDetailReport"
+import { useInventoryItemDetailReport } from "@/features/inventory-management/hooks/useInventoryItemDetailReport"
 import type {
-  InventoryBlockTableBigBlockData,
-  InventoryBlockTableCategoryData,
-  InventoryBlockTableItemData,
+  InventoryBigBlockReportRow,
+  InventoryCategoryDetailReportRow,
+  InventoryItemDetailReportRow,
 } from "@/features/inventory-management/types/InventoryBlockReports"
 import { cn } from "@/lib/utils"
 
 type SortKey = "name" | "currentStockQty" | "stockOutQty" | "stockInValue" | "stockOutValue"
 type StockHealth = "ok" | "warn" | "crit"
 
-type TableRow =
-  | InventoryBlockTableBigBlockData
-  | InventoryBlockTableCategoryData
-  | InventoryBlockTableItemData
+type SortableRow =
+  | InventoryBigBlockReportRow
+  | InventoryCategoryDetailReportRow
+  | InventoryItemDetailReportRow
 
 const TABLE_COLUMNS = [
   { key: "name", label: "Block / Subcategory", width: "2.4fr" },
@@ -57,6 +59,17 @@ const toneStyles: Record<
   },
 }
 
+const normalizeMatchKey = (value: string | null | undefined) =>
+  (value ?? "").trim().toLocaleLowerCase()
+
+const createBlockId = (value: string) => normalizeMatchKey(value).replace(/[^a-z0-9]+/g, "-")
+
+const createCategoryId = (bigBlock: string, subCategory: string) =>
+  `${createBlockId(bigBlock)}:${createBlockId(subCategory)}`
+
+const createItemId = (subCategory: string, itemId: number) =>
+  `${createBlockId(subCategory)}:${itemId}`
+
 const formatCompactNumber = (value: number) => {
   const absoluteValue = Math.abs(value)
   const prefix = value < 0 ? "-" : ""
@@ -74,7 +87,8 @@ const formatCurrency = (value: number) => `৳${formatCompactNumber(value)}`
 const getStockHealth = (currentStockQty: number, stockOutQty: number): StockHealth => {
   if (currentStockQty <= 0) return "crit"
 
-  const stockCoverageRatio = stockOutQty <= 0 ? Number.POSITIVE_INFINITY : currentStockQty / stockOutQty
+  const stockCoverageRatio =
+    stockOutQty <= 0 ? Number.POSITIVE_INFINITY : currentStockQty / stockOutQty
   if (stockCoverageRatio < 0.02) return "warn"
 
   return "ok"
@@ -85,13 +99,13 @@ const getCurrentStockPercent = (currentStockQty: number, stockInQty: number) => 
   return Math.min(100, Math.max(0, (currentStockQty / stockInQty) * 100))
 }
 
-const getRowName = (row: TableRow) => {
+const getRowName = (row: SortableRow) => {
   if ("itemName" in row) return row.itemName
-  if ("categoryName" in row) return row.categoryName
-  return row.bigBlockName
+  if ("subCategoryName" in row) return row.subCategoryName
+  return row.strBigBlock
 }
 
-const sortRows = <TRow extends TableRow>(rows: TRow[], sortKey: SortKey) =>
+const sortRows = <TRow extends SortableRow>(rows: TRow[], sortKey: SortKey) =>
   [...rows].sort((left, right) => {
     if (sortKey === "name") {
       return getRowName(left).localeCompare(getRowName(right))
@@ -100,7 +114,29 @@ const sortRows = <TRow extends TableRow>(rows: TRow[], sortKey: SortKey) =>
     return right[sortKey] - left[sortKey]
   })
 
-const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
+const RowSummary = ({
+  row,
+}: {
+  row: InventoryBigBlockReportRow | InventoryCategoryDetailReportRow
+}) => {
+  if ("totalSubCategories" in row) {
+    return (
+      <div className="mt-1 text-[11px] text-slate-500">
+        {row.totalCategories} categories · {row.totalSubCategories} subcategories · {row.totalItems} items
+      </div>
+    )
+  }
+
+  return <div className="mt-1 text-[11px] text-slate-500">{row.totalItems} items</div>
+}
+
+const ItemDetailPanel = ({
+  item,
+  bigBlockName,
+}: {
+  item: InventoryItemDetailReportRow
+  bigBlockName: string
+}) => {
   const tone = getStockHealth(item.currentStockQty, item.stockOutQty)
   const toneStyle = toneStyles[tone]
   const quantityVisuals = [
@@ -124,7 +160,7 @@ const ItemDetailPanel = ({ item }: { item: InventoryBlockTableItemData }) => {
           <div>
             <div className="text-base font-semibold text-slate-900">{item.itemName}</div>
             <div className="mt-1 text-[11px] text-slate-500">
-              {item.bigBlockName} / {item.categoryName} / {item.subCategoryName}
+              {bigBlockName} / {item.categoryName} / {item.subCategoryName}
             </div>
           </div>
 
@@ -260,25 +296,54 @@ export function BlockInventoryTable() {
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
 
-  const { data, isLoading, isError, error } = useInventoryBlockTableData()
-
-  const selectedBlock = useMemo(
-    () => data.find((block) => block.id === selectedBlockId) ?? null,
-    [data, selectedBlockId]
+  const bigBlocksQuery = useInventoryBigBlockReport()
+  const bigBlockRows = useMemo(
+    () => bigBlocksQuery.data?.data.data ?? [],
+    [bigBlocksQuery.data]
   )
 
-  const visibleRows = useMemo<
-    Array<InventoryBlockTableBigBlockData | InventoryBlockTableCategoryData>
-  >(() => {
-    if (selectedBlock) {
-      return sortRows<InventoryBlockTableCategoryData>(selectedBlock.categories, sortKey)
-    }
+  const selectedBlock = useMemo(
+    () =>
+      bigBlockRows.find((row) => createBlockId(row.strBigBlock) === selectedBlockId) ?? null,
+    [bigBlockRows, selectedBlockId]
+  )
 
-    return sortRows<InventoryBlockTableBigBlockData>(data, sortKey)
-  }, [data, selectedBlock, sortKey])
+  const categoriesQuery = useInventoryCategoryDetailReport(selectedBlock?.strBigBlock ?? null)
+  const categoryRows = useMemo(
+    () => categoriesQuery.data?.data.data ?? [],
+    [categoriesQuery.data]
+  )
+
+  const selectedCategory = useMemo(
+    () =>
+      categoryRows.find(
+        (row) => createCategoryId(row.strBigBlock, row.subCategoryName) === expandedCategoryId
+      ) ?? null,
+    [categoryRows, expandedCategoryId]
+  )
+
+  const itemsQuery = useInventoryItemDetailReport(selectedCategory?.subCategoryName ?? null)
+  const itemRows = useMemo(() => itemsQuery.data?.data.data ?? [], [itemsQuery.data])
+
+  const visibleBigBlockRows = useMemo(
+    () => sortRows<InventoryBigBlockReportRow>(bigBlockRows, sortKey),
+    [bigBlockRows, sortKey]
+  )
+
+  const visibleCategoryRows = useMemo(
+    () => sortRows<InventoryCategoryDetailReportRow>(categoryRows, sortKey),
+    [categoryRows, sortKey]
+  )
+
+  const visibleItemRows = useMemo(
+    () => sortRows<InventoryItemDetailReportRow>(itemRows, sortKey),
+    [itemRows, sortKey]
+  )
 
   const summary = useMemo(() => {
-    return visibleRows.reduce(
+    const rows = selectedBlock ? visibleCategoryRows : visibleBigBlockRows
+
+    return rows.reduce(
       (accumulator, row) => {
         const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
         accumulator[tone] += 1
@@ -286,14 +351,17 @@ export function BlockInventoryTable() {
       },
       { ok: 0, warn: 0, crit: 0 }
     )
-  }, [visibleRows])
+  }, [selectedBlock, visibleBigBlockRows, visibleCategoryRows])
 
   const columnTemplate = useMemo(
     () => TABLE_COLUMNS.map((column) => column.width).join(" "),
     []
   )
 
-  if (isLoading) {
+  const topLevelError =
+    bigBlocksQuery.error ?? (selectedBlock ? categoriesQuery.error : null) ?? null
+
+  if (bigBlocksQuery.isLoading) {
     return (
       <Card className="border-border/70 bg-card shadow-sm">
         <CardContent className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
@@ -303,11 +371,13 @@ export function BlockInventoryTable() {
     )
   }
 
-  if (isError) {
+  if (bigBlocksQuery.isError) {
     return (
       <Card className="border-border/70 bg-card shadow-sm">
         <CardContent className="flex h-[360px] items-center justify-center text-sm text-destructive">
-          {error instanceof Error ? error.message : "Failed to load inventory block data."}
+          {bigBlocksQuery.error instanceof Error
+            ? bigBlocksQuery.error.message
+            : "Failed to load inventory block data."}
         </CardContent>
       </Card>
     )
@@ -334,7 +404,7 @@ export function BlockInventoryTable() {
           {selectedBlock ? (
             <>
               <span className="text-slate-400">/</span>
-              <span className="font-semibold text-slate-900">{selectedBlock.bigBlockName}</span>
+              <span className="font-semibold text-slate-900">{selectedBlock.strBigBlock}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -392,168 +462,270 @@ export function BlockInventoryTable() {
             </div>
 
             <div className="bg-white">
-              {visibleRows.map((row) => {
-                const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
-                const isExpandedCategory =
-                  selectedBlock && expandedCategoryId === row.id && "items" in row
+              {selectedBlock && categoriesQuery.isLoading ? (
+                <div className="px-6 py-8 text-sm text-slate-500">
+                  Loading subcategories for {selectedBlock.strBigBlock}...
+                </div>
+              ) : null}
 
-                return (
-                  <div key={row.id} className="border-b border-slate-200 last:border-b-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!selectedBlock) {
-                          setSelectedBlockId(row.id)
+              {topLevelError ? (
+                <div className="px-6 py-8 text-sm text-destructive">
+                  {topLevelError instanceof Error
+                    ? topLevelError.message
+                    : "Failed to load inventory detail data."}
+                </div>
+              ) : null}
+
+              {!topLevelError &&
+                !selectedBlock &&
+                visibleBigBlockRows.map((row) => {
+                  const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
+
+                  return (
+                    <div key={createBlockId(row.strBigBlock)} className="border-b border-slate-200 last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedBlockId(createBlockId(row.strBigBlock))
                           setExpandedCategoryId(null)
                           setExpandedItemId(null)
-                          return
-                        }
-
-                        if ("items" in row) {
-                          setExpandedCategoryId((current) => {
-                            const nextCategoryId = current === row.id ? null : row.id
-                            setExpandedItemId(null)
-                            return nextCategoryId
-                          })
-                        }
-                      }}
-                      className={cn(
-                        "grid w-full border-l-2 text-left transition hover:bg-sky-50",
-                        toneStyles[tone].rowBorderClass,
-                        isExpandedCategory && "bg-sky-50"
-                      )}
-                      style={{ gridTemplateColumns: columnTemplate }}
-                    >
-                      <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-4">
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: toneStyles[tone].accent }}
-                        />
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-medium text-slate-900">
-                            {"categoryName" in row ? row.categoryName : row.bigBlockName}
-                          </div>
-                          <div className="mt-1 text-[11px] text-slate-500">
-                            {"totalSubCategories" in row
-                              ? `${row.totalCategories} categories · ${row.totalSubCategories} subcategories · ${row.totalItems} items`
-                              : `${row.totalItems} items`}
-                          </div>
-                        </div>
-                        <ChevronRight
-                          className={cn(
-                            "ml-auto h-4 w-4 shrink-0 text-slate-400 transition",
-                            (!selectedBlock || isExpandedCategory) && "rotate-90 text-sky-600"
-                          )}
-                        />
-                      </div>
-
-                      <div className="flex items-center border-r border-slate-200 px-4 py-4">
-                        <div className="flex w-full items-center gap-3">
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${getCurrentStockPercent(row.currentStockQty, row.stockInQty)}%`,
-                                backgroundColor: toneStyles[tone].accent,
-                              }}
-                            />
-                          </div>
+                        }}
+                        className={cn(
+                          "grid w-full border-l-2 text-left transition hover:bg-sky-50",
+                          toneStyles[tone].rowBorderClass
+                        )}
+                        style={{ gridTemplateColumns: columnTemplate }}
+                      >
+                        <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-4">
                           <span
-                            className={cn(
-                              "text-xs tabular-nums",
-                              tone === "crit" ? "text-red-700" : "text-slate-500"
-                            )}
-                          >
-                            {formatCompactNumber(row.currentStockQty)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
-                        {formatCompactNumber(row.stockOutQty)}
-                      </div>
-
-                      <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
-                        {formatCurrency(row.stockInValue)}
-                      </div>
-
-                      <div className="flex items-center px-4 py-4 text-xs text-slate-700">
-                        {formatCurrency(row.stockOutValue)}
-                      </div>
-                    </button>
-
-                    {isExpandedCategory ? (
-                      <div className="bg-slate-50/70">
-                        {row.items.length === 0 ? (
-                          <div className="px-8 py-6 text-sm text-slate-500">
-                            No item rows available for this category.
-                          </div>
-                        ) : null}
-
-                        {sortRows(row.items, sortKey).map((item) => {
-                          const itemTone = getStockHealth(item.currentStockQty, item.stockOutQty)
-                          const isExpandedItem = expandedItemId === item.id
-
-                          return (
-                            <div key={item.id} className="border-t border-slate-200">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setExpandedItemId((current) =>
-                                    current === item.id ? null : item.id
-                                  )
-                                }
-                                className={cn(
-                                  "grid w-full text-[11px] text-slate-700 transition hover:bg-slate-100/80",
-                                  isExpandedItem && "bg-slate-100/70"
-                                )}
-                                style={{ gridTemplateColumns: columnTemplate }}
-                              >
-                                <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-3 pl-8">
-                                  <span
-                                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                                    style={{ backgroundColor: toneStyles[itemTone].accent }}
-                                  />
-                                  <div className="min-w-0">
-                                    <div className="truncate font-medium text-slate-900">
-                                      {item.itemName}
-                                    </div>
-                                    <div className="mt-1 text-[10px] text-slate-500">
-                                      {item.categoryName} · {item.subCategoryName} ·{" "}
-                                      {item.appearsInShopCount} shops
-                                    </div>
-                                  </div>
-                                  <ChevronRight
-                                    className={cn(
-                                      "ml-auto h-3.5 w-3.5 shrink-0 text-slate-400 transition",
-                                      isExpandedItem && "rotate-90 text-sky-600"
-                                    )}
-                                  />
-                                </div>
-
-                                <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                  {formatCompactNumber(item.currentStockQty)}
-                                </div>
-                                <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                  {formatCompactNumber(item.stockOutQty)}
-                                </div>
-                                <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
-                                  {formatCurrency(item.stockInValue)}
-                                </div>
-                                <div className="flex items-center px-4 py-3 text-slate-500">
-                                  {formatCurrency(item.stockOutValue)}
-                                </div>
-                              </button>
-
-                              {isExpandedItem ? <ItemDetailPanel item={item} /> : null}
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: toneStyles[tone].accent }}
+                          />
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-slate-900">
+                              {row.strBigBlock}
                             </div>
+                            <RowSummary row={row} />
+                          </div>
+                          <ChevronRight className="ml-auto h-4 w-4 shrink-0 rotate-90 text-sky-600" />
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4">
+                          <div className="flex w-full items-center gap-3">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${getCurrentStockPercent(row.currentStockQty, row.stockInQty)}%`,
+                                  backgroundColor: toneStyles[tone].accent,
+                                }}
+                              />
+                            </div>
+                            <span
+                              className={cn(
+                                "text-xs tabular-nums",
+                                tone === "crit" ? "text-red-700" : "text-slate-500"
+                              )}
+                            >
+                              {formatCompactNumber(row.currentStockQty)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
+                          {formatCompactNumber(row.stockOutQty)}
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
+                          {formatCurrency(row.stockInValue)}
+                        </div>
+
+                        <div className="flex items-center px-4 py-4 text-xs text-slate-700">
+                          {formatCurrency(row.stockOutValue)}
+                        </div>
+                      </button>
+                    </div>
+                  )
+                })}
+
+              {!topLevelError &&
+                selectedBlock &&
+                !categoriesQuery.isLoading &&
+                visibleCategoryRows.map((row) => {
+                  const tone = getStockHealth(row.currentStockQty, row.stockOutQty)
+                  const categoryId = createCategoryId(row.strBigBlock, row.subCategoryName)
+                  const isExpandedCategory = expandedCategoryId === categoryId
+
+                  return (
+                    <div key={categoryId} className="border-b border-slate-200 last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExpandedCategoryId((current) =>
+                            current === categoryId ? null : categoryId
                           )
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                )
-              })}
+                          setExpandedItemId(null)
+                        }}
+                        className={cn(
+                          "grid w-full border-l-2 text-left transition hover:bg-sky-50",
+                          toneStyles[tone].rowBorderClass,
+                          isExpandedCategory && "bg-sky-50"
+                        )}
+                        style={{ gridTemplateColumns: columnTemplate }}
+                      >
+                        <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-4">
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: toneStyles[tone].accent }}
+                          />
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-slate-900">
+                              {row.subCategoryName}
+                            </div>
+                            <RowSummary row={row} />
+                          </div>
+                          <ChevronRight
+                            className={cn(
+                              "ml-auto h-4 w-4 shrink-0 text-slate-400 transition",
+                              isExpandedCategory && "rotate-90 text-sky-600"
+                            )}
+                          />
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4">
+                          <div className="flex w-full items-center gap-3">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                              <div
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${getCurrentStockPercent(row.currentStockQty, row.stockInQty)}%`,
+                                  backgroundColor: toneStyles[tone].accent,
+                                }}
+                              />
+                            </div>
+                            <span
+                              className={cn(
+                                "text-xs tabular-nums",
+                                tone === "crit" ? "text-red-700" : "text-slate-500"
+                              )}
+                            >
+                              {formatCompactNumber(row.currentStockQty)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
+                          {formatCompactNumber(row.stockOutQty)}
+                        </div>
+
+                        <div className="flex items-center border-r border-slate-200 px-4 py-4 text-xs text-slate-700">
+                          {formatCurrency(row.stockInValue)}
+                        </div>
+
+                        <div className="flex items-center px-4 py-4 text-xs text-slate-700">
+                          {formatCurrency(row.stockOutValue)}
+                        </div>
+                      </button>
+
+                      {isExpandedCategory ? (
+                        <div className="bg-slate-50/70">
+                          {itemsQuery.isLoading ? (
+                            <div className="px-8 py-6 text-sm text-slate-500">
+                              Loading item rows for {row.subCategoryName}...
+                            </div>
+                          ) : null}
+
+                          {itemsQuery.isError ? (
+                            <div className="px-8 py-6 text-sm text-destructive">
+                              {itemsQuery.error instanceof Error
+                                ? itemsQuery.error.message
+                                : "Failed to load item rows."}
+                            </div>
+                          ) : null}
+
+                          {!itemsQuery.isLoading &&
+                          !itemsQuery.isError &&
+                          visibleItemRows.length === 0 ? (
+                            <div className="px-8 py-6 text-sm text-slate-500">
+                              No item rows available for this subcategory.
+                            </div>
+                          ) : null}
+
+                          {!itemsQuery.isLoading &&
+                            !itemsQuery.isError &&
+                            visibleItemRows.map((item) => {
+                              const itemTone = getStockHealth(
+                                item.currentStockQty,
+                                item.stockOutQty
+                              )
+                              const itemId = createItemId(item.subCategoryName, item.itemId)
+                              const isExpandedItem = expandedItemId === itemId
+
+                              return (
+                                <div key={itemId} className="border-t border-slate-200">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedItemId((current) =>
+                                        current === itemId ? null : itemId
+                                      )
+                                    }
+                                    className={cn(
+                                      "grid w-full text-[11px] text-slate-700 transition hover:bg-slate-100/80",
+                                      isExpandedItem && "bg-slate-100/70"
+                                    )}
+                                    style={{ gridTemplateColumns: columnTemplate }}
+                                  >
+                                    <div className="flex min-w-0 items-center gap-3 border-r border-slate-200 px-4 py-3 pl-8">
+                                      <span
+                                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                        style={{ backgroundColor: toneStyles[itemTone].accent }}
+                                      />
+                                      <div className="min-w-0">
+                                        <div className="truncate font-medium text-slate-900">
+                                          {item.itemName}
+                                        </div>
+                                        <div className="mt-1 text-[10px] text-slate-500">
+                                          {item.categoryName} · {item.subCategoryName} ·{" "}
+                                          {item.appearsInShopCount} shops
+                                        </div>
+                                      </div>
+                                      <ChevronRight
+                                        className={cn(
+                                          "ml-auto h-3.5 w-3.5 shrink-0 text-slate-400 transition",
+                                          isExpandedItem && "rotate-90 text-sky-600"
+                                        )}
+                                      />
+                                    </div>
+
+                                    <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
+                                      {formatCompactNumber(item.currentStockQty)}
+                                    </div>
+                                    <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
+                                      {formatCompactNumber(item.stockOutQty)}
+                                    </div>
+                                    <div className="flex items-center border-r border-slate-200 px-4 py-3 text-slate-500">
+                                      {formatCurrency(item.stockInValue)}
+                                    </div>
+                                    <div className="flex items-center px-4 py-3 text-slate-500">
+                                      {formatCurrency(item.stockOutValue)}
+                                    </div>
+                                  </button>
+
+                                  {isExpandedItem ? (
+                                    <ItemDetailPanel
+                                      item={item}
+                                      bigBlockName={selectedBlock.strBigBlock}
+                                    />
+                                  ) : null}
+                                </div>
+                              )
+                            })}
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
             </div>
           </div>
         </div>

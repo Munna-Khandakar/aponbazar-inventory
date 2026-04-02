@@ -21,6 +21,8 @@ type InventoryExecuteReportRequest<TReportName extends InventoryReportName> = {
   parameters: {
     startDate: string
     endDate: string
+    bigBlock?: string
+    subCategory?: string
   }
   page: number
   size: number
@@ -53,11 +55,15 @@ const executeInventoryReport = async <
 >(
   reportName: TReportName,
   startDate: string,
-  endDate: string
+  endDate: string,
+  scopedParameters?: {
+    bigBlock?: string
+    subCategory?: string
+  }
 ): Promise<InventoryExecuteReportResponse<TReportName, TRow>> => {
   const firstPage = await executeInventoryReportPage<TReportName, TRow>({
     reportName,
-    parameters: { startDate, endDate },
+    parameters: { startDate, endDate, ...scopedParameters },
     page: 0,
     size: inventoryReportPageSize,
   })
@@ -70,7 +76,7 @@ const executeInventoryReport = async <
     Array.from({ length: firstPage.data.totalPages - 1 }, (_, index) =>
       executeInventoryReportPage<TReportName, TRow>({
         reportName,
-        parameters: { startDate, endDate },
+        parameters: { startDate, endDate, ...scopedParameters },
         page: index + 1,
         size: inventoryReportPageSize,
       })
@@ -101,19 +107,22 @@ export const inventoryManagementApi = {
     ),
   getInventoryCategoryDetailReport: async (
     startDate: string,
-    endDate: string
+    endDate: string,
+    bigBlock: string
   ): Promise<InventoryCategoryDetailReportResponse> =>
     executeInventoryReport<
       "inventory_category_detail",
       InventoryCategoryDetailReportRow
-    >("inventory_category_detail", startDate, endDate),
+    >("inventory_category_detail", startDate, endDate, { bigBlock }),
   getInventoryItemDetailReport: async (
     startDate: string,
-    endDate: string
+    endDate: string,
+    subCategory: string
   ): Promise<InventoryItemDetailReportResponse> =>
     executeInventoryReport<"inventory_item_detail", InventoryItemDetailReportRow>(
       "inventory_item_detail",
       startDate,
-      endDate
+      endDate,
+      { subCategory }
     ),
 }
