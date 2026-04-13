@@ -47,11 +47,17 @@ export type SalesForecastSeriesPoint = {
   numTotalNetSales: number
 }
 
+export type PredictedSalesForecastSeriesPoint = {
+  periodLabel: string
+  predictedGrossSales: number
+}
+
 type SeriesReportData<TReportName extends SalesReportType> =
   BaseReportData<TReportName> & {
     series: {
       base: SalesForecastSeriesPoint[]
       actual: SalesForecastSeriesPoint[]
+      predicted?: PredictedSalesForecastSeriesPoint[]
     }
     granularity: string
   }

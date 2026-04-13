@@ -22,6 +22,10 @@ const chartConfig = {
     label: "Targeted Sales",
     color: "#f97316",
   },
+  predictedSales: {
+    label: "Predicted Gross Sales",
+    color: "#16a34a",
+  },
 } satisfies ChartConfig
 
 const formatBdtCompact = (value: number) => {
@@ -35,6 +39,7 @@ const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
   const { data, isLoading, isFetching, error } = useSalesForecast()
+    console.log('==> data', data)
   const chartData = data ?? []
   const showLoadingState = isLoading || isFetching
 
@@ -45,7 +50,7 @@ export function SalesForecastChart() {
              <span className="font-bold">Sales Forecast</span>
              <span className="border px-2 py-1 rounded text-xs">Monthly</span>
          </CardTitle>
-          <CardDescription className="text-sm text-gray-500">Actual Sales, Target Sales Comparism in line chart</CardDescription>
+          <CardDescription className="text-sm text-gray-500">Actual, target, and predicted sales comparison in a monthly line chart</CardDescription>
       </CardHeader>
       <CardContent>
         {showLoadingState ? (
@@ -82,18 +87,26 @@ export function SalesForecastChart() {
               <ChartLegend content={<ChartLegendContent />} />
               <Line
                 type="monotone"
-                dataKey="actualSales"
-                stroke="var(--color-actualSales)"
-                strokeWidth={2.5}
-                dot={{ r: 4 }}
-              />
-              <Line
-                type="monotone"
                 dataKey="forecastedSales"
                 stroke="var(--color-forecastedSales)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
                 strokeDasharray="6 4"
+              />
+              <Line
+                type="monotone"
+                dataKey="predictedSales"
+                stroke="var(--color-predictedSales)"
+                strokeWidth={2}
+                dot={{ r: 4 }}
+                strokeDasharray="2 6"
+              />
+              <Line
+                type="monotone"
+                dataKey="actualSales"
+                stroke="var(--color-actualSales)"
+                strokeWidth={2.5}
+                dot={{ r: 4 }}
               />
             </LineChart>
           </ChartContainer>

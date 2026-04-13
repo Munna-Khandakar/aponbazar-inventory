@@ -148,6 +148,11 @@ const salesForecastApiResponse: SalesForecastReportResponse = {
         { periodLabel: "February 2026", numTotalNetSales: 50323126.27 },
         { periodLabel: "March 2026", numTotalNetSales: 98973992.12 },
       ],
+      predicted: [
+        { periodLabel: "February  2026", predictedGrossSales: 2131334.32 },
+        { periodLabel: "March     2026", predictedGrossSales: 17399009.53 },
+        { periodLabel: "April 2026", predictedGrossSales: 22000000 },
+      ],
     },
     granularity: "MONTH",
     totalRows: 12,
@@ -162,18 +167,74 @@ const salesForecastApiResponse: SalesForecastReportResponse = {
 
 const mapSalesForecastReport = (
   response: SalesForecastReportResponse
-): SalesForecastData[] =>
-  response.data.series.base.map((forecastPoint) => {
-    const actualPoint = response.data.series.actual.find(
-      (point) => point.periodLabel === forecastPoint.periodLabel
-    )
+): SalesForecastData[] => {
+  const normalizePeriodLabel = (periodLabel: string) =>
+    periodLabel.replace(/\s+/g, " ").trim()
 
-    return {
-      periodLabel: forecastPoint.periodLabel,
-      forecastedSales: forecastPoint.numTotalNetSales,
-      actualSales: actualPoint?.numTotalNetSales ?? 0,
+  const monthOrder = new Map([
+    ["january", 0],
+    ["february", 1],
+    ["march", 2],
+    ["april", 3],
+    ["may", 4],
+    ["june", 5],
+    ["july", 6],
+    ["august", 7],
+    ["september", 8],
+    ["october", 9],
+    ["november", 10],
+    ["december", 11],
+  ])
+
+  const getPeriodTimestamp = (periodLabel: string) => {
+    const [monthName, year] = normalizePeriodLabel(periodLabel).split(" ")
+    const monthIndex = monthOrder.get(monthName.toLowerCase())
+    const yearNumber = Number(year)
+
+    if (monthIndex === undefined || Number.isNaN(yearNumber)) {
+      return Number.MAX_SAFE_INTEGER
     }
-  })
+
+    return new Date(yearNumber, monthIndex, 1).getTime()
+  }
+
+  const baseByPeriod = new Map(
+    response.data.series.base.map((point) => [
+      normalizePeriodLabel(point.periodLabel),
+      point.numTotalNetSales,
+    ])
+  )
+
+  const actualByPeriod = new Map(
+    response.data.series.actual.map((point) => [
+      normalizePeriodLabel(point.periodLabel),
+      point.numTotalNetSales,
+    ])
+  )
+
+  const predictedByPeriod = new Map(
+    (response.data.series.predicted ?? []).map((point) => [
+      normalizePeriodLabel(point.periodLabel),
+      point.predictedGrossSales,
+    ])
+  )
+
+  const periods = Array.from(
+    new Set([
+      ...baseByPeriod.keys(),
+      ...actualByPeriod.keys(),
+      ...predictedByPeriod.keys(),
+    ])
+  ).sort((left, right) => getPeriodTimestamp(left) - getPeriodTimestamp(right))
+
+  return periods.map((periodLabel) => ({
+    periodLabel,
+    forecastedSales: baseByPeriod.get(periodLabel) ?? null,
+    actualSales: actualByPeriod.get(periodLabel) ?? null,
+    predictedSales:
+        actualByPeriod.get(periodLabel) ?? predictedByPeriod.get(periodLabel) ??  null,
+  }))
+}
 
 const inventoryPredictionData: InventoryPredictionData[] = [
   { month: "Jan", electronics: 1250, clothing: 2100, groceries: 3400, homeGoods: 1800 },
