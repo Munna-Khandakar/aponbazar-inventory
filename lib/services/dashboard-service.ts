@@ -227,12 +227,36 @@ const mapSalesForecastReport = (
     ])
   ).sort((left, right) => getPeriodTimestamp(left) - getPeriodTimestamp(right))
 
-  return periods.map((periodLabel) => ({
-    periodLabel,
-    forecastedSales: baseByPeriod.get(periodLabel) ?? null,
-    actualSales: actualByPeriod.get(periodLabel) ?? null,
-    predictedSales:
-        actualByPeriod.get(periodLabel) ?? predictedByPeriod.get(periodLabel) ??  null,
+  return bridgePredictedSalesPoint(
+    periods.map((periodLabel) => ({
+      periodLabel,
+      forecastedSales: baseByPeriod.get(periodLabel) ?? null,
+      actualSales: actualByPeriod.get(periodLabel) ?? null,
+      predictedSales: predictedByPeriod.get(periodLabel) ?? null,
+      predictedSalesLine: predictedByPeriod.get(periodLabel) ?? null,
+    }))
+  )
+}
+
+const bridgePredictedSalesPoint = (
+  data: SalesForecastData[]
+): SalesForecastData[] => {
+  const lastActualIndex = data.reduce(
+    (latestIndex, point, index) => (point.actualSales !== null ? index : latestIndex),
+    -1
+  )
+  const firstPredictedIndex = data.findIndex((point) => point.predictedSales !== null)
+  const shouldBridgePrediction =
+    lastActualIndex !== -1 &&
+    firstPredictedIndex !== -1 &&
+    firstPredictedIndex > lastActualIndex
+
+  return data.map((point, index) => ({
+    ...point,
+    predictedSalesLine:
+      shouldBridgePrediction && index === lastActualIndex
+        ? point.actualSales
+        : point.predictedSales,
   }))
 }
 

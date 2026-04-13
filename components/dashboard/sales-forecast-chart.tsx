@@ -1,7 +1,7 @@
 "use client"
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   ChartContainer,
   ChartLegend,
@@ -22,7 +22,7 @@ const chartConfig = {
     label: "Targeted Sales",
     color: "#f97316",
   },
-  predictedSales: {
+  predictedSalesLine: {
     label: "Predicted Gross Sales",
     color: "#16a34a",
   },
@@ -39,18 +39,19 @@ const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
 
 export function SalesForecastChart() {
   const { data, isLoading, isFetching, error } = useSalesForecast()
-    console.log('==> data', data)
   const chartData = data ?? []
   const showLoadingState = isLoading || isFetching
 
   return (
     <Card>
       <CardHeader className="flex flex-col justify-between align-items-center">
-         <CardTitle className='flex items-center gap-2 justify-between w-full'>
-             <span className="font-bold">Sales Forecast</span>
-             <span className="border px-2 py-1 rounded text-xs">Monthly</span>
-         </CardTitle>
-          <CardDescription className="text-sm text-gray-500">Actual, target, and predicted sales comparison in a monthly line chart</CardDescription>
+        <CardTitle className="flex items-center justify-between gap-2 w-full">
+          <span className="font-bold">Sales Forecast</span>
+          <span className="rounded border px-2 py-1 text-xs">Monthly</span>
+        </CardTitle>
+        <CardDescription className="text-sm text-gray-500">
+          Actual, target, and predicted sales comparison in a monthly line chart
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {showLoadingState ? (
@@ -95,11 +96,11 @@ export function SalesForecastChart() {
               />
               <Line
                 type="monotone"
-                dataKey="predictedSales"
-                stroke="var(--color-predictedSales)"
+                dataKey="predictedSalesLine"
+                stroke="var(--color-predictedSalesLine)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
-                strokeDasharray="2 6"
+                // strokeDasharray="2 6"
               />
               <Line
                 type="monotone"

@@ -3,4 +3,5 @@ export type SalesForecastData = {
   actualSales: number | null
   forecastedSales: number | null
   predictedSales: number | null
+  predictedSalesLine: number | null
 }
