@@ -1,5 +1,7 @@
 "use client"
 
+import { usePathname } from "next/navigation"
+
 import { DashboardRightSidebar } from "@/components/dashboard/dashboard-right-sidebar"
 import { DashboardTopbar } from "@/components/dashboard/dashboard-topbar"
 import { ReportFiltersProvider } from "@/hooks/use-report-filters"
@@ -7,6 +9,8 @@ import { useRequireAuth } from "@/hooks/use-auth"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isChecking, signOut } = useRequireAuth()
+  const pathname = usePathname()
+  const showOnlySidebarTitles = pathname === "/dashboard/sales-prediction"
 
   if (isChecking) {
     return (
@@ -29,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="order-2 min-w-0 xl:order-1">
               <div className="xl:sticky xl:top-16">
-                <DashboardRightSidebar />
+                <DashboardRightSidebar showOnlyTitle={showOnlySidebarTitles} />
               </div>
             </div>
           </div>
