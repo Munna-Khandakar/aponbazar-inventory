@@ -20,18 +20,29 @@ import { cn } from "@/lib/utils"
 
 const chartConfig = {
   baseSales: {
-    label: "Base Sales",
-    color: "#94a3b8",
+    label: "Targeted Sales",
+    color: "#f97316",
+  },
+  predictedGrossSales: {
+    label: "Predicted Gross Sales",
+    color: "#16a34a",
   },
   actualSales: {
     label: "Actual Sales",
-    color: "#0f766e",
+    color: "#2563eb",
   },
   salesPerformance: {
     label: "Sales Performance",
     color: "#ea580c",
   },
 } satisfies ChartConfig
+
+const salesLegendItems = [
+  { label: "Targeted Sales", color: "bg-orange-500" },
+  { label: "Predicted Gross Sales", color: "bg-green-600" },
+  { label: "Actual Sales", color: "bg-blue-600" },
+  { label: "Sales Performance", color: "bg-orange-600", isLine: true },
+]
 
 const formatBdtCompact = (value: number) => {
   if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`
@@ -50,6 +61,25 @@ type PromoImpactChartViewProps = {
   chartData: ReturnType<typeof usePromoImpact>["data"]
   orientation: ChartOrientation
   fullscreen?: boolean
+}
+
+function PromoImpactLegend() {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground">
+      {salesLegendItems.map((item) => (
+        <div key={item.label} className="inline-flex items-center gap-2">
+          <span
+            className={cn(
+              "inline-flex shrink-0",
+              item.isLine ? "h-0.5 w-5 rounded-full" : "size-2.5 rounded-full",
+              item.color
+            )}
+          />
+          <span>{item.label}</span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function PromoImpactChartView({
@@ -123,7 +153,15 @@ function PromoImpactChartView({
               dataKey="baseSales"
               fill="var(--color-baseSales)"
               radius={[0, 4, 4, 0]}
-              barSize={14}
+              barSize={12}
+            />
+            <Bar
+              xAxisId="sales"
+              yAxisId="shops"
+              dataKey="predictedGrossSales"
+              fill="var(--color-predictedGrossSales)"
+              radius={[0, 4, 4, 0]}
+              barSize={12}
             />
             <Bar
               xAxisId="sales"
@@ -131,7 +169,7 @@ function PromoImpactChartView({
               dataKey="actualSales"
               fill="var(--color-actualSales)"
               radius={[0, 4, 4, 0]}
-              barSize={14}
+              barSize={12}
             />
             <Line
               xAxisId="performance"
@@ -149,7 +187,7 @@ function PromoImpactChartView({
     )
   }
 
-  const chartWidth = Math.max(fullscreen ? 1600 : 1100, rows.length * 82)
+  const chartWidth = Math.max(fullscreen ? 1680 : 1200, rows.length * 92)
   const chartHeight = fullscreen ? 520 : 420
 
   return (
@@ -202,14 +240,21 @@ function PromoImpactChartView({
             dataKey="baseSales"
             fill="var(--color-baseSales)"
             radius={[4, 4, 0, 0]}
-            barSize={14}
+            barSize={12}
+          />
+          <Bar
+            yAxisId="sales"
+            dataKey="predictedGrossSales"
+            fill="var(--color-predictedGrossSales)"
+            radius={[4, 4, 0, 0]}
+            barSize={12}
           />
           <Bar
             yAxisId="sales"
             dataKey="actualSales"
             fill="var(--color-actualSales)"
             radius={[4, 4, 0, 0]}
-            barSize={14}
+            barSize={12}
           />
           <Line
             yAxisId="performance"
@@ -255,7 +300,7 @@ export function PromoImpactChart() {
           <div>
             <CardTitle>Shop Wise Sales</CardTitle>
             <CardDescription>
-              Base sales, actual sales, and sales performance by shop
+              Targeted, predicted, and actual sales with performance by shop
             </CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -295,7 +340,10 @@ export function PromoImpactChart() {
               Failed to load shop wise sales data
             </div>
           ) : (
-            <PromoImpactChartView chartData={chartData} orientation={orientation} />
+            <div className="space-y-4">
+              <PromoImpactLegend />
+              <PromoImpactChartView chartData={chartData} orientation={orientation} />
+            </div>
           )}
         </CardContent>
       </Card>
@@ -338,11 +386,14 @@ export function PromoImpactChart() {
               </div>
             </div>
             <div className="min-h-0 flex-1 px-5 py-4">
-              <PromoImpactChartView
-                chartData={chartData}
-                orientation={orientation}
-                fullscreen
-              />
+              <div className="flex h-full flex-col gap-4">
+                <PromoImpactLegend />
+                <PromoImpactChartView
+                  chartData={chartData}
+                  orientation={orientation}
+                  fullscreen
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -77,6 +77,7 @@ export type PromoImpactData = {
   shopName: string
   actualSales: number
   baseSales: number
+  predictedGrossSales?: number
   salesPerformance?: number
 }
 

@@ -302,6 +302,7 @@ const mapShopWiseSalesReport = (
   response.data.data.map((shop) => ({
     shopName: shop.strShopName,
     baseSales: shop.baseSales,
+    predictedGrossSales: shop.predictedGrossSales,
     actualSales: shop.actualSales,
     salesPerformance: shop.salesPerformance,
   }))
