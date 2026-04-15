@@ -93,6 +93,25 @@ export const usePromoImpact = () => {
     ...liveReportQueryOptions,
   })
 }
+export const useStorePerformanceSnapshot = () => {
+  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_AGGREGATE, {
+    includeGrowthTarget: false,
+  })
+
+  return useQuery({
+    queryKey: [
+      "reports",
+      "store-performance-snapshot",
+      request.reportName,
+      request.parameters,
+      request.page,
+      request.size,
+    ],
+    queryFn: () => dashboardService.getStorePerformanceSnapshot(request),
+    placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
+  })
+}
 export const useStorePerformance = () => {
   const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_PERFORMANCE, {
     includeGrowthTarget: false,

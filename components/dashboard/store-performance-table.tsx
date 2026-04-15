@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StorePerformanceTableSkeleton } from "@/components/dashboard/report-skeletons"
-import { useStorePerformance } from "@/hooks/use-dashboard"
+import { useStorePerformanceSnapshot } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
 
 const formatCurrency = (value: number) =>
@@ -11,12 +11,10 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   })}`
 
-const formatCount = (value: number) => value.toLocaleString("en-BD")
-
-const getPerformance = (actual: number, base: number, provided?: number) => {
+const getPerformance = (actual: number, targetted: number, provided?: number) => {
   if (provided !== undefined) return provided
-  if (base <= 0) return null
-  return (actual / base) * 100
+  if (targetted <= 0) return null
+  return (actual / targetted) * 100
 }
 
 const getPerformanceTone = (value: number | null) => {
@@ -36,7 +34,7 @@ const getPerformanceTone = (value: number | null) => {
 }
 
 export function StorePerformanceTable() {
-  const { data, isLoading, isFetching, error } = useStorePerformance()
+  const { data, isLoading, isFetching, error } = useStorePerformanceSnapshot()
   const rows = data ?? []
   const showLoadingState = isLoading || isFetching
 
@@ -44,7 +42,7 @@ export function StorePerformanceTable() {
     <Card>
       <CardHeader>
         <CardTitle>Shop performance snapshot</CardTitle>
-        <CardDescription>Actual vs base sales and deliveries by shop</CardDescription>
+        <CardDescription>Actual vs targetted sales by shop</CardDescription>
       </CardHeader>
       <CardContent className="max-h-[420px] overflow-auto">
         <table className="w-full text-sm">
@@ -52,11 +50,8 @@ export function StorePerformanceTable() {
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
               <th className="py-3 text-left">Shop</th>
               <th className="py-3 text-center">Sales perf.</th>
-              <th className="py-3 text-center">Delivery perf.</th>
               <th className="py-3 text-right">Actual sales</th>
-              <th className="py-3 text-right">Base sales</th>
-              <th className="py-3 text-right">Actual deliveries</th>
-              <th className="py-3 text-right">Base deliveries</th>
+              <th className="py-3 text-right">Targetted sales</th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +60,7 @@ export function StorePerformanceTable() {
             ) : error ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={4}
                   className="py-6 text-center text-sm text-destructive"
                 >
                   Failed to load shop performance data
@@ -75,13 +70,8 @@ export function StorePerformanceTable() {
             {rows.map((store) => {
               const salesPerformance = getPerformance(
                 store.actualSales,
-                store.baseSales,
+                store.targettedSales,
                 store.salesPerformance
-              )
-              const deliveryPerformance = getPerformance(
-                store.actualDeliveries,
-                store.baseDeliveries,
-                store.deliveryPerformance
               )
 
               return (
@@ -99,23 +89,9 @@ export function StorePerformanceTable() {
                       {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
                     </span>
                   </td>
-                  <td className="py-3 text-center">
-                    <span
-                        className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
-                            getPerformanceTone(deliveryPerformance)
-                        )}
-                    >
-                      {deliveryPerformance === null ? "N/A" : `${deliveryPerformance.toFixed(2)}%`}
-                    </span>
-                  </td>
                   <td className="py-3 text-right font-mono text-sm">{formatCurrency(store.actualSales)}</td>
-                  <td className="py-3 text-right font-mono text-sm">{formatCurrency(store.baseSales)}</td>
-                  <td className="py-3 text-right text-xs text-muted-foreground">
-                    {formatCount(store.actualDeliveries)}
-                  </td>
-                  <td className="py-3 text-right text-xs text-muted-foreground">
-                    {formatCount(store.baseDeliveries)}
+                  <td className="py-3 text-right font-mono text-sm">
+                    {formatCurrency(store.targettedSales)}
                   </td>
                 </tr>
               )

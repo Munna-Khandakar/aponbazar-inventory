@@ -90,6 +90,13 @@ export type StorePerformanceData = {
   deliveryPerformance?: number
 }
 
+export type StorePerformanceSnapshotData = {
+  shopName: string
+  actualSales: number
+  targettedSales: number
+  salesPerformance?: number
+}
+
 // Customer Behavior Types (Page 2)
 
 export type CustomerSegmentData = {

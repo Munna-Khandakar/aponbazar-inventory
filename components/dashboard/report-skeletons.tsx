@@ -134,12 +134,6 @@ export function StorePerformanceTableSkeleton() {
           <td className="py-3">
             <Skeleton className="ml-auto h-4 w-20" />
           </td>
-          <td className="py-3">
-            <Skeleton className="ml-auto h-4 w-16" />
-          </td>
-          <td className="py-3">
-            <Skeleton className="ml-auto h-4 w-16" />
-          </td>
         </tr>
       ))}
     </>

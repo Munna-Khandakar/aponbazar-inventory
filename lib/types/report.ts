@@ -78,6 +78,7 @@ export type ShopWiseSalesAggregateReportRow = {
   baseDeliveries: number
   salesPerformance?: number
   deliveryPerformance?: number
+  predictedGrossSales?: number
 }
 
 export type ShopWiseSalesAggregateReportResponse = ReportResponse<
