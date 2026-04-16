@@ -461,7 +461,7 @@ export function BlockInventoryTable() {
               ))}
             </div>
 
-            <div className="bg-white">
+            <div className="min-h-[520px] bg-white">
               {selectedBlock && categoriesQuery.isLoading ? (
                 <div className="px-6 py-8 text-sm text-slate-500">
                   Loading subcategories for {selectedBlock.strBigBlock}...
