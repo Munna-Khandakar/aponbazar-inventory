@@ -8,6 +8,7 @@ export enum SalesReportType {
 export type DateRangeReportParameters = {
   startDate: string
   endDate: string
+  shopName?: string
 }
 
 export type ReportParameters = DateRangeReportParameters & {

@@ -37,13 +37,18 @@ const createStaticHook = <T>(getter: () => T) => (): StaticQueryResult<T> => ({
 
 const useReportRequest = <TReportName extends SalesReportType>(
   reportName: TReportName,
-  options?: { includeGrowthTarget?: boolean }
+  options?: { includeGrowthTarget?: boolean; includeShopName?: boolean }
 ): ExecuteReportRequest<TReportName, DateRangeReportParameters | ReportParameters> => {
-  const { startDate, endDate, growthTarget } = useReportFilters()
+  const { startDate, endDate, growthTarget, shopName } = useReportFilters()
   const parameters =
     options?.includeGrowthTarget === false
-      ? { startDate, endDate }
-      : { startDate, endDate, growthTarget }
+      ? { startDate, endDate, ...(options?.includeShopName && shopName ? { shopName } : {}) }
+      : {
+          startDate,
+          endDate,
+          growthTarget,
+          ...(options?.includeShopName && shopName ? { shopName } : {}),
+        }
 
   return {
     reportName,
@@ -65,6 +70,7 @@ export const useOrderVolume = createStaticHook(dashboardService.getOrderVolume)
 export const useSalesForecast = () => {
   const request = useReportRequest(SalesReportType.MONTH_WISE_SALES, {
     includeGrowthTarget: true,
+    includeShopName: true,
   })
 
   return useQuery({

@@ -129,7 +129,7 @@ export function DashboardRightSidebar({
       <section className="flex h-full flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
-          {!showOnlyTitle ? (
+          {!showOnlyTitle || shopName ? (
             <div className="flex items-center gap-2">
               {shopName ? (
                 <Button
@@ -142,25 +142,27 @@ export function DashboardRightSidebar({
                   Reset
                 </Button>
               ) : null}
-              <button
-                type="button"
-                onClick={() =>
-                  setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
-                }
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
-                aria-label={
-                  sortDirection === "desc"
-                    ? "Sort shop insights low to high"
-                    : "Sort shop insights high to low"
-                }
-                title={
-                  sortDirection === "desc"
-                    ? "Currently high to low"
-                    : "Currently low to high"
-                }
-              >
-                <ArrowDownUp size={14} />
-              </button>
+              {!showOnlyTitle ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
+                  }
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
+                  aria-label={
+                    sortDirection === "desc"
+                      ? "Sort shop insights low to high"
+                      : "Sort shop insights high to low"
+                  }
+                  title={
+                    sortDirection === "desc"
+                      ? "Currently high to low"
+                      : "Currently low to high"
+                  }
+                >
+                  <ArrowDownUp size={14} />
+                </button>
+              ) : null}
             </div>
           ) : null}
         </div>
