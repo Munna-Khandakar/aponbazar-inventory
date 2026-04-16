@@ -68,6 +68,29 @@ const executeInventoryReportPage = async <
 }
 
 export const inventoryManagementApi = {
+  getInventoryBigBlockSeries: async (
+    startDate: string,
+    endDate: string
+  ): Promise<InventoryBigBlockSeriesResponse> => {
+    const { data } = await apiClient.post<
+      InventoryBigBlockSeriesResponse | InventoryBigBlockReportResponse | InventoryExecuteReportErrorResponse
+    >("/api/reports/execute", {
+      reportName: "inventory_big_block",
+      parameters: { startDate, endDate },
+      page: 0,
+      size: inventoryReportPageSize,
+    })
+
+    if ("error" in data) {
+      throw new Error(data.error || "Failed to load inventory_big_block series")
+    }
+
+    if (!isInventoryBigBlockSeriesResponse(data)) {
+      throw new Error("Inventory big block series response is not available for predictive chart")
+    }
+
+    return data
+  },
   getInventoryBigBlockReport: async (
     startDate: string,
     endDate: string

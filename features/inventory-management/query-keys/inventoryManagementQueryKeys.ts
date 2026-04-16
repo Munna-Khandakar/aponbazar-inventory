@@ -3,6 +3,8 @@ export const inventoryManagementQueryKeys = {
   kpiSummary: ["inventory-management", "kpi-summary"] as const,
   movementChart: ["inventory-management", "movement-chart"] as const,
   donutChart: ["inventory-management", "donut-chart"] as const,
+  bigBlockSeries: (startDate: string, endDate: string) =>
+    ["inventory-management", "inventory-big-block-series", startDate, endDate] as const,
   bigBlockReport: (startDate: string, endDate: string) =>
     ["inventory-management", "inventory-big-block", startDate, endDate] as const,
   categoryDetailReport: (startDate: string, endDate: string, bigBlock: string) =>
