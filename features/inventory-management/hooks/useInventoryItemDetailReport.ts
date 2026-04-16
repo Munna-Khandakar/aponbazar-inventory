@@ -7,16 +7,22 @@ import { inventoryManagementQueryKeys } from "@/features/inventory-management/qu
 import { useReportFilters } from "@/hooks/use-report-filters"
 
 export const useInventoryItemDetailReport = (subCategory: string | null) => {
-  const { startDate, endDate } = useReportFilters()
+  const { startDate, endDate, shopName } = useReportFilters()
 
   return useQuery({
     queryKey: inventoryManagementQueryKeys.itemDetailReport(
       startDate,
       endDate,
-      subCategory ?? ""
+      subCategory ?? "",
+      shopName
     ),
     queryFn: () =>
-      inventoryManagementApi.getInventoryItemDetailReport(startDate, endDate, subCategory ?? ""),
+      inventoryManagementApi.getInventoryItemDetailReport(
+        startDate,
+        endDate,
+        subCategory ?? "",
+        shopName
+      ),
     enabled: Boolean(subCategory),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

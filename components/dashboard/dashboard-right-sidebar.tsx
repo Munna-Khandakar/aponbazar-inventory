@@ -4,6 +4,7 @@ import { ArrowDownUp } from "lucide-react"
 import { useState } from "react"
 
 import { SidebarInsightsSkeleton } from "@/components/dashboard/report-skeletons"
+import { Button } from "@/components/ui/button"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { useStorePerformance } from "@/hooks/use-dashboard"
 import { cn } from "@/lib/utils"
@@ -95,7 +96,7 @@ export function DashboardRightSidebar({
   showOnlyTitle = false,
 }: DashboardRightSidebarProps) {
   const { data, isLoading, isFetching } = useStorePerformance()
-  const { searchTerm, setSearchTerm } = useReportFilters()
+  const { searchTerm, setSearchTerm, shopName, setShopName } = useReportFilters()
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
   const showLoadingState = isLoading || isFetching
 
@@ -129,25 +130,38 @@ export function DashboardRightSidebar({
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
           {!showOnlyTitle ? (
-            <button
-              type="button"
-              onClick={() =>
-                setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
-              }
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
-              aria-label={
-                sortDirection === "desc"
-                  ? "Sort shop insights low to high"
-                  : "Sort shop insights high to low"
-              }
-              title={
-                sortDirection === "desc"
-                  ? "Currently high to low"
-                  : "Currently low to high"
-              }
-            >
-              <ArrowDownUp size={14} />
-            </button>
+            <div className="flex items-center gap-2">
+              {shopName ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 rounded-md px-2 text-[11px]"
+                  onClick={() => setShopName("")}
+                >
+                  Reset
+                </Button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() =>
+                  setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
+                }
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
+                aria-label={
+                  sortDirection === "desc"
+                    ? "Sort shop insights low to high"
+                    : "Sort shop insights high to low"
+                }
+                title={
+                  sortDirection === "desc"
+                    ? "Currently high to low"
+                    : "Currently low to high"
+                }
+              >
+                <ArrowDownUp size={14} />
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -166,6 +180,7 @@ export function DashboardRightSidebar({
           {filteredInsights.map((item) => {
             const salesPerformance = item.salesPerformance ?? null
             const tone = getPerformanceTone(salesPerformance)
+            const isSelectedShop = shopName === item.shopName
             const fillWidth =
               salesPerformance === null || maxPerformance === null || minPerformance === null
                 ? 0
@@ -177,24 +192,41 @@ export function DashboardRightSidebar({
               <li
                 key={item.shopName}
                 className={cn(
-                  "rounded-md border border-border/60 p-2 text-xs",
-                  showOnlyTitle ? "bg-background/70" : ["space-y-1", tone.surface]
+                  "rounded-md border p-2 text-xs transition-colors",
+                  isSelectedShop
+                    ? "border-sky-500 bg-sky-50 shadow-sm ring-1 ring-sky-200"
+                    : "border-border/60",
+                  showOnlyTitle ? "bg-background/70" : "space-y-1",
+                  !isSelectedShop && !showOnlyTitle && tone.surface
                 )}
               >
-                <div className="truncate bold text-foreground">{item.shopName}</div>
-                {!showOnlyTitle ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className={cn("h-full rounded-full bold transition-[width]", tone.fill)}
-                        style={{ width: `${Math.max(0, Math.min(100, fillWidth))}%` }}
-                      />
-                    </div>
-                    <span className={cn("min-w-14 text-right font-medium", tone.text)}>
-                      {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
-                    </span>
+                <button
+                  type="button"
+                  className="w-full cursor-pointer text-left"
+                  onClick={() => setShopName(isSelectedShop ? "" : item.shopName)}
+                >
+                  <div
+                    className={cn(
+                      "truncate text-foreground",
+                      isSelectedShop ? "font-semibold text-sky-700" : "font-medium"
+                    )}
+                  >
+                    {item.shopName}
                   </div>
-                ) : null}
+                  {!showOnlyTitle ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className={cn("h-full rounded-full transition-[width]", tone.fill)}
+                          style={{ width: `${Math.max(0, Math.min(100, fillWidth))}%` }}
+                        />
+                      </div>
+                      <span className={cn("min-w-14 text-right font-medium", tone.text)}>
+                        {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
+                      </span>
+                    </div>
+                  ) : null}
+                </button>
               </li>
             )
           })}

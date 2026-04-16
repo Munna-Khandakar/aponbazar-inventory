@@ -7,11 +7,11 @@ import { inventoryManagementQueryKeys } from "@/features/inventory-management/qu
 import { useReportFilters } from "@/hooks/use-report-filters"
 
 export const useInventoryBigBlockSeries = () => {
-  const { startDate, endDate } = useReportFilters()
+  const { startDate, endDate, shopName } = useReportFilters()
 
   return useQuery({
-    queryKey: inventoryManagementQueryKeys.bigBlockSeries(startDate, endDate),
-    queryFn: () => inventoryManagementApi.getInventoryBigBlockSeries(startDate, endDate),
+    queryKey: inventoryManagementQueryKeys.bigBlockSeries(startDate, endDate, shopName),
+    queryFn: () => inventoryManagementApi.getInventoryBigBlockSeries(startDate, endDate, shopName),
     placeholderData: (previousData) => previousData,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

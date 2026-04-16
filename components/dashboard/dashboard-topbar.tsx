@@ -41,6 +41,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { dateMode, startDate, endDate, setPresetRange, setCustomRange } = useReportFilters()
+  const showDateFilters = pathname !== "/dashboard/inventory-management"
   const [isCustomRangeOpen, setIsCustomRangeOpen] = useState(false)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
   const [draftEndDate, setDraftEndDate] = useState(endDate)
@@ -107,35 +108,37 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={dateMode === "30d" ? "default" : "outline"}
-                className={cn("h-9 rounded-xl px-4", dateMode !== "30d" && "bg-background")}
-                onClick={() => setPresetRange("30d")}
-              >
-                30 Days
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={dateMode === "90d" ? "default" : "outline"}
-                className={cn("h-9 rounded-xl px-4", dateMode !== "90d" && "bg-background")}
-                onClick={() => setPresetRange("90d")}
-              >
-                90 Days
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={dateMode === "custom" ? "default" : "outline"}
-                className={cn("h-9 rounded-xl px-4", dateMode !== "custom" && "bg-background")}
-                onClick={openCustomRangeModal}
-              >
-                Custom
-              </Button>
-            </div>
+            {showDateFilters ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "30d" ? "default" : "outline"}
+                  className={cn("h-9 rounded-xl px-4", dateMode !== "30d" && "bg-background")}
+                  onClick={() => setPresetRange("30d")}
+                >
+                  30 Days
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "90d" ? "default" : "outline"}
+                  className={cn("h-9 rounded-xl px-4", dateMode !== "90d" && "bg-background")}
+                  onClick={() => setPresetRange("90d")}
+                >
+                  90 Days
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "custom" ? "default" : "outline"}
+                  className={cn("h-9 rounded-xl px-4", dateMode !== "custom" && "bg-background")}
+                  onClick={openCustomRangeModal}
+                >
+                  Custom
+                </Button>
+              </div>
+            ) : null}
           </div>
 
           <Button
@@ -150,7 +153,7 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
         </div>
       </div>
 
-      {isCustomRangeOpen ? (
+      {showDateFilters && isCustomRangeOpen ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4"
           onClick={() => setIsCustomRangeOpen(false)}

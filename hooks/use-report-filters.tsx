@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 export type DateMode = "30d" | "90d" | "custom"
 
@@ -24,6 +25,8 @@ type ReportFiltersContextValue = {
   setGrowthTarget: Dispatch<SetStateAction<string>>
   searchTerm: string
   setSearchTerm: Dispatch<SetStateAction<string>>
+  shopName: string
+  setShopName: (shopName: string) => void
   setPresetRange: (mode: Exclude<DateMode, "custom">) => void
   setCustomRange: (startDate: string, endDate: string) => void
 }
@@ -50,11 +53,15 @@ const getDateBeforeValue = (days: number) => {
 }
 
 export function ReportFiltersProvider({ children }: { children: ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [dateMode, setDateMode] = useState<DateMode>("custom")
   const [startDate, setStartDate] = useState(defaultStartDate)
   const [endDate, setEndDate] = useState(defaultEndDate)
   const [growthTarget, setGrowthTarget] = useState("8")
   const [searchTerm, setSearchTerm] = useState("")
+  const shopName = searchParams.get("shopName") ?? ""
 
   const setPresetRange = useCallback((mode: Exclude<DateMode, "custom">) => {
     setDateMode(mode)
@@ -68,6 +75,23 @@ export function ReportFiltersProvider({ children }: { children: ReactNode }) {
     setEndDate(customEndDate)
   }, [])
 
+  const setShopName = useCallback(
+    (nextShopName: string) => {
+      const normalizedShopName = nextShopName.trim()
+      const params = new URLSearchParams(searchParams.toString())
+
+      if (normalizedShopName) {
+        params.set("shopName", normalizedShopName)
+      } else {
+        params.delete("shopName")
+      }
+
+      const nextSearch = params.toString()
+      router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
+
   const value = useMemo<ReportFiltersContextValue>(
     () => ({
       dateMode,
@@ -80,6 +104,8 @@ export function ReportFiltersProvider({ children }: { children: ReactNode }) {
       setGrowthTarget,
       searchTerm,
       setSearchTerm,
+      shopName,
+      setShopName,
       setPresetRange,
       setCustomRange,
     }),
@@ -89,6 +115,8 @@ export function ReportFiltersProvider({ children }: { children: ReactNode }) {
       endDate,
       growthTarget,
       searchTerm,
+      shopName,
+      setShopName,
       setPresetRange,
       setCustomRange,
     ]

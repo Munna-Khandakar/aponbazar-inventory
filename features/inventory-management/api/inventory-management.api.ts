@@ -27,6 +27,7 @@ type InventoryExecuteReportRequest<TReportName extends InventoryReportName> = {
   parameters: {
     startDate: string
     endDate: string
+    shopName?: string
     bigBlock?: string
     subCategory?: string
   }
@@ -67,16 +68,37 @@ const executeInventoryReportPage = async <
   return data
 }
 
+const createInventoryReportParameters = ({
+  startDate,
+  endDate,
+  shopName,
+  bigBlock,
+  subCategory,
+}: {
+  startDate: string
+  endDate: string
+  shopName?: string
+  bigBlock?: string
+  subCategory?: string
+}) => ({
+  startDate,
+  endDate,
+  ...(shopName ? { shopName } : {}),
+  ...(bigBlock ? { bigBlock } : {}),
+  ...(subCategory ? { subCategory } : {}),
+})
+
 export const inventoryManagementApi = {
   getInventoryBigBlockSeries: async (
     startDate: string,
-    endDate: string
+    endDate: string,
+    shopName = ""
   ): Promise<InventoryBigBlockSeriesResponse> => {
     const { data } = await apiClient.post<
       InventoryBigBlockSeriesResponse | InventoryBigBlockReportResponse | InventoryExecuteReportErrorResponse
     >("/api/reports/execute", {
       reportName: "inventory_big_block",
-      parameters: { startDate, endDate },
+      parameters: createInventoryReportParameters({ startDate, endDate, shopName }),
       page: 0,
       size: inventoryReportPageSize,
     })
@@ -93,13 +115,14 @@ export const inventoryManagementApi = {
   },
   getInventoryBigBlockReport: async (
     startDate: string,
-    endDate: string
+    endDate: string,
+    shopName = ""
   ): Promise<InventoryBigBlockReportResponse> => {
     const { data } = await apiClient.post<
       InventoryBigBlockReportResponse | InventoryBigBlockSeriesResponse | InventoryExecuteReportErrorResponse
     >("/api/reports/execute", {
       reportName: "inventory_big_block",
-      parameters: { startDate, endDate },
+      parameters: createInventoryReportParameters({ startDate, endDate, shopName }),
       page: 0,
       size: inventoryReportPageSize,
     })
@@ -120,7 +143,7 @@ export const inventoryManagementApi = {
       Array.from({ length: data.data.totalPages - 1 }, (_, index) =>
         executeInventoryReportPage<"inventory_big_block", InventoryBigBlockReportRow>({
           reportName: "inventory_big_block",
-          parameters: { startDate, endDate },
+          parameters: createInventoryReportParameters({ startDate, endDate, shopName }),
           page: index + 1,
           size: inventoryReportPageSize,
         })
@@ -141,7 +164,8 @@ export const inventoryManagementApi = {
   getInventoryCategoryDetailReport: async (
     startDate: string,
     endDate: string,
-    bigBlock: string
+    bigBlock: string,
+    shopName = ""
   ): Promise<InventoryCategoryDetailReportResponse> => {
     const { data } = await apiClient.post<
       | InventoryCategoryDetailReportResponse
@@ -149,7 +173,7 @@ export const inventoryManagementApi = {
       | InventoryExecuteReportErrorResponse
     >("/api/reports/execute", {
       reportName: "inventory_category_detail",
-      parameters: { startDate, endDate, bigBlock },
+      parameters: createInventoryReportParameters({ startDate, endDate, bigBlock, shopName }),
       page: 0,
       size: inventoryReportPageSize,
     })
@@ -170,7 +194,7 @@ export const inventoryManagementApi = {
       Array.from({ length: data.data.totalPages - 1 }, (_, index) =>
         executeInventoryReportPage<"inventory_category_detail", InventoryCategoryDetailReportRow>({
           reportName: "inventory_category_detail",
-          parameters: { startDate, endDate, bigBlock },
+          parameters: createInventoryReportParameters({ startDate, endDate, bigBlock, shopName }),
           page: index + 1,
           size: inventoryReportPageSize,
         })
@@ -191,7 +215,8 @@ export const inventoryManagementApi = {
   getInventoryItemDetailReport: async (
     startDate: string,
     endDate: string,
-    subCategory: string
+    subCategory: string,
+    shopName = ""
   ): Promise<InventoryItemDetailReportResponse> => {
     const { data } = await apiClient.post<
       | InventoryItemDetailReportResponse
@@ -199,7 +224,7 @@ export const inventoryManagementApi = {
       | InventoryExecuteReportErrorResponse
     >("/api/reports/execute", {
       reportName: "inventory_item_detail",
-      parameters: { startDate, endDate, subCategory },
+      parameters: createInventoryReportParameters({ startDate, endDate, subCategory, shopName }),
       page: 0,
       size: inventoryReportPageSize,
     })
@@ -220,7 +245,12 @@ export const inventoryManagementApi = {
       Array.from({ length: data.data.totalPages - 1 }, (_, index) =>
         executeInventoryReportPage<"inventory_item_detail", InventoryItemDetailReportRow>({
           reportName: "inventory_item_detail",
-          parameters: { startDate, endDate, subCategory },
+          parameters: createInventoryReportParameters({
+            startDate,
+            endDate,
+            subCategory,
+            shopName,
+          }),
           page: index + 1,
           size: inventoryReportPageSize,
         })
