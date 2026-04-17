@@ -3,9 +3,13 @@
 import { ToplineSalesOverview } from "@/components/dashboard/topline-sales-overview"
 import { SalesForecastChart } from "@/components/dashboard/sales-forecast-chart"
 import { PromoImpactChart } from "@/components/dashboard/promo-impact-chart"
-import { SalesPredictionPerformanceSection } from "@/components/dashboard/sales-prediction-performance-section"
+import { ShopPerformanceSummary } from "@/components/dashboard/sales-prediction-performance-section"
+import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
+import { useReportFilters } from "@/hooks/use-report-filters"
 
 export default function SalesPredictionPage() {
+  const { shopName } = useReportFilters()
+
   return (
     <div className="space-y-6">
       <section>
@@ -17,12 +21,14 @@ export default function SalesPredictionPage() {
       </section>
 
       <section>
-        <SalesPredictionPerformanceSection />
+        {shopName ? <ShopPerformanceSummary /> : <StorePerformanceTable />}
       </section>
 
-      <section>
-        <PromoImpactChart />
-      </section>
+      {!shopName ? (
+        <section>
+          <PromoImpactChart />
+        </section>
+      ) : null}
     </div>
   )
 }

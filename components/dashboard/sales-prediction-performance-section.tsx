@@ -5,7 +5,6 @@ import type { ReactNode } from "react"
 import { ShopPerformanceSummarySkeleton } from "@/components/dashboard/report-skeletons"
 import { ShopPerformanceSummaryBarChart } from "@/components/dashboard/shop-performance-summary-bar-chart"
 import { ShopPerformanceSummaryDailyForecastChart } from "@/components/dashboard/shop-performance-summary-daily-forecast-chart"
-import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
 import { useShopPerformanceSummary } from "@/hooks/use-dashboard"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import type {
@@ -315,14 +314,4 @@ export function ShopPerformanceSummary() {
       />
     </section>
   )
-}
-
-export function SalesPredictionPerformanceSection() {
-  const { shopName } = useReportFilters()
-
-  if (!shopName) {
-    return <StorePerformanceTable />
-  }
-
-  return <ShopPerformanceSummary />
 }
