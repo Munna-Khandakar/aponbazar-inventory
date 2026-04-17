@@ -241,9 +241,6 @@ export function PredictiveInventoryStatusChart() {
       <Card className="border-border/70 shadow-sm">
         <CardHeader className="space-y-3">
           <div className="flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-              2
-            </span>
             <div>
               <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
               <CardDescription>
@@ -264,9 +261,6 @@ export function PredictiveInventoryStatusChart() {
       <Card className="border-destructive/40 shadow-sm">
         <CardHeader className="space-y-3">
           <div className="flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-              2
-            </span>
             <div>
               <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
               <CardDescription>
@@ -292,9 +286,6 @@ export function PredictiveInventoryStatusChart() {
       <Card className="border-border/70 shadow-sm">
         <CardHeader className="space-y-3">
           <div className="flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-              2
-            </span>
             <div>
               <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
               <CardDescription>
@@ -314,9 +305,6 @@ export function PredictiveInventoryStatusChart() {
     <Card className="border-border/70 shadow-sm">
       <CardHeader className="space-y-3">
         <div className="flex items-start gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-700">
-              2
-            </span>
             <div>
               <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
               <CardDescription>

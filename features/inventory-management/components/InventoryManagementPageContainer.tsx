@@ -3,6 +3,7 @@
 import { useIsFetching } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
 
+import { AiRecommendationSection } from "@/components/dashboard/ai-recommendation-section"
 import { BlockInventoryTable } from "@/features/inventory-management/components/BlockInventoryTable"
 import { PredictiveInventoryStatusChart } from "@/features/inventory-management/components/PredictiveInventoryStatusChart"
 import { SupplierReorderInsightsChart } from "@/features/inventory-management/components/SupplierReorderInsightsChart"
@@ -41,6 +42,8 @@ export function InventoryManagementPageContainer() {
       <PredictiveInventoryStatusChart />
 
       <SupplierReorderInsightsChart />
+
+      <AiRecommendationSection />
     </div>
   )
 }
