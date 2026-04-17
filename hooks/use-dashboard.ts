@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { dashboardService } from "@/lib/services/dashboard-service"
 import {
+  type GrowthTargetReportParameters,
   SalesReportType,
   type DateRangeReportParameters,
   type ExecuteReportRequest,
@@ -126,6 +127,27 @@ export const useStorePerformance = () => {
   return useQuery({
     queryKey: ["reports", request.reportName, request.parameters, request.page, request.size],
     queryFn: () => dashboardService.getStorePerformance(request),
+    placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
+  })
+}
+
+export const useShopPerformanceSummary = () => {
+  const { growthTarget } = useReportFilters()
+
+  const request: ExecuteReportRequest<
+    SalesReportType.SHOP_PERFORMANCE_SUMMARY,
+    GrowthTargetReportParameters
+  > = {
+    reportName: SalesReportType.SHOP_PERFORMANCE_SUMMARY,
+    parameters: {
+      growthTarget: Number(growthTarget) || 0,
+    },
+  }
+
+  return useQuery({
+    queryKey: ["reports", request.reportName, request.parameters],
+    queryFn: () => dashboardService.getShopPerformanceSummary(request),
     placeholderData: (previousData) => previousData,
     ...liveReportQueryOptions,
   })

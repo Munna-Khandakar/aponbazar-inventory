@@ -3,6 +3,7 @@ export enum SalesReportType {
   SHOP_WISE_SALES = "shop_wise_sales",
   SHOP_WISE_SALES_AGGREGATE = "shop_wise_sales_aggregate",
   SHOP_WISE_SALES_PERFORMANCE = "shop_wise_sales_performance",
+  SHOP_PERFORMANCE_SUMMARY = "shop_performance_summary",
 }
 
 export type DateRangeReportParameters = {
@@ -11,20 +12,28 @@ export type DateRangeReportParameters = {
   shopName?: string
 }
 
+export type GrowthTargetReportParameters = {
+  growthTarget: number
+}
+
 export type ReportParameters = DateRangeReportParameters & {
   growthTarget: string
 }
 
 export type ExecuteReportRequest<
   TReportName extends SalesReportType = SalesReportType,
-  TParameters extends DateRangeReportParameters | ReportParameters =
+  TParameters extends
     | DateRangeReportParameters
-    | ReportParameters,
+    | ReportParameters
+    | GrowthTargetReportParameters =
+    | DateRangeReportParameters
+    | ReportParameters
+    | GrowthTargetReportParameters,
 > = {
   reportName: TReportName
   parameters: TParameters
-  page: number
-  size: number
+  page?: number
+  size?: number
 }
 
 type BaseReportData<TReportName extends SalesReportType> = {
@@ -102,4 +111,69 @@ export type ShopPerformanceReportResponse = ReportResponse<
   BaseReportData<SalesReportType.SHOP_WISE_SALES_PERFORMANCE> & {
     data: ShopPerformanceReportRow[]
   }
+>
+
+export type ShopPerformanceSummaryForecastDayWisePoint = {
+  date: string
+  predictedGrossSales: number
+}
+
+export type ShopPerformanceSummaryPreviousMonth = {
+  periodLabel: string
+  actualSales: number
+  grossSales: number
+  returnSales: number
+  target: number
+  forecast: number
+  targetDiff: number
+  forecastDiff: number
+  achievementRatio?: number
+  gapRatio?: number
+  forecastVsActualRatio?: number
+}
+
+export type ShopPerformanceSummaryCurrentMonthCompleted = {
+  label: string
+  actualSales: number
+  grossSales: number
+  returnSales: number
+  target: number
+  forecast: number
+  targetDiff: number
+  forecastDiff: number
+  achievementRatio?: number
+  gapRatio?: number
+  forecastVsActualRatio?: number
+}
+
+export type ShopPerformanceSummaryCurrentMonthRemaining = {
+  label: string
+  target: number
+  forecast: number
+  targetVsForecastRatio?: number
+  forecastDayWise: ShopPerformanceSummaryForecastDayWisePoint[]
+}
+
+export type ShopPerformanceSummaryNextMonth = {
+  periodLabel: string
+  target: number
+  forecast: number
+  targetVsForecastRatio?: number
+  forecastDayWise: ShopPerformanceSummaryForecastDayWisePoint[]
+}
+
+export type ShopPerformanceSummaryReportRow = {
+  shopName: string
+  intWarehouseId: number
+  prevMonth: ShopPerformanceSummaryPreviousMonth
+  currentMonth: {
+    periodLabel: string
+    completed: ShopPerformanceSummaryCurrentMonthCompleted
+    remaining: ShopPerformanceSummaryCurrentMonthRemaining
+  }
+  nextMonth: ShopPerformanceSummaryNextMonth
+}
+
+export type ShopPerformanceSummaryReportResponse = ReportResponse<
+  ShopPerformanceSummaryReportRow[]
 >

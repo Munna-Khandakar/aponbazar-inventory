@@ -98,6 +98,70 @@ export type StorePerformanceSnapshotData = {
   salesPerformance?: number
 }
 
+export type ShopPerformanceSummaryForecastPoint = {
+  date: string
+  predictedGrossSales: number
+}
+
+export type ShopPerformanceSummaryMonthOverview = {
+  periodLabel: string
+  actualSales: number
+  grossSales: number
+  returnSales: number
+  target: number
+  forecast: number
+  targetDiff: number
+  forecastDiff: number
+  achievementRatio?: number
+  gapRatio?: number
+  forecastVsActualRatio?: number
+}
+
+export type ShopPerformanceSummaryCurrentMonth = {
+  periodLabel: string
+  completed: {
+    label: string
+    actualSales: number
+    grossSales: number
+    returnSales: number
+    target: number
+    forecast: number
+    targetDiff: number
+    forecastDiff: number
+    achievementRatio?: number
+    gapRatio?: number
+    forecastVsActualRatio?: number
+  }
+  remaining: {
+    label: string
+    target: number
+    forecast: number
+    targetVsForecastRatio?: number
+    forecastDayWise: ShopPerformanceSummaryForecastPoint[]
+  }
+}
+
+export type ShopPerformanceSummaryNextMonth = {
+  periodLabel: string
+  target: number
+  forecast: number
+  targetVsForecastRatio?: number
+  forecastDayWise: ShopPerformanceSummaryForecastPoint[]
+}
+
+export type ShopPerformanceSummaryItem = {
+  shopName: string
+  warehouseId: number
+  prevMonth: ShopPerformanceSummaryMonthOverview
+  currentMonth: ShopPerformanceSummaryCurrentMonth
+  nextMonth: ShopPerformanceSummaryNextMonth
+}
+
+export type ShopPerformanceSummaryDataset = {
+  asOf: string
+  items: ShopPerformanceSummaryItem[]
+}
+
 // Customer Behavior Types (Page 2)
 
 export type CustomerSegmentData = {

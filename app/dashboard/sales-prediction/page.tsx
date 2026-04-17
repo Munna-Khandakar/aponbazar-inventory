@@ -3,7 +3,7 @@
 import { ToplineSalesOverview } from "@/components/dashboard/topline-sales-overview"
 import { SalesForecastChart } from "@/components/dashboard/sales-forecast-chart"
 import { PromoImpactChart } from "@/components/dashboard/promo-impact-chart"
-import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
+import { SalesPredictionPerformanceSection } from "@/components/dashboard/sales-prediction-performance-section"
 
 export default function SalesPredictionPage() {
   return (
@@ -17,7 +17,7 @@ export default function SalesPredictionPage() {
       </section>
 
       <section>
-        <StorePerformanceTable />
+        <SalesPredictionPerformanceSection />
       </section>
 
       <section>

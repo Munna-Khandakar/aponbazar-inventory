@@ -140,6 +140,36 @@ export function StorePerformanceTableSkeleton() {
   )
 }
 
+export function ShopPerformanceSummarySkeleton() {
+  return (
+    <div className="grid gap-4 xl:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className={cn(
+            "space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4",
+            index === 1 && "bg-amber-50/60"
+          )}
+        >
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <div className="space-y-3">
+            {Array.from({ length: index === 1 ? 9 : 7 }).map((__, rowIndex) => (
+              <div key={rowIndex} className="flex items-center justify-between gap-4">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function SidebarInsightsSkeleton() {
   return (
     <>

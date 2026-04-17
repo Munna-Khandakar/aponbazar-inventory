@@ -17,6 +17,7 @@ import type {
   PromoImpactData,
   Reminder,
   RetentionCohortData,
+  ShopPerformanceSummaryDataset,
   StockLevelData,
   StorePerformanceData,
   StorePerformanceSnapshotData,
@@ -25,6 +26,7 @@ import type { SalesForecastData } from "@/lib/types/SalesForecastData"
 import type {
   ExecuteReportRequest,
   SalesForecastReportResponse,
+  ShopPerformanceSummaryReportResponse,
   ShopWiseSalesAggregateReportResponse,
   ShopPerformanceReportResponse,
 } from "@/lib/types/report"
@@ -666,6 +668,65 @@ const mapStorePerformanceReport = (
     deliveryPerformance: shop.deliveryPerformance,
   }))
 
+const mapShopPerformanceSummaryReport = (
+  response: ShopPerformanceSummaryReportResponse
+): ShopPerformanceSummaryDataset => ({
+  asOf: response.timestamp,
+  items: response.data.map((shop) => ({
+    shopName: shop.shopName,
+    warehouseId: shop.intWarehouseId,
+    prevMonth: {
+      periodLabel: shop.prevMonth.periodLabel,
+      actualSales: shop.prevMonth.actualSales,
+      grossSales: shop.prevMonth.grossSales,
+      returnSales: shop.prevMonth.returnSales,
+      target: shop.prevMonth.target,
+      forecast: shop.prevMonth.forecast,
+      targetDiff: shop.prevMonth.targetDiff,
+      forecastDiff: shop.prevMonth.forecastDiff,
+      achievementRatio: shop.prevMonth.achievementRatio,
+      gapRatio: shop.prevMonth.gapRatio,
+      forecastVsActualRatio: shop.prevMonth.forecastVsActualRatio,
+    },
+    currentMonth: {
+      periodLabel: shop.currentMonth.periodLabel,
+      completed: {
+        label: shop.currentMonth.completed.label,
+        actualSales: shop.currentMonth.completed.actualSales,
+        grossSales: shop.currentMonth.completed.grossSales,
+        returnSales: shop.currentMonth.completed.returnSales,
+        target: shop.currentMonth.completed.target,
+        forecast: shop.currentMonth.completed.forecast,
+        targetDiff: shop.currentMonth.completed.targetDiff,
+        forecastDiff: shop.currentMonth.completed.forecastDiff,
+        achievementRatio: shop.currentMonth.completed.achievementRatio,
+        gapRatio: shop.currentMonth.completed.gapRatio,
+        forecastVsActualRatio: shop.currentMonth.completed.forecastVsActualRatio,
+      },
+      remaining: {
+        label: shop.currentMonth.remaining.label,
+        target: shop.currentMonth.remaining.target,
+        forecast: shop.currentMonth.remaining.forecast,
+        targetVsForecastRatio: shop.currentMonth.remaining.targetVsForecastRatio,
+        forecastDayWise: shop.currentMonth.remaining.forecastDayWise.map((point) => ({
+          date: point.date,
+          predictedGrossSales: point.predictedGrossSales,
+        })),
+      },
+    },
+    nextMonth: {
+      periodLabel: shop.nextMonth.periodLabel,
+      target: shop.nextMonth.target,
+      forecast: shop.nextMonth.forecast,
+      targetVsForecastRatio: shop.nextMonth.targetVsForecastRatio,
+      forecastDayWise: shop.nextMonth.forecastDayWise.map((point) => ({
+        date: point.date,
+        predictedGrossSales: point.predictedGrossSales,
+      })),
+    },
+  })),
+})
+
 // Page 2: Customer Behavior Data
 
 const customerSegmentData: CustomerSegmentData[] = [
@@ -737,6 +798,7 @@ const liveReportTypes = new Set<SalesReportType>([
   SalesReportType.MONTH_WISE_SALES,
   SalesReportType.SHOP_WISE_SALES_AGGREGATE,
   SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
+  SalesReportType.SHOP_PERFORMANCE_SUMMARY,
 ])
 
 const getMockReportResponse = (
@@ -757,6 +819,7 @@ const getMockReportResponse = (
 const executeReport = async <
   TResponse extends
     | SalesForecastReportResponse
+    | ShopPerformanceSummaryReportResponse
     | ShopWiseSalesAggregateReportResponse
     | ShopPerformanceReportResponse,
 >(
@@ -807,6 +870,12 @@ export const dashboardService = {
   ) =>
     mapStorePerformanceReport(
       await executeReport<ShopPerformanceReportResponse>(request)
+    ),
+  getShopPerformanceSummary: async (
+    request: ExecuteReportRequest<SalesReportType.SHOP_PERFORMANCE_SUMMARY>
+  ) =>
+    mapShopPerformanceSummaryReport(
+      await executeReport<ShopPerformanceSummaryReportResponse>(request)
     ),
 
   // Page 2: Customer Behavior
