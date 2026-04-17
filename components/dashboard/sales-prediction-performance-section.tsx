@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 
 import { ShopPerformanceSummarySkeleton } from "@/components/dashboard/report-skeletons"
 import { ShopPerformanceSummaryBarChart } from "@/components/dashboard/shop-performance-summary-bar-chart"
+import { ShopPerformanceSummaryDailyForecastChart } from "@/components/dashboard/shop-performance-summary-daily-forecast-chart"
 import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
 import { useShopPerformanceSummary } from "@/hooks/use-dashboard"
 import { useReportFilters } from "@/hooks/use-report-filters"
@@ -305,6 +306,10 @@ export function ShopPerformanceSummary() {
       </div>
       <ShopPerformanceSummaryBarChart
         prevMonth={selectedShop.prevMonth}
+        currentMonth={selectedShop.currentMonth}
+        nextMonth={selectedShop.nextMonth}
+      />
+      <ShopPerformanceSummaryDailyForecastChart
         currentMonth={selectedShop.currentMonth}
         nextMonth={selectedShop.nextMonth}
       />
