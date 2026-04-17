@@ -295,7 +295,7 @@ export function PromoImpactChart() {
 
   return (
     <>
-      <Card>
+      <Card className="max-h-[520px] overflow-hidden">
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle>Shop Wise Sales</CardTitle>
@@ -332,7 +332,7 @@ export function PromoImpactChart() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-h-0 flex-1 overflow-auto">
           {showLoadingState ? (
             <PromoImpactChartSkeleton />
           ) : error ? (

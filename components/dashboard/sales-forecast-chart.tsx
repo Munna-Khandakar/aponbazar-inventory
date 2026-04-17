@@ -43,7 +43,7 @@ export function SalesForecastChart() {
   const showLoadingState = isLoading || isFetching
 
   return (
-    <Card>
+    <Card className="max-h-[520px] overflow-hidden">
       <CardHeader className="flex flex-col justify-between align-items-center">
         <CardTitle className="flex items-center justify-between gap-2 w-full">
           <span className="font-bold">Sales Forecast</span>
@@ -57,11 +57,14 @@ export function SalesForecastChart() {
         {showLoadingState ? (
           <SalesForecastChartSkeleton />
         ) : error ? (
-          <div className="flex aspect-video items-center justify-center text-sm text-destructive">
+          <div className="flex h-[320px] items-center justify-center text-sm text-destructive sm:h-[360px] xl:h-[380px]">
             Failed to load sales forecast data
           </div>
         ) : (
-          <ChartContainer config={chartConfig}>
+          <ChartContainer
+            config={chartConfig}
+            className="h-[320px] w-full aspect-auto sm:h-[360px] xl:h-[380px]"
+          >
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis

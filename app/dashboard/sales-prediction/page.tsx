@@ -12,8 +12,11 @@ export default function SalesPredictionPage() {
         <ToplineSalesOverview />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2 xl:items-stretch">
+      <section>
         <SalesForecastChart />
+      </section>
+
+      <section>
         <StorePerformanceTable />
       </section>
 

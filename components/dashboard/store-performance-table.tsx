@@ -39,12 +39,12 @@ export function StorePerformanceTable() {
   const showLoadingState = isLoading || isFetching
 
   return (
-    <Card>
+    <Card className="max-h-[520px] overflow-hidden">
       <CardHeader>
         <CardTitle>Shop performance snapshot</CardTitle>
         <CardDescription>Actual vs targetted sales by shop</CardDescription>
       </CardHeader>
-      <CardContent className="max-h-[420px] overflow-auto">
+      <CardContent className="min-h-0 flex-1 overflow-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
