@@ -14,77 +14,46 @@ import type {
 import { cn } from "@/lib/utils"
 
 const formatBdtCompact = (value: number) => {
-  const absoluteValue = Math.abs(value)
-
-  if (absoluteValue >= 10000000) {
-    return `৳${(absoluteValue / 10000000).toFixed(2).replace(/\.?0+$/, "")}Cr`
-  }
-
-  if (absoluteValue >= 100000) {
-    return `৳${(absoluteValue / 100000).toFixed(2).replace(/\.?0+$/, "")}L`
-  }
-
-  if (absoluteValue >= 1000) {
-    return `৳${(absoluteValue / 1000).toFixed(0)}K`
-  }
-
-  return `৳${absoluteValue.toLocaleString("en-BD", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+  return `৳${value.toLocaleString("en-BD", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 6,
   })}`
 }
 
-const formatSignedBdtCompact = (value: number | null | undefined) => {
+const formatNumericValue = (value: number) =>
+  value.toLocaleString("en-BD", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 6,
+  })
+
+const formatMetricValue = (key: string, value: number | null | undefined) => {
   if (value === null || value === undefined) {
     return "N/A"
   }
 
-  if (value === 0) {
-    return "৳0"
+  const normalizedKey = key.toLowerCase()
+
+  if (
+    normalizedKey.includes("sales") ||
+    normalizedKey.includes("target") ||
+    normalizedKey.includes("forecast") ||
+    normalizedKey.includes("diff")
+  ) {
+    return formatBdtCompact(value)
   }
 
-  return `${value > 0 ? "+" : "-"}${formatBdtCompact(value)}`
+  return formatNumericValue(value)
 }
 
-const formatRatio = (value: number | null | undefined) => {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
-    return "N/A"
-  }
-
-  return `${value.toFixed(2)}x`
-}
-
-const formatPercentage = (value: number | null | undefined) => {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
-    return "N/A"
-  }
-
-  return `${value.toFixed(1)}%`
-}
-
-const getAchievementPercentage = (actual: number, target: number, provided?: number) => {
-  if (provided !== undefined) {
-    return provided * 100
-  }
-
-  if (target <= 0) {
-    return null
-  }
-
-  return (actual / target) * 100
-}
-
-const getForecastCoverage = (target: number, forecast: number) => {
-  if (target <= 0) {
-    return null
-  }
-
-  return (forecast / target) * 100
-}
-
-const getDeltaTone = (value: number | null | undefined) => {
+const getValueTone = (key: string, value: number | null | undefined) => {
   if (value === null || value === undefined) {
     return "text-muted-foreground"
+  }
+
+  const normalizedKey = key.toLowerCase()
+
+  if (!normalizedKey.includes("diff")) {
+    return "text-foreground"
   }
 
   if (value > 0) {
@@ -97,6 +66,11 @@ const getDeltaTone = (value: number | null | undefined) => {
 
   return "text-foreground"
 }
+
+const formatFieldLabel = (key: string) =>
+  key
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (character) => character.toUpperCase())
 
 const formatAsOfDate = (value: string | null | undefined) => {
   if (!value) {
@@ -180,51 +154,47 @@ function SummaryPanel({
   )
 }
 
-function PreviousMonthPanel({ data }: { data: ShopPerformanceSummaryMonthOverview }) {
-  const achievement = getAchievementPercentage(
-    data.actualSales,
-    data.target,
-    data.achievementRatio
+function SummaryMetricsList({
+  entries,
+}: {
+  entries: Array<[string, number | null | undefined]>
+}) {
+  return (
+    <div className="space-y-1">
+      {entries.map(([key, value]) => (
+        <SummaryMetricRow
+          key={key}
+          label={formatFieldLabel(key)}
+          value={formatMetricValue(key, value)}
+          toneClassName={getValueTone(key, value)}
+        />
+      ))}
+    </div>
   )
+}
 
+function PreviousMonthPanel({ data }: { data: ShopPerformanceSummaryMonthOverview }) {
   return (
     <SummaryPanel eyebrow="Previous Month" title={data.periodLabel} status="Full month">
-      <div className="space-y-1">
-        <SummaryMetricRow label="Actual sales" value={formatBdtCompact(data.actualSales)} />
-        <SummaryMetricRow label="Target" value={formatBdtCompact(data.target)} />
-        <SummaryMetricRow label="Forecast" value={formatBdtCompact(data.forecast)} />
-        <SummaryMetricRow
-          label="vs target"
-          value={formatSignedBdtCompact(data.targetDiff)}
-          toneClassName={getDeltaTone(data.targetDiff)}
-        />
-        <SummaryMetricRow
-          label="vs forecast"
-          value={formatSignedBdtCompact(data.forecastDiff)}
-          toneClassName={getDeltaTone(data.forecastDiff)}
-        />
-        <SummaryMetricRow label="Achievement" value={formatPercentage(achievement)} />
-        <SummaryMetricRow
-          label="Achievement ratio"
-          value={formatRatio(data.achievementRatio)}
-        />
-        <SummaryMetricRow label="Gap ratio" value={formatRatio(data.gapRatio)} />
-        <SummaryMetricRow
-          label="Forecast vs actual"
-          value={formatRatio(data.forecastVsActualRatio)}
-        />
-      </div>
+      <SummaryMetricsList
+        entries={[
+          ["actualSales", data.actualSales],
+          ["grossSales", data.grossSales],
+          ["returnSales", data.returnSales],
+          ["target", data.target],
+          ["forecast", data.forecast],
+          ["targetDiff", data.targetDiff],
+          ["forecastDiff", data.forecastDiff],
+          ["achievementRatio", data.achievementRatio],
+          ["gapRatio", data.gapRatio],
+          ["forecastVsActualRatio", data.forecastVsActualRatio],
+        ]}
+      />
     </SummaryPanel>
   )
 }
 
 function CurrentMonthPanel({ data }: { data: ShopPerformanceSummaryCurrentMonth }) {
-  const achievement = getAchievementPercentage(
-    data.completed.actualSales,
-    data.completed.target,
-    data.completed.achievementRatio
-  )
-
   return (
     <SummaryPanel
       eyebrow="Current Month"
@@ -237,60 +207,33 @@ function CurrentMonthPanel({ data }: { data: ShopPerformanceSummaryCurrentMonth 
           <div className="mb-2 text-xs font-medium text-muted-foreground">
             {data.completed.label} (completed)
           </div>
-          <div className="space-y-1">
-            <SummaryMetricRow
-              label="Actual sales"
-              value={formatBdtCompact(data.completed.actualSales)}
-            />
-            <SummaryMetricRow
-              label="Target (prorated)"
-              value={formatBdtCompact(data.completed.target)}
-            />
-            <SummaryMetricRow
-              label="Forecast (prorated)"
-              value={formatBdtCompact(data.completed.forecast)}
-            />
-            <SummaryMetricRow
-              label="vs target"
-              value={formatSignedBdtCompact(data.completed.targetDiff)}
-              toneClassName={getDeltaTone(data.completed.targetDiff)}
-            />
-            <SummaryMetricRow
-              label="vs forecast"
-              value={formatSignedBdtCompact(data.completed.forecastDiff)}
-              toneClassName={getDeltaTone(data.completed.forecastDiff)}
-            />
-            <SummaryMetricRow label="Achievement" value={formatPercentage(achievement)} />
-            <SummaryMetricRow
-              label="Achievement ratio"
-              value={formatRatio(data.completed.achievementRatio)}
-            />
-            <SummaryMetricRow label="Gap ratio" value={formatRatio(data.completed.gapRatio)} />
-            <SummaryMetricRow
-              label="Forecast vs actual"
-              value={formatRatio(data.completed.forecastVsActualRatio)}
-            />
-          </div>
+          <SummaryMetricsList
+            entries={[
+              ["actualSales", data.completed.actualSales],
+              ["grossSales", data.completed.grossSales],
+              ["returnSales", data.completed.returnSales],
+              ["target", data.completed.target],
+              ["forecast", data.completed.forecast],
+              ["targetDiff", data.completed.targetDiff],
+              ["forecastDiff", data.completed.forecastDiff],
+              ["achievementRatio", data.completed.achievementRatio],
+              ["gapRatio", data.completed.gapRatio],
+              ["forecastVsActualRatio", data.completed.forecastVsActualRatio],
+            ]}
+          />
         </div>
 
         <div className="rounded-xl border border-border/70 bg-background/80 p-3">
           <div className="mb-2 text-xs font-medium text-muted-foreground">
             {data.remaining.label} (remaining)
           </div>
-          <div className="space-y-1">
-            <SummaryMetricRow
-              label="Target remaining"
-              value={formatBdtCompact(data.remaining.target)}
-            />
-            <SummaryMetricRow
-              label="Forecast remaining"
-              value={formatBdtCompact(data.remaining.forecast)}
-            />
-            <SummaryMetricRow
-              label="Target vs forecast"
-              value={formatRatio(data.remaining.targetVsForecastRatio)}
-            />
-          </div>
+          <SummaryMetricsList
+            entries={[
+              ["target", data.remaining.target],
+              ["forecast", data.remaining.forecast],
+              ["targetVsForecastRatio", data.remaining.targetVsForecastRatio],
+            ]}
+          />
         </div>
       </div>
     </SummaryPanel>
@@ -298,25 +241,15 @@ function CurrentMonthPanel({ data }: { data: ShopPerformanceSummaryCurrentMonth 
 }
 
 function NextMonthPanel({ data }: { data: ShopPerformanceSummaryNextMonth }) {
-  const coverage = getForecastCoverage(data.target, data.forecast)
-  const difference = data.forecast - data.target
-
   return (
     <SummaryPanel eyebrow="Next Month" title={data.periodLabel} status="Forecast only">
-      <div className="space-y-1">
-        <SummaryMetricRow label="Target" value={formatBdtCompact(data.target)} />
-        <SummaryMetricRow label="Forecast" value={formatBdtCompact(data.forecast)} />
-        <SummaryMetricRow
-          label="vs target"
-          value={formatSignedBdtCompact(difference)}
-          toneClassName={getDeltaTone(difference)}
-        />
-        <SummaryMetricRow label="Forecast coverage" value={formatPercentage(coverage)} />
-        <SummaryMetricRow
-          label="Target vs forecast ratio"
-          value={formatRatio(data.targetVsForecastRatio)}
-        />
-      </div>
+      <SummaryMetricsList
+        entries={[
+          ["target", data.target],
+          ["forecast", data.forecast],
+          ["targetVsForecastRatio", data.targetVsForecastRatio],
+        ]}
+      />
     </SummaryPanel>
   )
 }
