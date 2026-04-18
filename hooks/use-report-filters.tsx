@@ -12,7 +12,7 @@ import {
 } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
-export type DateMode = "30d" | "90d" | "custom"
+export type DateMode = "previousMonth" | "currentMonth" | "nextMonth" | "custom"
 
 type ReportFiltersContextValue = {
   dateMode: DateMode
@@ -42,31 +42,64 @@ const formatDateInputValue = (date: Date) => {
 
 const getToday = () => new Date()
 
-const getTodayValue = () => formatDateInputValue(getToday())
-const defaultStartDate = "2025-10-01"
-const defaultEndDate = "2026-03-15"
+const getStartOfMonthValue = (date: Date) =>
+  formatDateInputValue(new Date(date.getFullYear(), date.getMonth(), 1))
 
-const getDateBeforeValue = (days: number) => {
-  const base = getToday()
-  base.setDate(base.getDate() - days)
-  return formatDateInputValue(base)
+const getEndOfMonthValue = (date: Date) =>
+  formatDateInputValue(new Date(date.getFullYear(), date.getMonth() + 1, 0))
+
+const getCurrentMonthRange = () => {
+  const today = getToday()
+
+  return {
+    startDate: getStartOfMonthValue(today),
+    endDate: formatDateInputValue(today),
+  }
+}
+
+const getPresetRangeValues = (mode: Exclude<DateMode, "custom">) => {
+  const today = getToday()
+
+  switch (mode) {
+    case "previousMonth": {
+      const previousMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+
+      return {
+        startDate: getStartOfMonthValue(previousMonthDate),
+        endDate: getEndOfMonthValue(previousMonthDate),
+      }
+    }
+    case "currentMonth":
+      return getCurrentMonthRange()
+    case "nextMonth": {
+      const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
+
+      return {
+        startDate: getStartOfMonthValue(nextMonthDate),
+        endDate: getEndOfMonthValue(nextMonthDate),
+      }
+    }
+  }
 }
 
 export function ReportFiltersProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [dateMode, setDateMode] = useState<DateMode>("custom")
-  const [startDate, setStartDate] = useState(defaultStartDate)
-  const [endDate, setEndDate] = useState(defaultEndDate)
+  const defaultRange = useMemo(() => getCurrentMonthRange(), [])
+  const [dateMode, setDateMode] = useState<DateMode>("currentMonth")
+  const [startDate, setStartDate] = useState(defaultRange.startDate)
+  const [endDate, setEndDate] = useState(defaultRange.endDate)
   const [growthTarget, setGrowthTarget] = useState("8")
   const [searchTerm, setSearchTerm] = useState("")
   const shopName = searchParams.get("shopName") ?? ""
 
   const setPresetRange = useCallback((mode: Exclude<DateMode, "custom">) => {
+    const range = getPresetRangeValues(mode)
+
     setDateMode(mode)
-    setEndDate(getTodayValue())
-    setStartDate(mode === "30d" ? getDateBeforeValue(29) : getDateBeforeValue(89))
+    setStartDate(range.startDate)
+    setEndDate(range.endDate)
   }, [])
 
   const setCustomRange = useCallback((customStartDate: string, customEndDate: string) => {

@@ -14,6 +14,28 @@ type DashboardTopbarProps = {
   onSignOut: () => void
 }
 
+const parseDateInputValue = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number)
+
+  if (!year || !month || !day) {
+    return null
+  }
+
+  return new Date(year, month - 1, day)
+}
+
+const getInclusiveDayCount = (startDate: string, endDate: string) => {
+  const start = parseDateInputValue(startDate)
+  const end = parseDateInputValue(endDate)
+
+  if (!start || !end) {
+    return null
+  }
+
+  const millisecondsPerDay = 24 * 60 * 60 * 1000
+  return Math.floor((end.getTime() - start.getTime()) / millisecondsPerDay) + 1
+}
+
 const dashboardPages = [
   {
     href: "/dashboard",
@@ -61,8 +83,13 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
     return () => window.removeEventListener("keydown", handleEscape)
   }, [isCustomRangeOpen])
 
+  const customRangeLength = getInclusiveDayCount(draftStartDate, draftEndDate)
   const isCustomRangeInvalid =
-    !draftStartDate || !draftEndDate || draftStartDate > draftEndDate
+    !draftStartDate ||
+    !draftEndDate ||
+    draftStartDate > draftEndDate ||
+    customRangeLength === null ||
+    customRangeLength > 30
 
   const openCustomRangeModal = () => {
     setDraftStartDate(startDate)
@@ -113,20 +140,38 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
                 <Button
                   type="button"
                   size="sm"
-                  variant={dateMode === "30d" ? "default" : "outline"}
-                  className={cn("h-9 rounded-xl px-4", dateMode !== "30d" && "bg-background")}
-                  onClick={() => setPresetRange("30d")}
+                  variant={dateMode === "previousMonth" ? "default" : "outline"}
+                  className={cn(
+                    "h-9 rounded-xl px-4",
+                    dateMode !== "previousMonth" && "bg-background"
+                  )}
+                  onClick={() => setPresetRange("previousMonth")}
                 >
-                  30 Days
+                  Previous Month
                 </Button>
                 <Button
                   type="button"
                   size="sm"
-                  variant={dateMode === "90d" ? "default" : "outline"}
-                  className={cn("h-9 rounded-xl px-4", dateMode !== "90d" && "bg-background")}
-                  onClick={() => setPresetRange("90d")}
+                  variant={dateMode === "currentMonth" ? "default" : "outline"}
+                  className={cn(
+                    "h-9 rounded-xl px-4",
+                    dateMode !== "currentMonth" && "bg-background"
+                  )}
+                  onClick={() => setPresetRange("currentMonth")}
                 >
-                  90 Days
+                  Current Month
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dateMode === "nextMonth" ? "default" : "outline"}
+                  className={cn(
+                    "h-9 rounded-xl px-4",
+                    dateMode !== "nextMonth" && "bg-background"
+                  )}
+                  onClick={() => setPresetRange("nextMonth")}
+                >
+                  Next Month
                 </Button>
                 <Button
                   type="button"
@@ -202,7 +247,8 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
 
               {isCustomRangeInvalid ? (
                 <p className="text-sm text-destructive">
-                  Enter a valid range where the start date is before the end date.
+                  Enter a valid range where the start date is before the end date and the
+                  range does not exceed 30 days.
                 </p>
               ) : null}
             </div>
