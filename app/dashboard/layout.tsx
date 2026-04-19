@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 import { usePathname } from "next/navigation"
 
 import { DashboardRightSidebar } from "@/components/dashboard/dashboard-right-sidebar"
@@ -11,6 +12,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isChecking, signOut } = useRequireAuth()
   const pathname = usePathname()
   const showOnlySidebarTitles = pathname === "/dashboard/sales-prediction"
+  const topbarRef = useRef<HTMLDivElement | null>(null)
+  const [topbarHeight, setTopbarHeight] = useState(0)
+
+  useEffect(() => {
+    const topbarElement = topbarRef.current
+
+    if (!topbarElement) {
+      return
+    }
+
+    const updateTopbarHeight = () => {
+      setTopbarHeight(topbarElement.getBoundingClientRect().height)
+    }
+
+    updateTopbarHeight()
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateTopbarHeight()
+    })
+
+    resizeObserver.observe(topbarElement)
+    window.addEventListener("resize", updateTopbarHeight)
+
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener("resize", updateTopbarHeight)
+    }
+  }, [])
+
+  const layoutStyle: CSSProperties & Record<"--dashboard-topbar-height", string> = {
+    "--dashboard-topbar-height": `${topbarHeight}px`,
+  }
 
   if (isChecking) {
     return (
@@ -23,16 +56,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50" style={layoutStyle}>
       <ReportFiltersProvider>
         <div className="pb-4 sm:pb-6 lg:pb-8">
-          <DashboardTopbar onSignOut={signOut} />
+          <div ref={topbarRef}>
+            <DashboardTopbar onSignOut={signOut} />
+          </div>
 
           <div className="grid gap-6 px-4 pt-4 sm:px-6 sm:pt-4 lg:px-8 xl:grid-cols-[320px_minmax(0,1fr)]">
             <main className="order-1 min-w-0 space-y-6 xl:order-2">{children}</main>
 
             <div className="order-2 min-w-0 xl:order-1">
-              <div className="xl:sticky xl:top-16">
+              <div className="xl:sticky xl:top-[calc(var(--dashboard-topbar-height)+1rem)]">
                 <DashboardRightSidebar showOnlyTitle={showOnlySidebarTitles} />
               </div>
             </div>

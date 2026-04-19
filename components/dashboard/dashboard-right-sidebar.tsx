@@ -125,7 +125,7 @@ export function DashboardRightSidebar({
   const minPerformance = performanceValues.length ? Math.min(...performanceValues) : null
 
   return (
-    <aside className="rounded-xl border border-border/70 bg-card/90 p-4 xl:h-[calc(100vh-6rem)]">
+    <aside className="rounded-xl border border-border/70 bg-card/90 p-4 xl:h-[calc(100dvh-var(--dashboard-topbar-height)-2rem)]">
       <section className="flex h-full flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
