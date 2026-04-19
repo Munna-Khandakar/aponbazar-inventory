@@ -112,24 +112,6 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
               <p className="max-w-2xl text-sm text-muted-foreground">
                 {currentPage.description}
               </p>
-              {shopName ? (
-                <div className="flex flex-wrap items-center gap-2 pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-2 rounded-full px-3"
-                    onClick={() => setShopName("")}
-                  >
-                    <ArrowLeft size={14} />
-                    Back
-                  </Button>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
-                    <Store size={14} />
-                    <span>Showing results for {shopName}</span>
-                  </div>
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -216,6 +198,27 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
           </div>
         </div>
       </div>
+
+      {shopName ? (
+        <div className="pointer-events-none fixed inset-x-0 top-1 z-40 flex justify-center px-4">
+          <div className="pointer-events-auto inline-flex max-w-[min(92vw,40rem)] items-center gap-2 rounded-full border border-sky-200 bg-background/95 px-3 py-2 text-sm font-medium text-sky-700 shadow-lg ring-1 ring-sky-100 backdrop-blur">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-2 rounded-full border-sky-200 bg-sky-50 px-3 text-sky-700 hover:bg-sky-100 hover:text-sky-800"
+              onClick={() => setShopName("")}
+            >
+              <ArrowLeft size={14} />
+              Back
+            </Button>
+            <div className="flex min-w-0 items-center gap-2">
+              <Store size={14} className="shrink-0" />
+              <span className="truncate">Showing results for {shopName}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {showDateFilters && isCustomRangeOpen ? (
         <div
