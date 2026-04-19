@@ -21,7 +21,10 @@ export default function SalesPredictionPage() {
         <SalesForecastChart />
       </section>
 
-      <section>
+      <section
+        id="shop-performance-snapshot"
+        className="scroll-mt-[calc(var(--dashboard-topbar-height)+1.5rem)]"
+      >
         {shopName ? <ShopPerformanceSummary /> : <StorePerformanceTable />}
       </section>
 

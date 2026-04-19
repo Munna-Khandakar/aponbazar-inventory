@@ -1,7 +1,7 @@
 "use client"
 
 import { ArrowDownUp } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { SidebarInsightsSkeleton } from "@/components/dashboard/report-skeletons"
 import { Button } from "@/components/ui/button"
@@ -98,7 +98,42 @@ export function DashboardRightSidebar({
   const { data, isLoading, isFetching } = useStorePerformance()
   const { searchTerm, setSearchTerm, shopName, setShopName } = useReportFilters()
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+  const pendingSnapshotScrollRef = useRef(false)
   const showLoadingState = isLoading || isFetching
+
+  const scrollToSnapshot = () => {
+    const snapshotSection = document.getElementById("shop-performance-snapshot")
+
+    if (!snapshotSection) {
+      return false
+    }
+
+    snapshotSection.scrollIntoView({ behavior: "smooth", block: "start" })
+    return true
+  }
+
+  useEffect(() => {
+    if (!pendingSnapshotScrollRef.current || shopName) {
+      return
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      scrollToSnapshot()
+      pendingSnapshotScrollRef.current = false
+    })
+
+    return () => window.cancelAnimationFrame(animationFrameId)
+  }, [shopName])
+
+  const handleSnapshotClick = () => {
+    if (shopName) {
+      pendingSnapshotScrollRef.current = true
+      setShopName("")
+      return
+    }
+
+    scrollToSnapshot()
+  }
 
   const filteredInsights = [...(data ?? [])]
     .filter((item) =>
@@ -129,42 +164,51 @@ export function DashboardRightSidebar({
       <section className="flex h-full flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
-          {!showOnlyTitle || shopName ? (
-            <div className="flex items-center gap-2">
-              {shopName ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 rounded-md px-2 text-[11px]"
-                  onClick={() => setShopName("")}
-                >
-                  Reset
-                </Button>
-              ) : null}
-              {!showOnlyTitle ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
-                  }
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
-                  aria-label={
-                    sortDirection === "desc"
-                      ? "Sort shop insights low to high"
-                      : "Sort shop insights high to low"
-                  }
-                  title={
-                    sortDirection === "desc"
-                      ? "Currently high to low"
-                      : "Currently low to high"
-                  }
-                >
-                  <ArrowDownUp size={14} />
-                </button>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {showOnlyTitle ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 rounded-md px-2 text-[11px]"
+                onClick={handleSnapshotClick}
+              >
+                Snapshot
+              </Button>
+            ) : null}
+            {shopName ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 rounded-md px-2 text-[11px]"
+                onClick={() => setShopName("")}
+              >
+                Reset
+              </Button>
+            ) : null}
+            {!showOnlyTitle ? (
+              <button
+                type="button"
+                onClick={() =>
+                  setSortDirection((current) => (current === "desc" ? "asc" : "desc"))
+                }
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground transition hover:text-foreground"
+                aria-label={
+                  sortDirection === "desc"
+                    ? "Sort shop insights low to high"
+                    : "Sort shop insights high to low"
+                }
+                title={
+                  sortDirection === "desc"
+                    ? "Currently high to low"
+                    : "Currently low to high"
+                }
+              >
+                <ArrowDownUp size={14} />
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <input
