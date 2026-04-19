@@ -55,6 +55,33 @@ const formatPerformance = (value: number) => `${value.toFixed(2)}%`
 const formatShopTick = (value: string) =>
   value.length > 12 ? `${value.slice(0, 12)}…` : value
 
+const formatPromoTooltipValue = (name: string, value: number) =>
+  name === "salesPerformance" || name === "Sales Performance"
+    ? formatPerformance(value)
+    : formatBdt(value)
+
+const renderPromoTooltipRow = (
+  value: number | string | Array<number | string>,
+  name: string,
+  color?: string
+) => {
+  const resolvedValue = Array.isArray(value) ? value[0] : value
+
+  return (
+    <div className="flex min-w-[220px] items-center justify-between gap-4">
+      <div className="flex items-center gap-2">
+        <span className="size-2.5 rounded-full" style={{ backgroundColor: color }} />
+        <span className="text-muted-foreground">
+          {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+        </span>
+      </div>
+      <span className="font-mono font-medium text-foreground">
+        {formatPromoTooltipValue(name, Number(resolvedValue))}
+      </span>
+    </div>
+  )
+}
+
 type ChartOrientation = "horizontal" | "vertical"
 
 type PromoImpactChartViewProps = {
@@ -138,10 +165,8 @@ function PromoImpactChartView({
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => `Shop: ${value}`}
-                  formatter={(value, name) =>
-                    name === "Sales Performance"
-                      ? formatPerformance(Number(value))
-                      : formatBdt(Number(value))
+                  formatter={(value, name, item) =>
+                    renderPromoTooltipRow(value, String(name), item.color)
                   }
                 />
               }
@@ -226,10 +251,8 @@ function PromoImpactChartView({
             content={
               <ChartTooltipContent
                 labelFormatter={(value) => `Shop: ${value}`}
-                formatter={(value, name) =>
-                  name === "Sales Performance"
-                    ? formatPerformance(Number(value))
-                    : formatBdt(Number(value))
+                formatter={(value, name, item) =>
+                  renderPromoTooltipRow(value, String(name), item.color)
                 }
               />
             }
