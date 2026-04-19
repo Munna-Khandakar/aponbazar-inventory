@@ -1,5 +1,6 @@
 "use client"
 
+import type { SVGProps } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -28,29 +29,95 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-const formatBdtCompact = (value: number) => {
-  if (value >= 10000000) return `৳${(value / 10000000).toFixed(1)}Cr`
-  if (value >= 100000) return `৳${(value / 100000).toFixed(1)}L`
-  return `৳${value.toLocaleString("en-BD")}`
+const seriesLabels = {
+  actualSales: "Actual Sales",
+  forecastedSales: "Targeted Sales",
+  predictedSalesLine: "Predicted Gross Sales",
+} as const
+
+const formatBdt = (value: number) =>
+  `৳${value.toLocaleString("en-BD", {
+    maximumFractionDigits: 0,
+  })}`
+
+const getGranularityLabel = (granularity?: string) => {
+  switch (granularity?.toUpperCase()) {
+    case "WEEK":
+      return "Weekly"
+    case "DAY":
+      return "Daily"
+    case "MONTH":
+      return "Monthly"
+    default:
+      return "Period"
+  }
 }
 
-const formatBdt = (value: number) => `৳${value.toLocaleString("en-BD")}`
-const formatPeriodTick = (value: string) => value.split(" ")[0].slice(0, 3)
+const getPeriodTickLines = (value: string) => {
+  const normalizedValue = value.replace(/\s+/g, " ").trim()
+  const weekMatch = normalizedValue.match(/^(\d{4})-W(\d{1,2})$/)
+
+  if (weekMatch) {
+    const [, year, week] = weekMatch
+    return [year, `W${week}`]
+  }
+
+  const parts = normalizedValue.split(" ")
+
+  if (parts.length >= 2) {
+    return [parts[0], parts.slice(1).join(" ")]
+  }
+
+  return [normalizedValue]
+}
+
+type PeriodAxisTickProps = SVGProps<SVGTextElement> & {
+  x?: number
+  y?: number
+  payload?: {
+    value: string
+  }
+}
+
+const PeriodAxisTick = ({ x = 0, y = 0, payload }: PeriodAxisTickProps) => {
+  if (!payload?.value) {
+    return null
+  }
+
+  const [lineOne, lineTwo] = getPeriodTickLines(payload.value)
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="middle"
+        fill="currentColor"
+        className="fill-muted-foreground text-[11px]"
+      >
+        <tspan x={0}>{lineOne}</tspan>
+        {lineTwo ? <tspan x={0} dy={12}>{lineTwo}</tspan> : null}
+      </text>
+    </g>
+  )
+}
 
 export function SalesForecastChart() {
   const { data, isLoading, isFetching, error } = useSalesForecast()
-  const chartData = data ?? []
+  const chartData = data?.points ?? []
   const showLoadingState = isLoading || isFetching
+  const granularityLabel = getGranularityLabel(data?.granularity)
 
   return (
     <Card className="max-h-[520px] overflow-hidden">
       <CardHeader className="flex flex-col justify-between align-items-center">
         <CardTitle className="flex items-center justify-between gap-2 w-full">
           <span className="font-bold">Sales Forecast</span>
-          <span className="rounded border px-2 py-1 text-xs">Monthly</span>
+          <span className="rounded border px-2 py-1 text-xs">{granularityLabel}</span>
         </CardTitle>
         <CardDescription className="text-sm text-gray-500">
-          Actual, target, and predicted sales comparison in a monthly line chart
+          Actual, target, and predicted sales comparison using the report executor periods
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -65,26 +132,44 @@ export function SalesForecastChart() {
             config={chartConfig}
             className="h-[320px] w-full aspect-auto sm:h-[360px] xl:h-[380px]"
           >
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <LineChart data={chartData} margin={{ top: 8, right: 12, left: 12, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.5} />
               <XAxis
                 dataKey="periodLabel"
                 tickLine={false}
                 axisLine={false}
-                tickMargin={8}
-                minTickGap={24}
-                tickFormatter={formatPeriodTick}
+                tickMargin={10}
+                interval={0}
+                height={52}
+                tick={<PeriodAxisTick />}
               />
               <YAxis
+                width={110}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => formatBdtCompact(Number(value))}
+                tickMargin={12}
+                tickFormatter={(value) => formatBdt(Number(value))}
               />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
                     labelFormatter={(value) => `Period: ${value}`}
-                    formatter={(value) => formatBdt(Number(value))}
+                    formatter={(value, name, item) => (
+                      <div className="flex min-w-[220px] items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="size-2.5 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <span className="text-muted-foreground">
+                            {seriesLabels[name as keyof typeof seriesLabels] ?? name}
+                          </span>
+                        </div>
+                        <span className="font-mono font-medium text-foreground">
+                          {formatBdt(Number(value))}
+                        </span>
+                      </div>
+                    )}
                   />
                 }
               />
@@ -95,6 +180,7 @@ export function SalesForecastChart() {
                 stroke="var(--color-forecastedSales)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
                 strokeDasharray="6 4"
               />
               <Line
@@ -103,7 +189,7 @@ export function SalesForecastChart() {
                 stroke="var(--color-predictedSalesLine)"
                 strokeWidth={2}
                 dot={{ r: 4 }}
-                // strokeDasharray="2 6"
+                activeDot={{ r: 6 }}
               />
               <Line
                 type="monotone"
@@ -111,6 +197,7 @@ export function SalesForecastChart() {
                 stroke="var(--color-actualSales)"
                 strokeWidth={2.5}
                 dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ChartContainer>

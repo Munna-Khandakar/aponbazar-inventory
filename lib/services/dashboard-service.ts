@@ -22,7 +22,7 @@ import type {
   StorePerformanceData,
   StorePerformanceSnapshotData,
 } from "@/lib/types/dashboard"
-import type { SalesForecastData } from "@/lib/types/SalesForecastData"
+import type { SalesForecastData, SalesForecastDataset } from "@/lib/types/SalesForecastData"
 import type {
   ExecuteReportRequest,
   SalesForecastReportResponse,
@@ -170,7 +170,7 @@ const salesForecastApiResponse: SalesForecastReportResponse = {
 
 const mapSalesForecastReport = (
   response: SalesForecastReportResponse
-): SalesForecastData[] => {
+): SalesForecastDataset => {
   const normalizePeriodLabel = (periodLabel: string) =>
     periodLabel.replace(/\s+/g, " ").trim()
 
@@ -190,7 +190,15 @@ const mapSalesForecastReport = (
   ])
 
   const getPeriodTimestamp = (periodLabel: string) => {
-    const [monthName, year] = normalizePeriodLabel(periodLabel).split(" ")
+    const normalizedLabel = normalizePeriodLabel(periodLabel)
+    const weekMatch = normalizedLabel.match(/^(\d{4})-W(\d{1,2})$/)
+
+    if (weekMatch) {
+      const [, year, week] = weekMatch
+      return Number(year) * 100 + Number(week)
+    }
+
+    const [monthName, year] = normalizedLabel.split(" ")
     const monthIndex = monthOrder.get(monthName.toLowerCase())
     const yearNumber = Number(year)
 
@@ -198,7 +206,7 @@ const mapSalesForecastReport = (
       return Number.MAX_SAFE_INTEGER
     }
 
-    return new Date(yearNumber, monthIndex, 1).getTime()
+    return yearNumber * 100 + monthIndex
   }
 
   const baseByPeriod = new Map(
@@ -230,15 +238,18 @@ const mapSalesForecastReport = (
     ])
   ).sort((left, right) => getPeriodTimestamp(left) - getPeriodTimestamp(right))
 
-  return bridgePredictedSalesPoint(
-    periods.map((periodLabel) => ({
-      periodLabel,
-      forecastedSales: baseByPeriod.get(periodLabel) ?? null,
-      actualSales: actualByPeriod.get(periodLabel) ?? null,
-      predictedSales: predictedByPeriod.get(periodLabel) ?? null,
-      predictedSalesLine: predictedByPeriod.get(periodLabel) ?? null,
-    }))
-  )
+  return {
+    granularity: response.data.granularity,
+    points: bridgePredictedSalesPoint(
+      periods.map((periodLabel) => ({
+        periodLabel,
+        forecastedSales: baseByPeriod.get(periodLabel) ?? null,
+        actualSales: actualByPeriod.get(periodLabel) ?? null,
+        predictedSales: predictedByPeriod.get(periodLabel) ?? null,
+        predictedSalesLine: predictedByPeriod.get(periodLabel) ?? null,
+      }))
+    ),
+  }
 }
 
 const bridgePredictedSalesPoint = (

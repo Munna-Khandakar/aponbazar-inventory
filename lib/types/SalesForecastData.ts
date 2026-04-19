@@ -5,3 +5,8 @@ export type SalesForecastData = {
   predictedSales: number | null
   predictedSalesLine: number | null
 }
+
+export type SalesForecastDataset = {
+  granularity: string
+  points: SalesForecastData[]
+}
