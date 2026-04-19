@@ -93,10 +93,12 @@ export type StorePerformanceData = {
 
 export type StorePerformanceSnapshotData = {
   shopName: string
-  actualSales: number
+  mtdSales: number
   targetSales: number
-  predictedGrossSales?: number
-  salesPerformance?: number
+  predictedSalesRom: number
+  mtdTargetVsSales?: number
+  predictedGap?: number
+  forecastAccuracy?: number
 }
 
 export type ShopPerformanceSummaryForecastPoint = {

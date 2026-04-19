@@ -119,19 +119,25 @@ export function StorePerformanceTableSkeleton() {
     <>
       {Array.from({ length: 6 }).map((_, index) => (
         <tr key={index} className="border-b border-border/60 last:border-b-0">
-          <td className="py-3 pr-3">
+          <td className="py-3 pr-6">
             <Skeleton className="h-4 w-36" />
           </td>
-          <td className="py-3 text-center">
-            <Skeleton className="mx-auto h-6 w-16 rounded-full" />
+          <td className="px-4 py-3">
+            <Skeleton className="ml-auto h-4 w-24" />
           </td>
-          <td className="py-3 text-center">
-            <Skeleton className="mx-auto h-6 w-16 rounded-full" />
+          <td className="px-4 py-3">
+            <Skeleton className="ml-auto h-4 w-24" />
           </td>
-          <td className="py-3">
+          <td className="px-4 py-3">
+            <Skeleton className="ml-auto h-4 w-24" />
+          </td>
+          <td className="px-4 py-3">
+            <Skeleton className="ml-auto h-6 w-20 rounded-full" />
+          </td>
+          <td className="px-4 py-3">
             <Skeleton className="ml-auto h-4 w-20" />
           </td>
-          <td className="py-3">
+          <td className="pl-4 py-3">
             <Skeleton className="ml-auto h-4 w-20" />
           </td>
         </tr>

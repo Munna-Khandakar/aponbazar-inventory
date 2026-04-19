@@ -101,7 +101,7 @@ export const usePromoImpact = () => {
   })
 }
 export const useStorePerformanceSnapshot = () => {
-  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES_AGGREGATE, {
+  const request = useReportRequest(SalesReportType.SHOP_WISE_SALES, {
     includeGrowthTarget: false,
   })
 

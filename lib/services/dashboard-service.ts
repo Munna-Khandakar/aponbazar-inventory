@@ -27,6 +27,7 @@ import type {
   ExecuteReportRequest,
   SalesForecastReportResponse,
   ShopPerformanceSummaryReportResponse,
+  ShopWiseSalesReportResponse,
   ShopWiseSalesAggregateReportResponse,
   ShopPerformanceReportResponse,
 } from "@/lib/types/report"
@@ -320,14 +321,16 @@ const mapShopWiseSalesReport = (
   }))
 
 const mapStorePerformanceSnapshotReport = (
-  response: ShopWiseSalesAggregateReportResponse
+  response: ShopWiseSalesReportResponse
 ): StorePerformanceSnapshotData[] =>
-  response.data.data.map((shop) => ({
-    shopName: shop.strShopName,
-    actualSales: shop.actualSales,
-    targetSales: shop.baseSales,
-    predictedGrossSales: shop.predictedGrossSales,
-    salesPerformance: shop.salesPerformance,
+  response.data.series.summary.map((shop) => ({
+    shopName: shop.shopName,
+    mtdSales: shop.mtdSales,
+    targetSales: shop.targetSales,
+    predictedSalesRom: shop.predictedRom,
+    mtdTargetVsSales: shop.mtdTargetVsSales,
+    predictedGap: shop.predictedGap,
+    forecastAccuracy: shop.forecastAccuracy,
   }))
 
 const storePerformanceApiResponse: ShopPerformanceReportResponse = {
@@ -807,6 +810,7 @@ const customerSatisfactionData: CustomerSatisfactionData[] = [
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value))
 const liveReportTypes = new Set<SalesReportType>([
   SalesReportType.MONTH_WISE_SALES,
+  SalesReportType.SHOP_WISE_SALES,
   SalesReportType.SHOP_WISE_SALES_AGGREGATE,
   SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
   SalesReportType.SHOP_PERFORMANCE_SUMMARY,
@@ -830,6 +834,7 @@ const getMockReportResponse = (
 const executeReport = async <
   TResponse extends
     | SalesForecastReportResponse
+    | ShopWiseSalesReportResponse
     | ShopPerformanceSummaryReportResponse
     | ShopWiseSalesAggregateReportResponse
     | ShopPerformanceReportResponse,
@@ -871,10 +876,10 @@ export const dashboardService = {
       await executeReport<ShopWiseSalesAggregateReportResponse>(request)
     ),
   getStorePerformanceSnapshot: async (
-    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_AGGREGATE>
+    request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES>
   ) =>
     mapStorePerformanceSnapshotReport(
-      await executeReport<ShopWiseSalesAggregateReportResponse>(request)
+      await executeReport<ShopWiseSalesReportResponse>(request)
     ),
   getStorePerformance: async (
     request: ExecuteReportRequest<SalesReportType.SHOP_WISE_SALES_PERFORMANCE>

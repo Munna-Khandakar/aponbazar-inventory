@@ -62,6 +62,28 @@ export type PredictedSalesForecastSeriesPoint = {
   predictedGrossSales: number
 }
 
+export type ShopWiseSalesSeriesPoint = {
+  strWarehouseName: string
+  periodLabel: string
+  numTotalNetSales: number
+}
+
+export type ShopWiseSalesPredictedSeriesPoint = {
+  strWarehouseName: string
+  periodLabel: string
+  predictedGrossSales: number
+}
+
+export type ShopWiseSalesSummaryRow = {
+  shopName: string
+  targetSales: number
+  mtdSales: number
+  predictedRom: number
+  mtdTargetVsSales?: number
+  predictedGap?: number
+  forecastAccuracy?: number
+}
+
 type SeriesReportData<TReportName extends SalesReportType> =
   BaseReportData<TReportName> & {
     series: {
@@ -77,7 +99,15 @@ export type SalesForecastReportResponse = ReportResponse<
 >
 
 export type ShopWiseSalesReportResponse = ReportResponse<
-  SeriesReportData<SalesReportType.SHOP_WISE_SALES>
+  BaseReportData<SalesReportType.SHOP_WISE_SALES> & {
+    series: {
+      base: ShopWiseSalesSeriesPoint[]
+      actual: ShopWiseSalesSeriesPoint[]
+      predicted?: ShopWiseSalesPredictedSeriesPoint[]
+      summary: ShopWiseSalesSummaryRow[]
+    }
+    granularity: string
+  }
 >
 
 export type ShopWiseSalesAggregateReportRow = {

@@ -13,14 +13,47 @@ const formatCurrency = (value?: number) =>
         maximumFractionDigits: 2,
       })}`
 
-const getPerformance = (actual: number, targetSales: number, provided?: number) => {
-  if (provided !== undefined) return provided
-  if (targetSales <= 0) return null
-  return (actual / targetSales) * 100
+const formatPercentage = (value?: number) =>
+  value === undefined ? "N/A" : `${value.toFixed(2)}%`
+
+const getMetricTone = (value?: number) => {
+  if (value === undefined) {
+    return "text-slate-500"
+  }
+
+  if (value >= 100) {
+    return "text-emerald-700"
+  }
+
+  if (value >= 75) {
+    return "text-amber-700"
+  }
+
+  return "text-rose-700"
 }
 
-const getPerformanceTone = (value: number | null) => {
+const getForecastAccuracyTone = (value?: number) => {
+  if (value === undefined) {
+    return "text-slate-500"
+  }
+
+  if (value >= 75) {
+    return "text-emerald-700"
+  }
+
+  if (value >= 40) {
+    return "text-amber-700"
+  }
+
+  return "text-rose-700"
+}
+
+const getMetricBadgeTone = (value?: number) => {
   if (value === null) {
+    return "bg-slate-100 text-slate-600"
+  }
+
+  if (value === undefined) {
     return "bg-slate-100 text-slate-600"
   }
 
@@ -44,17 +77,19 @@ export function StorePerformanceTable() {
     <Card className="max-h-[520px] overflow-hidden">
       <CardHeader>
         <CardTitle>Shop performance snapshot</CardTitle>
-        <CardDescription>Actual, target, and predicted sales by shop</CardDescription>
+        <CardDescription>Target, MTD sales, ROM forecast, and forecast quality by shop</CardDescription>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-              <th className="py-3 pr-6 text-left">Shop</th>
-              <th className="px-4 py-3 text-center">Sales perf.</th>
-              <th className="px-4 py-3 text-right">Actual sales</th>
-              <th className="px-4 py-3 text-right">Target sales</th>
-              <th className="pl-4 py-3 text-right">Predicted sales</th>
+              <th className="py-3 pr-6 text-left">Shop Name</th>
+              <th className="px-4 py-3 text-right">Target Sales</th>
+              <th className="px-4 py-3 text-right">MTD Sales</th>
+              <th className="px-4 py-3 text-right">Predicted Sales (ROM)</th>
+              <th className="px-4 py-3 text-right">MTD Target vs Sales</th>
+              <th className="px-4 py-3 text-right">Predicted Gap</th>
+              <th className="pl-4 py-3 text-right">Forecast Accuracy</th>
             </tr>
           </thead>
           <tbody>
@@ -63,7 +98,7 @@ export function StorePerformanceTable() {
             ) : error ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={7}
                   className="py-6 text-center text-sm text-destructive"
                 >
                   Failed to load shop performance data
@@ -71,35 +106,45 @@ export function StorePerformanceTable() {
               </tr>
             ) : null}
             {rows.map((store) => {
-              const salesPerformance = getPerformance(
-                store.actualSales,
-                store.targetSales,
-                store.salesPerformance
-              )
-
               return (
                 <tr key={store.shopName} className="border-b border-border/60 last:border-b-0">
                   <td className="py-3 pr-6">
                     <div className="font-semibold text-foreground">{store.shopName}</div>
                   </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                        className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
-                            getPerformanceTone(salesPerformance)
-                        )}
-                    >
-                      {salesPerformance === null ? "N/A" : `${salesPerformance.toFixed(2)}%`}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
-                    {formatCurrency(store.actualSales)}
-                  </td>
                   <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
                     {formatCurrency(store.targetSales)}
                   </td>
-                  <td className="pl-4 py-3 text-right font-mono text-sm whitespace-nowrap">
-                    {formatCurrency(store.predictedGrossSales)}
+                  <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+                    {formatCurrency(store.mtdSales)}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+                    {formatCurrency(store.predictedSalesRom)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm whitespace-nowrap">
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                        getMetricBadgeTone(store.mtdTargetVsSales)
+                      )}
+                    >
+                      {formatPercentage(store.mtdTargetVsSales)}
+                    </span>
+                  </td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 text-right font-mono text-sm whitespace-nowrap",
+                      getMetricTone(store.predictedGap)
+                    )}
+                  >
+                    {formatPercentage(store.predictedGap)}
+                  </td>
+                  <td
+                    className={cn(
+                      "pl-4 py-3 text-right font-mono text-sm whitespace-nowrap",
+                      getForecastAccuracyTone(store.forecastAccuracy)
+                    )}
+                  >
+                    {formatPercentage(store.forecastAccuracy)}
                   </td>
                 </tr>
               )
