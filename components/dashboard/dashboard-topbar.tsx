@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronDown, LogOut, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, LogOut, Store, X } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -62,7 +62,8 @@ const dashboardPages = [
 export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { dateMode, startDate, endDate, setPresetRange, setCustomRange } = useReportFilters()
+  const { dateMode, startDate, endDate, shopName, setShopName, setPresetRange, setCustomRange } =
+    useReportFilters()
   const showDateFilters = pathname !== "/dashboard/inventory-management"
   const [isCustomRangeOpen, setIsCustomRangeOpen] = useState(false)
   const [draftStartDate, setDraftStartDate] = useState(startDate)
@@ -111,6 +112,24 @@ export function DashboardTopbar({ onSignOut }: DashboardTopbarProps) {
               <p className="max-w-2xl text-sm text-muted-foreground">
                 {currentPage.description}
               </p>
+              {shopName ? (
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2 rounded-full px-3"
+                    onClick={() => setShopName("")}
+                  >
+                    <ArrowLeft size={14} />
+                    Back
+                  </Button>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">
+                    <Store size={14} />
+                    <span>Showing results for {shopName}</span>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
