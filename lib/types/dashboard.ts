@@ -94,7 +94,8 @@ export type StorePerformanceData = {
 export type StorePerformanceSnapshotData = {
   shopName: string
   actualSales: number
-  targettedSales: number
+  targetSales: number
+  predictedGrossSales?: number
   salesPerformance?: number
 }
 

@@ -315,7 +315,8 @@ const mapStorePerformanceSnapshotReport = (
   response.data.data.map((shop) => ({
     shopName: shop.strShopName,
     actualSales: shop.actualSales,
-    targettedSales: shop.baseSales,
+    targetSales: shop.baseSales,
+    predictedGrossSales: shop.predictedGrossSales,
     salesPerformance: shop.salesPerformance,
   }))
 

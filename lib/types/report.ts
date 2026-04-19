@@ -39,9 +39,9 @@ export type ExecuteReportRequest<
 type BaseReportData<TReportName extends SalesReportType> = {
   reportName: TReportName
   totalRows: number
-  page: number
-  pageSize: number
-  totalPages: number
+  page?: number
+  pageSize?: number
+  totalPages?: number
   executionTimeMs: number
   generatedAt: string
 }
