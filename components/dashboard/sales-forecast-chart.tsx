@@ -29,12 +29,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-const seriesLabels = {
-  actualSales: "Actual Sales",
-  forecastedSales: "Targeted Sales",
-  predictedSalesLine: "Predicted Gross Sales",
-} as const
-
 const formatBdt = (value: number) =>
   `৳${value.toLocaleString("en-BD", {
     maximumFractionDigits: 0,
@@ -162,7 +156,7 @@ export function SalesForecastChart() {
                             style={{ backgroundColor: item.color }}
                           />
                           <span className="text-muted-foreground">
-                            {seriesLabels[name as keyof typeof seriesLabels] ?? name}
+                            {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
                           </span>
                         </div>
                         <span className="font-mono font-medium text-foreground">

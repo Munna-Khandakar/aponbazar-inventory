@@ -245,7 +245,6 @@ const mapSalesForecastReport = (
         periodLabel,
         forecastedSales: baseByPeriod.get(periodLabel) ?? null,
         actualSales: actualByPeriod.get(periodLabel) ?? null,
-        predictedSales: predictedByPeriod.get(periodLabel) ?? null,
         predictedSalesLine: predictedByPeriod.get(periodLabel) ?? null,
       }))
     ),
@@ -259,7 +258,7 @@ const bridgePredictedSalesPoint = (
     (latestIndex, point, index) => (point.actualSales !== null ? index : latestIndex),
     -1
   )
-  const firstPredictedIndex = data.findIndex((point) => point.predictedSales !== null)
+  const firstPredictedIndex = data.findIndex((point) => point.predictedSalesLine !== null)
   const shouldBridgePrediction =
     lastActualIndex !== -1 &&
     firstPredictedIndex !== -1 &&
@@ -270,7 +269,7 @@ const bridgePredictedSalesPoint = (
     predictedSalesLine:
       shouldBridgePrediction && index === lastActualIndex
         ? point.actualSales
-        : point.predictedSales,
+        : point.predictedSalesLine,
   }))
 }
 
