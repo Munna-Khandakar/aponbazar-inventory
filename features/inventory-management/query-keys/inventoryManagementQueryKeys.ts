@@ -13,4 +13,6 @@ export const inventoryManagementQueryKeys = {
     ["inventory-management", "inventory-item-detail", startDate, endDate, subCategory, shopName] as const,
   blockTableData: (startDate: string, endDate: string, shopName: string) =>
     ["inventory-management", "inventory-block-table-data", startDate, endDate, shopName] as const,
+  shopInventorySnapshot: (shopName: string) =>
+    ["inventory-management", "shop-inventory-snapshot", shopName] as const,
 }

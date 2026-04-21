@@ -12,6 +12,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isChecking, signOut } = useRequireAuth()
   const pathname = usePathname()
   const showOnlySidebarTitles = pathname === "/dashboard/sales-prediction"
+  const snapshotTargetId =
+    pathname === "/dashboard/sales-prediction"
+      ? "shop-performance-snapshot"
+      : pathname === "/dashboard/inventory-management"
+        ? "shop-inventory-snapshot"
+        : undefined
   const topbarRef = useRef<HTMLDivElement | null>(null)
   const [topbarHeight, setTopbarHeight] = useState(0)
 
@@ -68,7 +74,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="order-2 min-w-0 xl:order-1">
               <div className="xl:sticky xl:top-[calc(var(--dashboard-topbar-height)+1rem)]">
-                <DashboardRightSidebar showOnlyTitle={showOnlySidebarTitles} />
+                <DashboardRightSidebar
+                  showOnlyTitle={showOnlySidebarTitles}
+                  snapshotTargetId={snapshotTargetId}
+                />
               </div>
             </div>
           </div>

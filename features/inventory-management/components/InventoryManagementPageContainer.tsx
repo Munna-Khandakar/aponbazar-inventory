@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import { AiRecommendationSection } from "@/components/dashboard/ai-recommendation-section"
 import { BlockInventoryTable } from "@/features/inventory-management/components/BlockInventoryTable"
 import { PredictiveInventoryStatusChart } from "@/features/inventory-management/components/PredictiveInventoryStatusChart"
+import { ShopInventorySnapshotTable } from "@/features/inventory-management/components/ShopInventorySnapshotTable"
 import { SupplierReorderInsightsChart } from "@/features/inventory-management/components/SupplierReorderInsightsChart"
 import { ToplineInventoryOverview } from "@/features/inventory-management/components/ToplineInventoryOverview"
 import { useReportFilters } from "@/hooks/use-report-filters"
@@ -40,6 +41,13 @@ export function InventoryManagementPageContainer() {
       <BlockInventoryTable />
 
       <PredictiveInventoryStatusChart />
+
+      <section
+        id="shop-inventory-snapshot"
+        className="scroll-mt-[calc(var(--dashboard-topbar-height)+1.5rem)]"
+      >
+        <ShopInventorySnapshotTable />
+      </section>
 
       <SupplierReorderInsightsChart />
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { ArrowDownUp } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { SidebarInsightsSkeleton } from "@/components/dashboard/report-skeletons"
 import { Button } from "@/components/ui/button"
@@ -90,10 +90,12 @@ const getPerformanceTone = (value: number | null): PerformanceTone => {
 
 type DashboardRightSidebarProps = {
   showOnlyTitle?: boolean
+  snapshotTargetId?: string
 }
 
 export function DashboardRightSidebar({
   showOnlyTitle = false,
+  snapshotTargetId,
 }: DashboardRightSidebarProps) {
   const { data, isLoading, isFetching } = useStorePerformance()
   const { searchTerm, setSearchTerm, shopName, setShopName } = useReportFilters()
@@ -101,8 +103,12 @@ export function DashboardRightSidebar({
   const pendingSnapshotScrollRef = useRef(false)
   const showLoadingState = isLoading || isFetching
 
-  const scrollToSnapshot = () => {
-    const snapshotSection = document.getElementById("shop-performance-snapshot")
+  const scrollToSnapshot = useCallback(() => {
+    if (!snapshotTargetId) {
+      return false
+    }
+
+    const snapshotSection = document.getElementById(snapshotTargetId)
 
     if (!snapshotSection) {
       return false
@@ -110,10 +116,10 @@ export function DashboardRightSidebar({
 
     snapshotSection.scrollIntoView({ behavior: "smooth", block: "start" })
     return true
-  }
+  }, [snapshotTargetId])
 
   useEffect(() => {
-    if (!pendingSnapshotScrollRef.current || shopName) {
+    if (!snapshotTargetId || !pendingSnapshotScrollRef.current || shopName) {
       return
     }
 
@@ -123,9 +129,13 @@ export function DashboardRightSidebar({
     })
 
     return () => window.cancelAnimationFrame(animationFrameId)
-  }, [shopName])
+  }, [shopName, scrollToSnapshot, snapshotTargetId])
 
   const handleSnapshotClick = () => {
+    if (!snapshotTargetId) {
+      return
+    }
+
     if (shopName) {
       pendingSnapshotScrollRef.current = true
       setShopName("")
@@ -165,7 +175,7 @@ export function DashboardRightSidebar({
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Shop Insights</h3>
           <div className="flex items-center gap-2">
-            {showOnlyTitle ? (
+            {snapshotTargetId ? (
               <Button
                 type="button"
                 variant="outline"

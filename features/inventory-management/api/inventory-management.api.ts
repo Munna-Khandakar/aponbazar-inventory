@@ -13,6 +13,7 @@ import type {
   InventoryItemDetailReportResponse,
   InventoryItemDetailReportRow,
 } from "@/features/inventory-management/types/InventoryBlockReports"
+import type { ShopInventorySnapshotReportResponse } from "@/features/inventory-management/types/ShopInventorySnapshotReport"
 import { adaptInventoryCategoryDetailReportResponse } from "@/features/inventory-management/utils/adaptInventoryCategoryDetailReport"
 import { adaptInventoryBigBlockReportResponse } from "@/features/inventory-management/utils/adaptInventoryBigBlockReport"
 import { adaptInventoryItemDetailReportResponse } from "@/features/inventory-management/utils/adaptInventoryItemDetailReport"
@@ -89,6 +90,22 @@ const createInventoryReportParameters = ({
 })
 
 export const inventoryManagementApi = {
+  getShopInventorySnapshot: async (shopName = ""): Promise<ShopInventorySnapshotReportResponse> => {
+    const { data } = await apiClient.post<
+      ShopInventorySnapshotReportResponse | InventoryExecuteReportErrorResponse
+    >("/api/reports/execute", {
+      reportName: "shop_wise_inventory_snapshot",
+      parameters: {
+        shopName: shopName || null,
+      },
+    })
+
+    if ("error" in data) {
+      throw new Error(data.error || "Failed to load shop_wise_inventory_snapshot")
+    }
+
+    return data
+  },
   getInventoryBigBlockSeries: async (
     startDate: string,
     endDate: string,
