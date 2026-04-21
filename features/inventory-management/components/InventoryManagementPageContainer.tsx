@@ -42,12 +42,14 @@ export function InventoryManagementPageContainer() {
 
       <PredictiveInventoryStatusChart />
 
-      <section
-        id="shop-inventory-snapshot"
-        className="scroll-mt-[calc(var(--dashboard-topbar-height)+1.5rem)]"
-      >
-        <ShopInventorySnapshotTable />
-      </section>
+      {!shopName ? (
+        <section
+          id="shop-inventory-snapshot"
+          className="scroll-mt-[calc(var(--dashboard-topbar-height)+1.5rem)]"
+        >
+          <ShopInventorySnapshotTable />
+        </section>
+      ) : null}
 
       <SupplierReorderInsightsChart />
 
