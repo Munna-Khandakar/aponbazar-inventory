@@ -46,7 +46,7 @@ const adaptActualRows = (rows: InventoryBigBlockActualRow[]): InventoryBigBlockR
 export const adaptInventoryBigBlockReportResponse = (
   response: InventoryBigBlockSeriesResponse
 ): InventoryBigBlockReportResponse => {
-  const adaptedRows = adaptActualRows(response.data.series.actual)
+  const adaptedRows = adaptActualRows(response.data.series?.actual ?? [])
 
   return {
     success: response.success,

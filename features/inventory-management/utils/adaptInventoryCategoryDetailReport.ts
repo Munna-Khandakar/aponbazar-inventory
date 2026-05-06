@@ -51,7 +51,7 @@ const adaptActualRows = (
 export const adaptInventoryCategoryDetailReportResponse = (
   response: InventoryCategoryDetailSeriesResponse
 ): InventoryCategoryDetailReportResponse => {
-  const adaptedRows = adaptActualRows(response.data.series.actual)
+  const adaptedRows = adaptActualRows(response.data.series?.actual ?? [])
 
   return {
     success: response.success,

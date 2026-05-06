@@ -50,6 +50,21 @@ const isInventoryItemDetailSeriesResponse = (
   response: InventoryItemDetailReportResponse | InventoryItemDetailSeriesResponse
 ): response is InventoryItemDetailSeriesResponse => "series" in response.data
 
+const normalizeInventoryBigBlockSeriesResponse = (
+  response: InventoryBigBlockSeriesResponse
+): InventoryBigBlockSeriesResponse => ({
+  ...response,
+  data: {
+    ...response.data,
+    series: {
+      actual: Array.isArray(response.data.series?.actual) ? response.data.series.actual : [],
+      predicted: Array.isArray(response.data.series?.predicted)
+        ? response.data.series.predicted
+        : [],
+    },
+  },
+})
+
 const executeInventoryReportPage = async <
   TReportName extends InventoryReportName,
   TRow,
@@ -128,7 +143,7 @@ export const inventoryManagementApi = {
       throw new Error("Inventory big block series response is not available for predictive chart")
     }
 
-    return data
+    return normalizeInventoryBigBlockSeriesResponse(data)
   },
   getInventoryBigBlockReport: async (
     startDate: string,

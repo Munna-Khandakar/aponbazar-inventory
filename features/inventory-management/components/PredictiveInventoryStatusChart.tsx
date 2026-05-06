@@ -277,8 +277,8 @@ export function PredictiveInventoryStatusChart() {
   }
 
   const { chartData, chartConfig, lineConfigs } = buildPredictiveChartModel(
-    data.data.series.actual,
-    data.data.series.predicted
+    data.data.series?.actual ?? [],
+    data.data.series?.predicted ?? []
   )
 
   if (!chartData.length || !lineConfigs.length) {
