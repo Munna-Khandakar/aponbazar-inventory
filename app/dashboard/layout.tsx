@@ -17,6 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       ? "shop-performance-snapshot"
       : pathname === "/dashboard/inventory-management"
         ? "shop-inventory-snapshot"
+        : pathname === "/dashboard/customer-behavior"
+          ? "shop-customer-snapshot"
         : undefined
   const topbarRef = useRef<HTMLDivElement | null>(null)
   const [topbarHeight, setTopbarHeight] = useState(0)
