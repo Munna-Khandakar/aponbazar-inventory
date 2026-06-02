@@ -20,7 +20,7 @@ export function BehavioralInsightsSection({ insights }: BehavioralInsightsSectio
       <CardHeader>
         <CardTitle>AI Behavioral Insights</CardTitle>
         <CardDescription>
-          Churn risks, credit forecasts, and customer segment opportunities
+          Rule-based summaries generated from the current live customer reports
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

@@ -8,24 +8,24 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { TransactionMethodVolume } from "@/features/customer-behavior/types/CustomerBehaviorDashboard"
-import { formatNumber } from "@/features/customer-behavior/utils/formatCustomerBehaviorValue"
+import type { PaymentMethodSales } from "@/features/customer-behavior/types/CustomerBehaviorDashboard"
+import { formatCurrency } from "@/features/customer-behavior/utils/formatCustomerBehaviorValue"
 
 type TransactionMethodsDonutChartProps = {
-  data: TransactionMethodVolume[]
+  data: PaymentMethodSales[]
 }
 
 export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutChartProps) {
-  const totalTransactions = data.reduce(
-    (total, method) => total + method.transactionCount,
+  const totalSalesValue = data.reduce(
+    (total, method) => total + method.amount,
     0
   )
 
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
-        <CardTitle>Transaction Methods</CardTitle>
-        <CardDescription>Transaction count by payment method</CardDescription>
+        <CardTitle>Payment Method Sales Mix</CardTitle>
+        <CardDescription>Current-month sales value by payment method</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -39,7 +39,7 @@ export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutCh
                       <div className="flex min-w-32 items-center justify-between gap-4">
                         <span className="text-muted-foreground">{name}</span>
                         <span className="font-mono font-medium">
-                          {formatNumber(Number(value))}
+                          {formatCurrency(Number(value))}
                         </span>
                       </div>
                     )}
@@ -48,7 +48,7 @@ export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutCh
               />
               <Pie
                 data={data}
-                dataKey="transactionCount"
+                dataKey="amount"
                 nameKey="method"
                 innerRadius={66}
                 outerRadius={96}
@@ -63,10 +63,10 @@ export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutCh
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                Transactions
+                Sales Value
               </p>
               <p className="font-mono text-xl font-semibold text-foreground">
-                {formatNumber(totalTransactions)}
+                {formatCurrency(totalSalesValue)}
               </p>
             </div>
           </div>
@@ -74,10 +74,6 @@ export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutCh
 
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {data.map((method) => {
-            const percentage = totalTransactions
-              ? (method.transactionCount / totalTransactions) * 100
-              : 0
-
             return (
               <div
                 key={method.method}
@@ -91,7 +87,7 @@ export function TransactionMethodsDonutChart({ data }: TransactionMethodsDonutCh
                   <span className="text-sm font-medium text-foreground">{method.method}</span>
                 </div>
                 <span className="font-mono text-xs text-muted-foreground">
-                  {formatNumber(method.transactionCount)} ({percentage.toFixed(1)}%)
+                  {formatCurrency(method.amount)} ({method.percentage.toFixed(2)}%)
                 </span>
               </div>
             )

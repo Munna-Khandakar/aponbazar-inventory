@@ -34,7 +34,7 @@ export function CustomerDemographyChart({ data }: CustomerDemographyChartProps) 
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
         <CardTitle>Customer Demography</CardTitle>
-        <CardDescription>Male and female customers by age range</CardDescription>
+        <CardDescription>Current-month male and female customers by age range</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="aspect-auto h-[320px] w-full">

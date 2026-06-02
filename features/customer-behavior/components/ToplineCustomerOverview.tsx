@@ -2,7 +2,8 @@ import type { CustomerOverview } from "@/features/customer-behavior/types/Custom
 import {
   formatCurrency,
   formatNumber,
-  formatPercentage,
+  formatNullableNumber,
+  formatNullablePercentage,
 } from "@/features/customer-behavior/utils/formatCustomerBehaviorValue"
 import { cn } from "@/lib/utils"
 
@@ -43,13 +44,13 @@ export function ToplineCustomerOverview({ overview }: ToplineCustomerOverviewPro
     },
     {
       label: "Predicted Churn",
-      value: formatNumber(overview.predictedChurn),
-      definition: "Customers forecast to cross the 90-day no-transaction threshold.",
+      value: formatNullableNumber(overview.predictedChurn),
+      definition: "Customers currently at risk of crossing the churn threshold.",
     },
     {
       label: "Forecast Accuracy",
-      value: formatPercentage(overview.forecastAccuracy),
-      definition: "Confidence score for the current customer behavior forecast.",
+      value: formatNullablePercentage(overview.forecastAccuracy),
+      definition: "Forecast accuracy is not available from the current API.",
     },
   ]
 
@@ -60,7 +61,7 @@ export function ToplineCustomerOverview({ overview }: ToplineCustomerOverviewPro
           Topline Customer Overview
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Headline customer health signals for the selected period
+          Current-month customer health signals
         </p>
       </div>
 

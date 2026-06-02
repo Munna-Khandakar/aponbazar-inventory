@@ -3,6 +3,13 @@ export const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   })}`
 
+export const formatNullableCurrency = (value: number | null) =>
+  value === null ? "N/A" : formatCurrency(value)
+
 export const formatNumber = (value: number) => value.toLocaleString("en-BD")
 
-export const formatPercentage = (value: number) => `${value.toFixed(0)}%`
+export const formatNullableNumber = (value: number | null) =>
+  value === null ? "N/A" : formatNumber(value)
+
+export const formatNullablePercentage = (value: number | null) =>
+  value === null ? "N/A" : `${value.toFixed(0)}%`
