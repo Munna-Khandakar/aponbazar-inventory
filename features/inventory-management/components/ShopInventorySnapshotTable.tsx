@@ -1,75 +1,35 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
+import { GitCompareArrows } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { FullscreenTableCard } from "@/components/dashboard/fullscreen-table-card"
+import { ShopComparisonDialog } from "@/features/inventory-management/components/ShopComparisonDialog"
 import { useShopInventorySnapshot } from "@/features/inventory-management/hooks/useShopInventorySnapshot"
-import type {
-  InventoryHealthStatus,
-  ShopInventorySnapshotTableRow,
-} from "@/features/inventory-management/types/ShopInventorySnapshotReport"
+import type { ShopInventorySnapshotTableRow } from "@/features/inventory-management/types/ShopInventorySnapshotReport"
+import {
+  formatCurrency,
+  formatPercentage,
+  formatQuantity,
+  getHealthTone,
+} from "@/features/inventory-management/utils/shopSnapshotFormatters"
 import { cn } from "@/lib/utils"
 
-const quantityFormatter = new Intl.NumberFormat("en-BD", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-const currencyFormatter = new Intl.NumberFormat("en-BD", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-const percentageFormatter = new Intl.NumberFormat("en-BD", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-const formatQuantity = (value: number | null) => {
-  if (value === null) {
-    return "N/A"
-  }
-
-  return quantityFormatter.format(value)
-}
-
-const formatCurrency = (value: number | null) => {
-  if (value === null) {
-    return "N/A"
-  }
-
-  return `৳${currencyFormatter.format(value)}`
-}
-
-const formatPercentage = (value: number | null) => {
-  if (value === null) {
-    return "N/A"
-  }
-
-  return `${percentageFormatter.format(value)}%`
-}
-
-const getHealthTone = (value: InventoryHealthStatus | null) => {
-  switch (value) {
-    case "Healthy":
-      return "bg-emerald-100 text-emerald-700"
-    case "Overstocked":
-      return "bg-amber-100 text-amber-700"
-    case "Stockout Risk":
-      return "bg-rose-100 text-rose-700"
-    default:
-      return "bg-slate-100 text-slate-600"
-  }
-}
+const MAX_COMPARE = 3
 
 const InventorySnapshotSkeleton = () => {
   return Array.from({ length: 7 }, (_, index) => (
     <tr key={index} className="border-b border-border/60 last:border-b-0">
-      {Array.from({ length: 7 }, (_, columnIndex) => (
+      {Array.from({ length: 8 }, (_, columnIndex) => (
         <td
           key={columnIndex}
           className={cn(
             "py-3",
-            columnIndex === 0 ? "pr-6" : "px-4 text-right",
-            columnIndex === 6 ? "pl-4 pr-0" : ""
+            columnIndex === 0 ? "w-10 px-3" : "",
+            columnIndex === 1 ? "pr-6" : columnIndex > 1 ? "px-4 text-right" : "",
+            columnIndex === 7 ? "pl-4 pr-0" : ""
           )}
         >
           <div className="h-4 animate-pulse rounded bg-slate-200" />
@@ -79,11 +39,20 @@ const InventorySnapshotSkeleton = () => {
   ))
 }
 
-function InventorySnapshotTableBody({ rows }: { rows: ShopInventorySnapshotTableRow[] }) {
+function InventorySnapshotTableBody({
+  rows,
+  selectedShops,
+  onToggleShop,
+}: {
+  rows: ShopInventorySnapshotTableRow[]
+  selectedShops: Set<string>
+  onToggleShop: (shopName: string) => void
+}) {
   return (
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+          <th className="w-10 px-3 py-3" />
           <th className="py-3 pr-6 text-left">Shop Name</th>
           <th className="px-4 py-3 text-right">Current Stock (Qty)</th>
           <th className="px-4 py-3 text-right">Current Stock (Value)</th>
@@ -95,16 +64,40 @@ function InventorySnapshotTableBody({ rows }: { rows: ShopInventorySnapshotTable
       </thead>
       <tbody>
         {rows.map((row) => (
-          <InventorySnapshotTableRow key={row.shopName} row={row} />
+          <InventorySnapshotTableRow
+            key={row.shopName}
+            row={row}
+            isSelected={selectedShops.has(row.shopName)}
+            isDisabled={!selectedShops.has(row.shopName) && selectedShops.size >= MAX_COMPARE}
+            onToggle={() => onToggleShop(row.shopName)}
+          />
         ))}
       </tbody>
     </table>
   )
 }
 
-function InventorySnapshotTableRow({ row }: { row: ShopInventorySnapshotTableRow }) {
+function InventorySnapshotTableRow({
+  row,
+  isSelected,
+  isDisabled,
+  onToggle,
+}: {
+  row: ShopInventorySnapshotTableRow
+  isSelected: boolean
+  isDisabled: boolean
+  onToggle: () => void
+}) {
   return (
-    <tr className="border-b border-border/60 last:border-b-0">
+    <tr className={cn("border-b border-border/60 last:border-b-0", isSelected && "bg-primary/5")}>
+      <td className="w-10 px-3 py-3">
+        <Checkbox
+          checked={isSelected}
+          disabled={isDisabled}
+          onCheckedChange={onToggle}
+          aria-label={`Select ${row.shopName}`}
+        />
+      </td>
       <td className="py-3 pr-6">
         <div className="font-semibold text-foreground">{row.shopName}</div>
       </td>
@@ -141,32 +134,84 @@ export function ShopInventorySnapshotTable() {
   const { rows, isLoading, isFetching, error } = useShopInventorySnapshot()
   const showLoadingState = isLoading || isFetching
 
+  const [selectedShops, setSelectedShops] = useState<Set<string>>(new Set())
+  const [isCompareOpen, setIsCompareOpen] = useState(false)
+
+  // Clear selection when the underlying rows change (e.g. filter change)
+  useEffect(() => {
+    setSelectedShops(new Set())
+  }, [rows])
+
+  const handleToggleShop = (shopName: string) => {
+    setSelectedShops((prev) => {
+      const next = new Set(prev)
+      if (next.has(shopName)) {
+        next.delete(shopName)
+      } else if (next.size < MAX_COMPARE) {
+        next.add(shopName)
+      }
+      return next
+    })
+  }
+
+  const selectedShopRows = useMemo(
+    () => rows.filter((r) => selectedShops.has(r.shopName)),
+    [rows, selectedShops]
+  )
+
+  const compareButton =
+    selectedShops.size >= 2 ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        onClick={() => setIsCompareOpen(true)}
+      >
+        <GitCompareArrows size={15} />
+        Compare ({selectedShops.size})
+      </Button>
+    ) : null
+
   return (
-    <FullscreenTableCard
-      className="max-h-[520px] overflow-hidden"
-      title="Shop inventory snapshot"
-      description="Current stock, next 5-day lifting, and inventory health signals by shop"
-      fullscreenDescription="Expanded view of shop-level stock quantity, stock value, 5-day lifting, and health signals."
-      bodyClassName="min-h-0 flex-1 overflow-auto"
-      fullscreenDisabled={showLoadingState}
-    >
-      {showLoadingState ? (
-        <table className="w-full text-sm">
-          <tbody>
-            <InventorySnapshotSkeleton />
-          </tbody>
-        </table>
-      ) : error ? (
-        <div className="flex aspect-video items-center justify-center text-sm text-destructive">
-          Failed to load shop inventory snapshot
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
-          No inventory snapshot rows available for the current filter.
-        </div>
-      ) : (
-        <InventorySnapshotTableBody rows={rows} />
-      )}
-    </FullscreenTableCard>
+    <>
+      <FullscreenTableCard
+        className="max-h-[520px] overflow-hidden"
+        title="Shop inventory snapshot"
+        description="Current stock, next 5-day lifting, and inventory health signals by shop"
+        fullscreenDescription="Expanded view of shop-level stock quantity, stock value, 5-day lifting, and health signals."
+        bodyClassName="min-h-0 flex-1 overflow-auto"
+        fullscreenDisabled={showLoadingState}
+        headerActions={compareButton}
+      >
+        {showLoadingState ? (
+          <table className="w-full text-sm">
+            <tbody>
+              <InventorySnapshotSkeleton />
+            </tbody>
+          </table>
+        ) : error ? (
+          <div className="flex aspect-video items-center justify-center text-sm text-destructive">
+            Failed to load shop inventory snapshot
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
+            No inventory snapshot rows available for the current filter.
+          </div>
+        ) : (
+          <InventorySnapshotTableBody
+            rows={rows}
+            selectedShops={selectedShops}
+            onToggleShop={handleToggleShop}
+          />
+        )}
+      </FullscreenTableCard>
+
+      <ShopComparisonDialog
+        open={isCompareOpen}
+        onOpenChange={setIsCompareOpen}
+        shops={selectedShopRows}
+      />
+    </>
   )
 }

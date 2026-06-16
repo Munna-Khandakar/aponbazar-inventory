@@ -18,6 +18,7 @@ type FullscreenTableCardProps = {
   fullscreenBodyClassName?: string
   className?: string
   fullscreenDisabled?: boolean
+  headerActions?: ReactNode
 }
 
 export function FullscreenTableCard({
@@ -32,6 +33,7 @@ export function FullscreenTableCard({
   fullscreenBodyClassName,
   className,
   fullscreenDisabled = false,
+  headerActions,
 }: FullscreenTableCardProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -58,17 +60,20 @@ export function FullscreenTableCard({
             <CardTitle>{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            disabled={fullscreenDisabled}
-            onClick={() => setIsFullscreen(true)}
-          >
-            <Maximize2 size={15} />
-            Full Screen
-          </Button>
+          <div className="flex items-center gap-2">
+            {headerActions}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={fullscreenDisabled}
+              onClick={() => setIsFullscreen(true)}
+            >
+              <Maximize2 size={15} />
+              Full Screen
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className={bodyClassName}>{children}</CardContent>
       </Card>
@@ -85,16 +90,19 @@ export function FullscreenTableCard({
                   {fullscreenDescription ?? description}
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setIsFullscreen(false)}
-              >
-                <X size={15} />
-                Close
-              </Button>
+              <div className="flex items-center gap-2">
+                {headerActions}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setIsFullscreen(false)}
+                >
+                  <X size={15} />
+                  Close
+                </Button>
+              </div>
             </div>
             <div className={fullscreenBodyClassName ?? "min-h-0 flex-1 overflow-auto px-5 py-4"}>
               {fullscreenChildren ?? children}
