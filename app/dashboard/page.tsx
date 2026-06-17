@@ -9,6 +9,7 @@ import { PromoImpactChart } from "@/components/dashboard/promo-impact-chart"
 import { RevenueChart } from "@/components/dashboard/revenue-chart"
 import { SalesForecastChart } from "@/components/dashboard/sales-forecast-chart"
 import { StorePerformanceTable } from "@/components/dashboard/store-performance-table"
+import { PreComputedPageContainer } from "@/features/pre-computed-analytics/components/PreComputedPageContainer"
 import { useDashboardStats } from "@/hooks/use-dashboard"
 
 export default function DashboardHomePage() {
@@ -44,6 +45,8 @@ export default function DashboardHomePage() {
         <RevenueChart />
         <OrderVolumeChart />
       </section>
+
+      <PreComputedPageContainer />
     </div>
   )
 }
