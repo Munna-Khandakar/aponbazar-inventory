@@ -25,7 +25,11 @@ import type {
 import type { SalesForecastData, SalesForecastDataset } from "@/lib/types/SalesForecastData"
 import type {
   ExecuteReportRequest,
+  InventoryOverviewReportResponse,
+  InventoryOverviewRow,
   SalesForecastReportResponse,
+  SalesOverviewReportResponse,
+  SalesOverviewRow,
   ShopPerformanceSummaryReportResponse,
   ShopWiseSalesReportResponse,
   ShopWiseSalesAggregateReportResponse,
@@ -814,6 +818,8 @@ const liveReportTypes = new Set<SalesReportType>([
   SalesReportType.SHOP_WISE_SALES_AGGREGATE,
   SalesReportType.SHOP_WISE_SALES_PERFORMANCE,
   SalesReportType.SHOP_PERFORMANCE_SUMMARY,
+  SalesReportType.INVENTORY_OVERVIEW,
+  SalesReportType.SALES_OVERVIEW,
 ])
 
 const getMockReportResponse = (
@@ -837,7 +843,9 @@ const executeReport = async <
     | ShopWiseSalesReportResponse
     | ShopPerformanceSummaryReportResponse
     | ShopWiseSalesAggregateReportResponse
-    | ShopPerformanceReportResponse,
+    | ShopPerformanceReportResponse
+    | InventoryOverviewReportResponse
+    | SalesOverviewReportResponse,
 >(
   request: ExecuteReportRequest
 ): Promise<TResponse> => {
@@ -848,6 +856,12 @@ const executeReport = async <
   const { data } = await apiClient.post<TResponse>("/api/reports/execute", request)
   return data
 }
+
+const mapInventoryOverviewReport = (res: InventoryOverviewReportResponse): InventoryOverviewRow =>
+  res.data.data[0]
+
+const mapSalesOverviewReport = (res: SalesOverviewReportResponse): SalesOverviewRow =>
+  res.data.data[0]
 
 export const dashboardService = {
   getStats: () => clone({ metrics, reminders, insights }),
@@ -862,6 +876,14 @@ export const dashboardService = {
   getSalesForecast: async (request: ExecuteReportRequest<SalesReportType.MONTH_WISE_SALES>) =>
     mapSalesForecastReport(
       await executeReport<SalesForecastReportResponse>(request)
+    ),
+  getInventoryOverview: async (request: ExecuteReportRequest<SalesReportType.INVENTORY_OVERVIEW>) =>
+    mapInventoryOverviewReport(
+      await executeReport<InventoryOverviewReportResponse>(request)
+    ),
+  getSalesOverview: async (request: ExecuteReportRequest<SalesReportType.SALES_OVERVIEW>) =>
+    mapSalesOverviewReport(
+      await executeReport<SalesOverviewReportResponse>(request)
     ),
   getInventoryPrediction: () => clone(inventoryPredictionData),
   getDemandForecast: () => clone(demandForecastData),

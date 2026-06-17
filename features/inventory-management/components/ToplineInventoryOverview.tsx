@@ -2,7 +2,7 @@
 
 import { KpiGaugeCard } from "@/components/dashboard/kpi-gauge-card"
 import { useReportFilters } from "@/hooks/use-report-filters"
-import { useDemandForecast, useInventoryPrediction } from "@/hooks/use-dashboard"
+import { useInventoryOverview } from "@/hooks/use-dashboard"
 import { KpiMetricType, type KpiMetricDataset } from "@/lib/types/kpi-metric"
 
 const formatCompactNumber = (value: number) => {
@@ -11,40 +11,13 @@ const formatCompactNumber = (value: number) => {
   return value.toLocaleString("en-BD")
 }
 
-const getForecastAccuracy = (confidence: "high" | "medium" | "low") => {
-  if (confidence === "high") return 96
-  if (confidence === "medium") return 86
-  return 72
-}
-
 export function ToplineInventoryOverview() {
   const { startDate, endDate } = useReportFilters()
-  const { data: inventoryPrediction } = useInventoryPrediction()
-  const { data: demandForecast } = useDemandForecast()
+  const { data, isLoading } = useInventoryOverview()
 
-  const latestProjection = inventoryPrediction?.[inventoryPrediction.length - 1]
-  const totalStock = latestProjection
-    ? latestProjection.electronics +
-      latestProjection.clothing +
-      latestProjection.groceries +
-      latestProjection.homeGoods
-    : 0
-
-  const forecastRows = demandForecast ?? []
-  const predictedStockout = forecastRows.filter(
-    (row) => row.currentStock < row.predictedDemand
-  ).length
-  const overstockItems = forecastRows.filter(
-    (row) => row.currentStock > row.predictedDemand * 1.2
-  ).length
-  const forecastAccuracy = forecastRows.length
-    ? Math.round(
-        forecastRows.reduce(
-          (total, row) => total + getForecastAccuracy(row.confidence),
-          0
-        ) / forecastRows.length
-      )
-    : 0
+  const totalStockQty = data?.totalStockQty ?? 0
+  const stockoutQty = data?.stockoutQty ?? 0
+  const overstockQty = data?.overstockQty ?? 0
 
   const metrics: Array<KpiMetricDataset & {
     labelOverride: string
@@ -54,33 +27,33 @@ export function ToplineInventoryOverview() {
     {
       metricType: KpiMetricType.ACTUAL_SALES,
       progressValue: 90,
-      valueText: totalStock,
+      valueText: totalStockQty,
       labelOverride: "Total Stock",
       valuePrefixOverride: "Units",
       valueFormatterOverride: formatCompactNumber,
     },
     {
       metricType: KpiMetricType.PREDICTED_SALES,
-      progressValue: Math.min(100, predictedStockout * 8),
-      valueText: predictedStockout,
+      progressValue: totalStockQty > 0 ? Math.min(100, (stockoutQty / totalStockQty) * 100) : 0,
+      valueText: stockoutQty,
       labelOverride: "Predicted Stockout",
-      valuePrefixOverride: "Items",
-      valueFormatterOverride: (value) => value.toLocaleString("en-BD"),
+      valuePrefixOverride: "Units",
+      valueFormatterOverride: formatCompactNumber,
     },
     {
       metricType: KpiMetricType.GROWTH_TARGET,
-      progressValue: Math.min(100, overstockItems * 10),
-      valueText: overstockItems,
+      progressValue: totalStockQty > 0 ? Math.min(100, (overstockQty / totalStockQty) * 100) : 0,
+      valueText: overstockQty,
       labelOverride: "Overstock",
-      valuePrefixOverride: "Items",
-      valueFormatterOverride: (value) => value.toLocaleString("en-BD"),
+      valuePrefixOverride: "Units",
+      valueFormatterOverride: formatCompactNumber,
     },
     {
       metricType: KpiMetricType.FORECAST_ACCURACY,
-      progressValue: forecastAccuracy,
-      valueText: forecastAccuracy,
+      progressValue: 0,
+      valueText: 0,
       labelOverride: "Forecast Accuracy",
-      valueFormatterOverride: (value) => `${value}%`,
+      valueFormatterOverride: () => "—",
     },
   ]
 
@@ -101,7 +74,7 @@ export function ToplineInventoryOverview() {
             key={metric.labelOverride}
             metric={metric}
             labelOverride={metric.labelOverride}
-            valuePrefixOverride={metric.valuePrefixOverride}
+            valuePrefixOverride={isLoading ? undefined : metric.valuePrefixOverride}
             valueFormatterOverride={metric.valueFormatterOverride}
           />
         ))}

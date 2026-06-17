@@ -6,6 +6,8 @@ import { useReportFilters } from "@/hooks/use-report-filters"
 import { dashboardService } from "@/lib/services/dashboard-service"
 import {
   type GrowthTargetReportParameters,
+  type InventoryOverviewParameters,
+  type SalesOverviewParameters,
   SalesReportType,
   type DateRangeReportParameters,
   type ExecuteReportRequest,
@@ -86,6 +88,38 @@ export const useInventoryPrediction = createStaticHook(dashboardService.getInven
 export const useDemandForecast = createStaticHook(dashboardService.getDemandForecast)
 export const useStockLevels = createStaticHook(dashboardService.getStockLevels)
 export const useInventoryHealth = createStaticHook(dashboardService.getInventoryHealth)
+
+export const useInventoryOverview = () => {
+  const { shopName } = useReportFilters()
+  const request: ExecuteReportRequest<SalesReportType.INVENTORY_OVERVIEW, InventoryOverviewParameters> = {
+    reportName: SalesReportType.INVENTORY_OVERVIEW,
+    parameters: shopName ? { shopName } : {},
+  }
+  return useQuery({
+    queryKey: ["reports", request.reportName, request.parameters],
+    queryFn: () => dashboardService.getInventoryOverview(request),
+    placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
+  })
+}
+
+export const useSalesOverview = (baseMonth?: string) => {
+  const { shopName, growthTarget } = useReportFilters()
+  const request: ExecuteReportRequest<SalesReportType.SALES_OVERVIEW, SalesOverviewParameters> = {
+    reportName: SalesReportType.SALES_OVERVIEW,
+    parameters: {
+      ...(shopName ? { shopName } : {}),
+      growthTarget: Number(growthTarget) || 0,
+      ...(baseMonth ? { baseMonth } : {}),
+    },
+  }
+  return useQuery({
+    queryKey: ["reports", request.reportName, request.parameters],
+    queryFn: () => dashboardService.getSalesOverview(request),
+    placeholderData: (previousData) => previousData,
+    ...liveReportQueryOptions,
+  })
+}
 
 // Promotions & Store Ops
 export const usePromoImpact = () => {

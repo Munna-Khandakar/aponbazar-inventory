@@ -16,7 +16,7 @@ type KpiMetricConfig = {
 
 const metricConfig: Record<KpiMetricType, KpiMetricConfig> = {
   [KpiMetricType.ACTUAL_SALES]: {
-    label: "Actual Sales",
+    label: "MTD Actual Sales",
     valuePrefix: "BDT",
     formatValue: (value) => `${value.toFixed(2)} M`,
     styles: {
@@ -26,7 +26,7 @@ const metricConfig: Record<KpiMetricType, KpiMetricConfig> = {
     },
   },
   [KpiMetricType.PREDICTED_SALES]: {
-    label: "Targeted Sales",
+    label: "MTD Targeted Sales",
     valuePrefix: "BDT",
     formatValue: (value) => `${value.toFixed(2)} M`,
     styles: {

@@ -4,6 +4,8 @@ export enum SalesReportType {
   SHOP_WISE_SALES_AGGREGATE = "shop_wise_sales_aggregate",
   SHOP_WISE_SALES_PERFORMANCE = "shop_wise_sales_performance",
   SHOP_PERFORMANCE_SUMMARY = "shop_performance_summary",
+  INVENTORY_OVERVIEW = "inventory_overview",
+  SALES_OVERVIEW = "sales_overview",
 }
 
 export type DateRangeReportParameters = {
@@ -20,15 +22,29 @@ export type ReportParameters = DateRangeReportParameters & {
   growthTarget: string
 }
 
+export type InventoryOverviewParameters = {
+  shopName?: string
+}
+
+export type SalesOverviewParameters = {
+  shopName?: string
+  growthTarget?: number
+  baseMonth?: string
+}
+
 export type ExecuteReportRequest<
   TReportName extends SalesReportType = SalesReportType,
   TParameters extends
     | DateRangeReportParameters
     | ReportParameters
-    | GrowthTargetReportParameters =
+    | GrowthTargetReportParameters
+    | InventoryOverviewParameters
+    | SalesOverviewParameters =
     | DateRangeReportParameters
     | ReportParameters
-    | GrowthTargetReportParameters,
+    | GrowthTargetReportParameters
+    | InventoryOverviewParameters
+    | SalesOverviewParameters,
 > = {
   reportName: TReportName
   parameters: TParameters
@@ -206,4 +222,30 @@ export type ShopPerformanceSummaryReportRow = {
 
 export type ShopPerformanceSummaryReportResponse = ReportResponse<
   ShopPerformanceSummaryReportRow[]
+>
+
+export type InventoryOverviewRow = {
+  shopName: string | null
+  totalStockQty: number
+  totalStockValue: number
+  predictedDemandQty: number
+  stockoutQty: number
+  overstockQty: number
+}
+
+export type SalesOverviewRow = {
+  shopName: string | null
+  mtdSales: number
+  mtdTarget: number
+  achievementPct: number
+  predictedRom: number
+  predictedMonthTotal: number
+}
+
+export type InventoryOverviewReportResponse = ReportResponse<
+  BaseReportData<SalesReportType.INVENTORY_OVERVIEW> & { data: InventoryOverviewRow[] }
+>
+
+export type SalesOverviewReportResponse = ReportResponse<
+  BaseReportData<SalesReportType.SALES_OVERVIEW> & { data: SalesOverviewRow[] }
 >
