@@ -54,6 +54,7 @@ export interface InventoryBigBlockPredictedRow {
   reportName: "inventory_big_block_prediction"
   generatedAt: string
   date: string
+  periodEnd: string
   bigBlock: string
   predictedQty: number
 }
@@ -107,6 +108,7 @@ export interface InventoryCategoryDetailPredictedRow {
   reportName: "inventory_category_detail_prediction"
   generatedAt: string
   date: string
+  periodEnd: string
   bigBlock: string
   subCategoryName: string
   predictedQty: number
@@ -169,6 +171,7 @@ export interface InventoryItemDetailPredictedRow {
   reportName: "inventory_item_detail_prediction"
   generatedAt: string
   date: string
+  periodEnd: string
   itemId: number
   itemName: string
   categoryName: string

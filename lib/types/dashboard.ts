@@ -102,7 +102,8 @@ export type StorePerformanceSnapshotData = {
 }
 
 export type ShopPerformanceSummaryForecastPoint = {
-  date: string
+  periodStart: string
+  periodEnd: string
   predictedGrossSales: number
 }
 

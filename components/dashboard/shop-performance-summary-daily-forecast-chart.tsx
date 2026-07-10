@@ -17,7 +17,7 @@ import type {
 
 const dailyForecastChartConfig = {
   predictedGrossSales: {
-    label: "Daily Forecast",
+    label: "Forecast by period",
     color: "#d97706",
   },
 } satisfies ChartConfig
@@ -41,6 +41,13 @@ const formatTickDate = (value: string) => {
   }).format(parsedDate)
 }
 
+const formatPeriodRange = (periodStart: string, periodEnd: string) => {
+  const start = formatTickDate(periodStart)
+  const end = formatTickDate(periodEnd)
+
+  return start === end ? start : `${start} – ${end}`
+}
+
 type ShopPerformanceSummaryDailyForecastChartProps = {
   currentMonth: ShopPerformanceSummaryCurrentMonth
   nextMonth: ShopPerformanceSummaryNextMonth
@@ -54,12 +61,13 @@ export function ShopPerformanceSummaryDailyForecastChart({
     ...currentMonth.remaining.forecastDayWise,
     ...nextMonth.forecastDayWise,
   ].map((point) => ({
-    date: point.date,
+    periodStart: point.periodStart,
+    periodEnd: point.periodEnd,
     predictedGrossSales: point.predictedGrossSales,
   }))
 
-  const firstDate = chartData[0]?.date
-  const lastDate = chartData[chartData.length - 1]?.date
+  const firstDate = chartData[0]?.periodStart
+  const lastDate = chartData[chartData.length - 1]?.periodEnd
   const dateRangeLabel =
     firstDate && lastDate
       ? `${formatTickDate(firstDate)} to ${formatTickDate(lastDate)}`
@@ -70,12 +78,12 @@ export function ShopPerformanceSummaryDailyForecastChart({
       <div className="rounded-2xl border border-border/70 bg-background p-4">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-foreground">
-            Daily Forecast
+            Forecast by period
           </h3>
           <p className="text-sm text-muted-foreground">{dateRangeLabel}</p>
         </div>
         <div className="flex min-h-[260px] items-center justify-center text-sm text-muted-foreground">
-          No daily forecast data is available.
+          No period forecast data is available.
         </div>
       </div>
     )
@@ -84,7 +92,7 @@ export function ShopPerformanceSummaryDailyForecastChart({
   return (
     <div className="rounded-2xl border border-border/70 bg-background p-4">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Daily Forecast</h3>
+        <h3 className="text-lg font-semibold text-foreground">Forecast by period</h3>
         <p className="text-sm text-muted-foreground">{dateRangeLabel}</p>
       </div>
       <ChartContainer
@@ -100,7 +108,7 @@ export function ShopPerformanceSummaryDailyForecastChart({
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
-            dataKey="date"
+            dataKey="periodStart"
             tickLine={false}
             axisLine={false}
             tickMargin={10}
@@ -117,7 +125,17 @@ export function ShopPerformanceSummaryDailyForecastChart({
           <ChartTooltip
             content={
               <ChartTooltipContent
-                labelFormatter={(value) => formatTickDate(String(value))}
+                labelFormatter={(value, payload) => {
+                  const point = payload?.[0]?.payload as
+                    | { periodStart?: string; periodEnd?: string }
+                    | undefined
+
+                  if (point?.periodStart && point?.periodEnd) {
+                    return formatPeriodRange(point.periodStart, point.periodEnd)
+                  }
+
+                  return formatTickDate(String(value))
+                }}
                 formatter={(value) => formatBdtValue(Number(value))}
               />
             }

@@ -100,29 +100,41 @@ const buildPredictiveChartModel = (
   }[],
   predictedRows: {
     date: string
+    periodEnd: string
     bigBlock: string
     predictedQty: number
   }[]
 ) => {
   const actualValuesByBlock = new Map<string, Map<string, number>>()
-  const predictedValuesByBlock = new Map<string, Map<string, number>>()
+  const predictedChunksByBlock = new Map<
+    string,
+    { start: string; end: string; value: number }[]
+  >()
 
   actualRows.forEach((row) => {
     addValueToBlockDateMap(actualValuesByBlock, row.strBigBlock, row.date, row.currentStockQty)
   })
 
   predictedRows.forEach((row) => {
-    addValueToBlockDateMap(predictedValuesByBlock, row.bigBlock, row.date, row.predictedQty)
+    const chunk = { start: row.date, end: row.periodEnd, value: row.predictedQty }
+    const chunks = predictedChunksByBlock.get(row.bigBlock)
+
+    if (chunks) {
+      chunks.push(chunk)
+    } else {
+      predictedChunksByBlock.set(row.bigBlock, [chunk])
+    }
   })
 
   const blockNames = Array.from(
-    new Set([...actualValuesByBlock.keys(), ...predictedValuesByBlock.keys()])
+    new Set([...actualValuesByBlock.keys(), ...predictedChunksByBlock.keys()])
   ).sort((left, right) => left.localeCompare(right))
 
   const allDates = Array.from(
     new Set([
       ...actualRows.map((row) => row.date),
       ...predictedRows.map((row) => row.date),
+      ...predictedRows.map((row) => row.periodEnd),
     ])
   ).sort((left, right) => left.localeCompare(right))
 
@@ -143,7 +155,7 @@ const buildPredictiveChartModel = (
     const actualKey = getActualSeriesKey(blockName)
     const predictedKey = getPredictedSeriesKey(blockName)
     const actualValues = actualValuesByBlock.get(blockName)
-    const predictedValues = predictedValuesByBlock.get(blockName)
+    const predictedChunks = predictedChunksByBlock.get(blockName)
     const lastActualDate = actualValues ? Array.from(actualValues.keys()).sort().at(-1) : undefined
 
     chartConfig[actualKey] = {
@@ -163,7 +175,8 @@ const buildPredictiveChartModel = (
       }
     })
 
-    if (predictedValues) {
+    if (predictedChunks?.length) {
+      // Anchor the predicted line to the last actual point so the two series connect.
       if (lastActualDate) {
         const lastActualValue = actualValues?.get(lastActualDate)
         const boundaryPoint = dataByDate.get(lastActualDate)
@@ -171,27 +184,27 @@ const buildPredictiveChartModel = (
         if (boundaryPoint && lastActualValue !== undefined) {
           boundaryPoint[predictedKey] = lastActualValue
         }
+      }
 
-        predictedValues.forEach((value, date) => {
-          if (date <= lastActualDate) {
+      // Each predicted row is now a whole-chunk (~5-day) total, so render it as a
+      // flat step spanning [date, periodEnd] rather than a single-day point.
+      predictedChunks.forEach((chunk) => {
+        allDates.forEach((date) => {
+          if (date < chunk.start || date > chunk.end) {
+            return
+          }
+
+          if (lastActualDate && date <= lastActualDate) {
             return
           }
 
           const dataPoint = dataByDate.get(date)
 
           if (dataPoint) {
-            dataPoint[predictedKey] = value
+            dataPoint[predictedKey] = chunk.value
           }
         })
-      } else {
-        predictedValues.forEach((value, date) => {
-          const dataPoint = dataByDate.get(date)
-
-          if (dataPoint) {
-            dataPoint[predictedKey] = value
-          }
-        })
-      }
+      })
     }
 
     lineConfigs.push({
@@ -308,7 +321,7 @@ export function PredictiveInventoryStatusChart() {
             <div>
               <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
               <CardDescription>
-                Daily stock quantity by big block, with actual values shown as solid lines and predicted values shown as dotted lines.
+                Daily actual stock by big block (solid lines), with predicted demand shown as dotted lines — each predicted step is a per-period (~5-day) total spanning its date range.
               </CardDescription>
             </div>
           </div>

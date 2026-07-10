@@ -160,7 +160,8 @@ export type ShopPerformanceReportResponse = ReportResponse<
 >
 
 export type ShopPerformanceSummaryForecastDayWisePoint = {
-  date: string
+  periodStart: string
+  periodEnd: string
   predictedGrossSales: number
 }
 

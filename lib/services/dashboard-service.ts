@@ -727,7 +727,8 @@ const mapShopPerformanceSummaryReport = (
         forecast: shop.currentMonth.remaining.forecast,
         targetVsForecastRatio: shop.currentMonth.remaining.targetVsForecastRatio,
         forecastDayWise: shop.currentMonth.remaining.forecastDayWise.map((point) => ({
-          date: point.date,
+          periodStart: point.periodStart,
+          periodEnd: point.periodEnd,
           predictedGrossSales: point.predictedGrossSales,
         })),
       },
@@ -738,7 +739,8 @@ const mapShopPerformanceSummaryReport = (
       forecast: shop.nextMonth.forecast,
       targetVsForecastRatio: shop.nextMonth.targetVsForecastRatio,
       forecastDayWise: shop.nextMonth.forecastDayWise.map((point) => ({
-        date: point.date,
+        periodStart: point.periodStart,
+        periodEnd: point.periodEnd,
         predictedGrossSales: point.predictedGrossSales,
       })),
     },
