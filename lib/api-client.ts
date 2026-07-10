@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const baseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://apon-report.duckdns.org"
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://aponbazar-report-production.up.railway.app"
 
 export const apiClient = axios.create({
   baseURL,
