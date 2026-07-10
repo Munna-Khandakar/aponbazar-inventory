@@ -10,7 +10,6 @@ import { DashboardKpiRow } from "./DashboardKpiRow"
 import { FocusProductsTable } from "./FocusProductsTable"
 import { ImmediateActionCards } from "./ImmediateActionCards"
 import { InventoryOverviewTreemap } from "./InventoryOverviewTreemap"
-import { PredictedSalesMarginPanel } from "./PredictedSalesMarginPanel"
 import { ProductBundlingPanel } from "./ProductBundlingPanel"
 import { SalesGrowthChart } from "./SalesGrowthChart"
 
@@ -70,9 +69,8 @@ export function PreComputedPageContainer() {
 
       <DashboardKpiRow kpi={dashboardKpi} computedAt={computedAt} isLoading={isLoading} />
 
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-2">
         <SalesGrowthChart data={salesChartPoints} isLoading={isLoading} />
-        <PredictedSalesMarginPanel />
         <InventoryOverviewTreemap data={treemapCategories} isLoading={isLoading} />
       </section>
 

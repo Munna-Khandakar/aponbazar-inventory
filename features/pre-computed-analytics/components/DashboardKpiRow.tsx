@@ -1,7 +1,7 @@
 "use client"
 
 import type { LucideIcon } from "lucide-react"
-import { Boxes, Database, PieChart, Store, TrendingDown, TrendingUp } from "lucide-react"
+import { Boxes, Database, Store, TrendingDown, TrendingUp } from "lucide-react"
 
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -103,8 +103,8 @@ type Props = {
 export function DashboardKpiRow({ kpi, computedAt, isLoading }: Props) {
   if (isLoading) {
     return (
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-[132px] w-full rounded-xl" />
         ))}
       </section>
@@ -132,14 +132,9 @@ export function DashboardKpiRow({ kpi, computedAt, isLoading }: Props) {
     : ""
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {/* Stage 3 — not delivered yet */}
       <KpiShell label="Total Sales (Predicted)" sublabel="Current Month" icon={TrendingUp} accent="emerald">
-        <PlaceholderValue stage="Stage 3" />
-      </KpiShell>
-
-      {/* Stage 3 — not delivered yet */}
-      <KpiShell label="Predicted Margin" sublabel="Current Month" icon={PieChart} accent="violet">
         <PlaceholderValue stage="Stage 3" />
       </KpiShell>
 

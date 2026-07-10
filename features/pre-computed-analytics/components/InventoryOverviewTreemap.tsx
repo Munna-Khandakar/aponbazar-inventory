@@ -107,13 +107,13 @@ export function InventoryOverviewTreemap({ data, isLoading }: Props) {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-[300px] w-full" />
+          <Skeleton className="h-[340px] w-full" />
         ) : treemapData.length === 0 ? (
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[340px] items-center justify-center text-sm text-muted-foreground">
             No inventory overview data available.
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={340}>
             <Treemap
               data={treemapData}
               dataKey="size"
