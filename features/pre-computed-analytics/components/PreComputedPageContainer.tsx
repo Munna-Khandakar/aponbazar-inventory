@@ -1,12 +1,17 @@
 "use client"
 
-import { Clock, Loader2 } from "lucide-react"
+import { Calendar, Loader2, RefreshCw } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 import { usePreComputedDashboard } from "../hooks/usePreComputedDashboard"
-import { ActionInsightsPanel } from "./ActionInsightsPanel"
-import { BigBlocksTreemap } from "./BigBlocksTreemap"
 import { CustomerClusterSection } from "./CustomerClusterSection"
+import { DashboardKpiRow } from "./DashboardKpiRow"
 import { FocusProductsTable } from "./FocusProductsTable"
+import { ImmediateActionCards } from "./ImmediateActionCards"
+import { InventoryOverviewTreemap } from "./InventoryOverviewTreemap"
+import { PredictedSalesMarginPanel } from "./PredictedSalesMarginPanel"
+import { ProductBundlingPanel } from "./ProductBundlingPanel"
 import { SalesGrowthChart } from "./SalesGrowthChart"
 
 export function PreComputedPageContainer() {
@@ -14,55 +19,82 @@ export function PreComputedPageContainer() {
     isLoading,
     isFetching,
     isError,
+    refetch,
     salesChartPoints,
-    treemapNodes,
+    treemapCategories,
+    focusTop20,
     focusProductStock,
-    customerCluster,
-    computedAt,
+    dashboardKpi,
     actionInsights,
+    computedAt,
   } = usePreComputedDashboard()
+
+  const dataAsOf = computedAt
+    ? new Date(computedAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : null
 
   return (
     <div className="space-y-6">
-      {isFetching ? (
-        <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 shadow-sm">
-          <Loader2 className="h-4 w-4 animate-spin text-sky-700" />
-          <span>Updating pre-computed analytics...</span>
-        </div>
-      ) : null}
+      {/* D0 action row */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {dataAsOf ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
+            <Calendar size={13} className="text-muted-foreground" />
+            Data as of <span className="font-medium text-foreground">{dataAsOf}</span>
+          </span>
+        ) : null}
+        <Button
+          variant="outline"
+          className="h-9 gap-2 rounded-xl"
+          onClick={() => refetch()}
+          disabled={isFetching}
+        >
+          {isFetching ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          Refresh Data
+        </Button>
+      </div>
 
       {isError ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-sm">
-          Failed to load pre-computed analytics. The staging data may be temporarily unavailable.
+          Failed to load dashboard data. The pre-computed staging data may be temporarily unavailable.
         </div>
       ) : null}
 
-      {computedAt && !isFetching ? (
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-600 shadow-sm">
-          <Clock size={13} className="shrink-0 text-slate-400" />
-          <span>
-            Showing pre-computed data. Last refreshed:{" "}
-            <span className="font-medium text-slate-800">
-              {new Date(computedAt).toLocaleString("en-BD", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </span>
-            . Next refresh at 02:00.
-          </span>
-        </div>
-      ) : null}
+      <DashboardKpiRow kpi={dashboardKpi} computedAt={computedAt} isLoading={isLoading} />
 
-      <SalesGrowthChart data={salesChartPoints} isLoading={isLoading} />
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <BigBlocksTreemap data={treemapNodes} isLoading={isLoading} />
-        <FocusProductsTable focusProductStock={focusProductStock} isLoading={isLoading} />
+      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+        <SalesGrowthChart data={salesChartPoints} isLoading={isLoading} />
+        <PredictedSalesMarginPanel />
+        <InventoryOverviewTreemap data={treemapCategories} isLoading={isLoading} />
       </section>
 
-      <CustomerClusterSection data={customerCluster} isLoading={isLoading} />
+      <section className="grid items-start gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+        <FocusProductsTable
+          rows={focusTop20}
+          focusProductStock={focusProductStock}
+          isLoading={isLoading}
+        />
+        <div className="self-start">
+          <CustomerClusterSection />
+        </div>
+        <div className="self-start">
+          <ProductBundlingPanel />
+        </div>
+      </section>
 
-      <ActionInsightsPanel insights={actionInsights} computedAt={computedAt} />
+      <ImmediateActionCards counts={actionInsights} isLoading={isLoading} />
+
+      <p className="pt-2 text-center text-xs text-muted-foreground">
+        Note: All data is pre-computed and updated daily. For real-time insights, please visit individual dashboards.
+      </p>
     </div>
   )
 }

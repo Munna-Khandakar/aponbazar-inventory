@@ -1,88 +1,75 @@
 import type {
-  ActionInsight,
   BigBlockSalesStat,
-  BigBlockTreemapNode,
-  PreComputedDashboardData,
   SalesChartPoint,
   SalesMonthlyStat,
+  TreemapCategory,
 } from "../types/PreComputedDashboard"
 
+/**
+ * Collapse the per-shop×month `salesMonthly` rows into one company-wide point per
+ * month, then compute MoM / YoY growth from the monthly net-sales series.
+ *
+ * When a `shopName` filter is active the backend already returns rows for a single
+ * shop, so the same aggregation trivially reduces to that shop's series.
+ */
 export function deriveSalesChartPoints(rows: SalesMonthlyStat[]): SalesChartPoint[] {
-  return [...rows]
-    .sort((a, b) => a.monthStart.localeCompare(b.monthStart))
-    .map((row) => {
-      const [year, month] = row.monthStart.split("-").map(Number)
-      const date = new Date(year, month - 1, 1)
-      const monthLabel = date.toLocaleString("en-BD", { month: "short", year: "numeric" })
-      return {
-        monthLabel,
-        netSales: row.netSales,
-        predictedSales: row.predictedSales,
-        predictedMargin: row.predictedMargin,
-      }
-    })
-}
+  const byMonth = new Map<string, { monthLabel: string; netSales: number }>()
 
-export function deriveTreemapNodes(rows: BigBlockSalesStat[]): BigBlockTreemapNode[] {
-  const grouped: Record<string, { name: string; size: number }[]> = {}
   for (const row of rows) {
-    if (!grouped[row.bigBlock]) grouped[row.bigBlock] = []
-    grouped[row.bigBlock].push({ name: row.subCategory, size: row.totalSales })
+    const existing = byMonth.get(row.monthStart)
+    if (existing) {
+      existing.netSales += row.netSales
+    } else {
+      byMonth.set(row.monthStart, {
+        monthLabel: row.monthLabel,
+        netSales: row.netSales,
+      })
+    }
   }
-  return Object.entries(grouped).map(([bigBlock, children]) => ({
-    name: bigBlock,
-    children,
-  }))
+
+  const months = Array.from(byMonth.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([, value]) => value)
+
+  return months.map((month, index) => {
+    const previous = months[index - 1]
+    const yearAgo = months[index - 12]
+
+    const momGrowth =
+      previous && previous.netSales !== 0
+        ? (month.netSales / previous.netSales - 1) * 100
+        : null
+    const yoyGrowth =
+      yearAgo && yearAgo.netSales !== 0
+        ? (month.netSales / yearAgo.netSales - 1) * 100
+        : null
+
+    return {
+      monthLabel: month.monthLabel,
+      netSales: month.netSales,
+      momGrowth,
+      yoyGrowth,
+    }
+  })
 }
 
-export function deriveActionInsights(data: PreComputedDashboardData | undefined): ActionInsight[] {
-  if (!data) return []
-  const insights: ActionInsight[] = []
-
-  // Stockout risk check
-  for (const [product, outlets] of Object.entries(data.focusProductStock)) {
-    const atRisk = outlets.filter((o) => o.inventoryHealth === "Stockout Risk")
-    if (atRisk.length > 0) {
-      insights.push({
-        id: `stockout-${product}`,
-        text: `${product} is at stockout risk in ${atRisk.length} outlet${atRisk.length > 1 ? "s" : ""}: ${atRisk.map((o) => o.shopName).join(", ")}.`,
-        tone: "critical",
-      })
-    }
+/**
+ * Aggregate `bigBlockSales` rows by `bigBlock` and compute each block's share of
+ * total sales (§4 of the D0 handover). Sorted descending by sales.
+ */
+export function deriveTreemapCategories(rows: BigBlockSalesStat[]): TreemapCategory[] {
+  const byBlock = new Map<string, number>()
+  for (const row of rows) {
+    byBlock.set(row.bigBlock, (byBlock.get(row.bigBlock) ?? 0) + row.totalSales)
   }
 
-  // Predicted vs actual sales
-  const sorted = [...data.salesMonthly].sort((a, b) =>
-    b.monthStart.localeCompare(a.monthStart)
-  )
-  const latest = sorted[0]
-  const previous = sorted[1]
-  if (latest?.predictedSales != null && previous?.netSales != null) {
-    const delta = ((latest.predictedSales - previous.netSales) / previous.netSales) * 100
-    if (delta >= 5) {
-      insights.push({
-        id: "sales-growth",
-        text: `Predicted sales for the current month are ${delta.toFixed(1)}% above last month's actuals.`,
-        tone: "opportunity",
-      })
-    } else if (delta <= -5) {
-      insights.push({
-        id: "sales-decline",
-        text: `Predicted sales for the current month are ${Math.abs(delta).toFixed(1)}% below last month's actuals.`,
-        tone: "warning",
-      })
-    }
-  }
+  const total = Array.from(byBlock.values()).reduce((sum, value) => sum + value, 0)
 
-  // Cluster count
-  const clusterCount = new Set(data.customerCluster.map((c) => c.clusterLabel)).size
-  if (clusterCount > 0) {
-    insights.push({
-      id: "cluster-count",
-      text: `${clusterCount} distinct customer segment${clusterCount > 1 ? "s" : ""} identified. Review clusters to tailor promotions per segment.`,
-      tone: "opportunity",
-    })
-  }
-
-  return insights
+  return Array.from(byBlock.entries())
+    .map(([name, totalSales]) => ({
+      name,
+      totalSales,
+      pct: total > 0 ? (totalSales / total) * 100 : 0,
+    }))
+    .sort((a, b) => b.totalSales - a.totalSales)
 }

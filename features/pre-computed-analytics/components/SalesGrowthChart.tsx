@@ -1,23 +1,37 @@
 "use client"
 
-import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts"
+import { useState } from "react"
+import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
+import { useReportFilters } from "@/hooks/use-report-filters"
 
 import type { SalesChartPoint } from "../types/PreComputedDashboard"
 
 const chartConfig = {
-  netSales: { label: "Net Sales", color: "#2563eb" },
-  predictedSales: { label: "Predicted Sales", color: "#f59e0b" },
-  predictedMargin: { label: "Predicted Margin", color: "#10b981" },
+  momGrowth: { label: "MoM Growth (%)", color: "#16a34a" },
+  yoyGrowth: { label: "YoY Growth (%)", color: "#7c3aed" },
 } satisfies ChartConfig
 
-function formatBdt(value: number) {
-  if (value >= 1_000_000) return `৳${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `৳${(value / 1_000).toFixed(0)}k`
-  return `৳${value.toLocaleString("en-BD")}`
+type ViewMode = "mom" | "yoy" | "both"
+
+const views: { value: ViewMode; label: string }[] = [
+  { value: "mom", label: "MoM" },
+  { value: "yoy", label: "YoY" },
+  { value: "both", label: "Both" },
+]
+
+function formatPctTick(value: number) {
+  return `${value}%`
 }
 
 type Props = {
@@ -26,90 +40,100 @@ type Props = {
 }
 
 export function SalesGrowthChart({ data, isLoading }: Props) {
-  const latest = [...data].reverse().find((p) => p.predictedSales != null)
+  const [view, setView] = useState<ViewMode>("both")
+  const { shopName } = useReportFilters()
+
+  const showMom = view === "mom" || view === "both"
+  const showYoy = view === "yoy" || view === "both"
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Sales Growth — Month over Month</CardTitle>
+            <CardTitle>Sales Growth (MoM / YoY)</CardTitle>
             <CardDescription className="mt-1">
-              Historical net sales since Jan 2022 with current-month predictions
+              {shopName || "All Outlets"} · Since Jan 2022
             </CardDescription>
           </div>
-          {latest ? (
-            <div className="flex shrink-0 gap-3">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-                <p className="text-[11px] font-medium text-amber-700">Predicted Sales</p>
-                <p className="text-sm font-semibold text-amber-900">
-                  {latest.predictedSales != null ? formatBdt(latest.predictedSales) : "—"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-center">
-                <p className="text-[11px] font-medium text-emerald-700">Predicted Margin</p>
-                <p className="text-sm font-semibold text-emerald-900">
-                  {latest.predictedMargin != null ? formatBdt(latest.predictedMargin) : "—"}
-                </p>
-              </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-xs text-muted-foreground">View</span>
+            <div className="inline-flex rounded-lg border border-border/70 bg-muted/30 p-0.5">
+              {views.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setView(option.value)}
+                  className={
+                    view === option.value
+                      ? "rounded-md bg-background px-3 py-1 text-xs font-medium text-foreground shadow-sm"
+                      : "rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+                  }
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
-          ) : null}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Skeleton className="h-[360px] w-full" />
+          <Skeleton className="h-[340px] w-full" />
         ) : data.length === 0 ? (
-          <div className="flex h-[360px] items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-[340px] items-center justify-center text-sm text-muted-foreground">
             No sales data available.
           </div>
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-[360px] w-full">
-            <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+          <ChartContainer config={chartConfig} className="aspect-auto h-[340px] w-full">
+            <LineChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 4 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="monthLabel"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                minTickGap={40}
+                minTickGap={48}
                 tick={{ fontSize: 11 }}
               />
               <YAxis
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={formatBdt}
-                width={64}
+                tickFormatter={formatPctTick}
+                width={48}
                 tick={{ fontSize: 11 }}
               />
+              <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
                     formatter={(value, name) => [
-                      formatBdt(Number(value)),
+                      value == null ? "—" : `${Number(value).toFixed(1)}%`,
                       chartConfig[name as keyof typeof chartConfig]?.label ?? name,
                     ]}
                   />
                 }
               />
-              <Bar dataKey="netSales" fill="var(--color-netSales)" radius={[3, 3, 0, 0]} maxBarSize={18} />
-              <Line
-                dataKey="predictedSales"
-                stroke="var(--color-predictedSales)"
-                strokeWidth={2}
-                strokeDasharray="5 3"
-                dot={false}
-                connectNulls
-              />
-              <Line
-                dataKey="predictedMargin"
-                stroke="var(--color-predictedMargin)"
-                strokeWidth={2}
-                strokeDasharray="5 3"
-                dot={false}
-                connectNulls
-              />
-            </ComposedChart>
+              <ChartLegend content={<ChartLegendContent />} />
+              {showMom ? (
+                <Line
+                  dataKey="momGrowth"
+                  stroke="var(--color-momGrowth)"
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              ) : null}
+              {showYoy ? (
+                <Line
+                  dataKey="yoyGrowth"
+                  stroke="var(--color-yoyGrowth)"
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              ) : null}
+            </LineChart>
           </ChartContainer>
         )}
       </CardContent>

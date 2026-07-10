@@ -3,24 +3,13 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
-import type { FocusProductOutletRow } from "../types/PreComputedDashboard"
+import type { FocusProductOutletRow, InventoryHealth } from "../types/PreComputedDashboard"
+import { formatBdtFull, formatQty } from "../utils/formatters"
 
-function formatQty(value: number | null) {
-  if (value == null) return "—"
-  return value.toLocaleString("en-BD", { maximumFractionDigits: 0 })
-}
-
-function formatBdt(value: number | null) {
-  if (value == null) return "—"
-  if (value >= 1_000_000) return `৳${(value / 1_000_000).toFixed(2)}M`
-  if (value >= 1_000) return `৳${(value / 1_000).toFixed(1)}k`
-  return `৳${value.toLocaleString("en-BD")}`
-}
-
-const healthStyles: Record<string, string> = {
+const healthStyles: Record<InventoryHealth, string> = {
   Healthy: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Overstocked: "bg-amber-50 text-amber-700 border-amber-200",
-  "Stockout Risk": "bg-red-50 text-red-700 border-red-200",
+  Caution: "bg-amber-50 text-amber-700 border-amber-200",
+  Low: "bg-red-50 text-red-700 border-red-200",
 }
 
 type Props = {
@@ -37,7 +26,7 @@ export function FocusProductDialog({ open, onOpenChange, productName, rows }: Pr
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>{productName}</DialogTitle>
           <DialogDescription>
-            Stock snapshot across all outlets — refreshed daily at 02:00
+            Outlet-wise inventory snapshot — refreshed daily at 02:00
           </DialogDescription>
         </DialogHeader>
 
@@ -55,10 +44,10 @@ export function FocusProductDialog({ open, onOpenChange, productName, rows }: Pr
                   Current Stock Value
                 </th>
                 <th className="whitespace-nowrap px-4 py-3 text-right font-medium text-muted-foreground">
-                  5-Day Lifting
+                  Net Sales
                 </th>
                 <th className="whitespace-nowrap px-4 py-3 text-right font-medium text-muted-foreground">
-                  Optimum Inventory Value
+                  5-Day Lifting
                 </th>
                 <th className="whitespace-nowrap px-4 py-3 text-center font-medium text-muted-foreground">
                   Inventory Health
@@ -68,7 +57,7 @@ export function FocusProductDialog({ open, onOpenChange, productName, rows }: Pr
             <tbody>
               {rows.map((row, i) => (
                 <tr
-                  key={row.shopName}
+                  key={`${row.shopName}-${row.warehouseId ?? i}`}
                   className={cn(
                     "border-t border-border/40 transition-colors hover:bg-muted/30",
                     i % 2 === 1 && "bg-muted/10"
@@ -81,20 +70,20 @@ export function FocusProductDialog({ open, onOpenChange, productName, rows }: Pr
                     {formatQty(row.currentStockQty)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-foreground">
-                    {formatBdt(row.currentStockValue)}
+                    {formatBdtFull(row.currentStockValue)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-foreground">
-                    {formatQty(row.fiveDayLifting)}
+                    {formatBdtFull(row.netSales)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-foreground">
-                    {formatBdt(row.optimumInventoryValue)}
+                    {formatBdtFull(row.lifting5d)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {row.inventoryHealth ? (
                       <span
                         className={cn(
                           "inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                          healthStyles[row.inventoryHealth] ?? "bg-muted text-muted-foreground"
+                          healthStyles[row.inventoryHealth]
                         )}
                       >
                         {row.inventoryHealth}

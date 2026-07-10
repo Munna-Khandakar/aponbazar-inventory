@@ -7,7 +7,7 @@ import { useReportFilters } from "@/hooks/use-report-filters"
 
 import { preComputedAnalyticsApi } from "../api/pre-computed-analytics.api"
 import { preComputedQueryKeys } from "../query-keys/preComputedQueryKeys"
-import { deriveActionInsights, deriveSalesChartPoints, deriveTreemapNodes } from "../utils/deriveChartData"
+import { deriveSalesChartPoints, deriveTreemapCategories } from "../utils/deriveChartData"
 
 export function usePreComputedDashboard() {
   const { shopName } = useReportFilters()
@@ -21,28 +21,26 @@ export function usePreComputedDashboard() {
     refetchOnReconnect: false,
   })
 
+  const data = query.data?.data
+
   const salesChartPoints = useMemo(
-    () => deriveSalesChartPoints(query.data?.data.salesMonthly ?? []),
-    [query.data]
+    () => deriveSalesChartPoints(data?.salesMonthly ?? []),
+    [data]
   )
 
-  const treemapNodes = useMemo(
-    () => deriveTreemapNodes(query.data?.data.bigBlockSales ?? []),
-    [query.data]
-  )
-
-  const actionInsights = useMemo(
-    () => deriveActionInsights(query.data?.data),
-    [query.data]
+  const treemapCategories = useMemo(
+    () => deriveTreemapCategories(data?.bigBlockSales ?? []),
+    [data]
   )
 
   return {
     ...query,
     salesChartPoints,
-    treemapNodes,
-    focusProductStock: query.data?.data.focusProductStock ?? {},
-    customerCluster: query.data?.data.customerCluster ?? [],
-    computedAt: query.data?.data.computedAt ?? null,
-    actionInsights,
+    treemapCategories,
+    focusTop20: data?.focusTop20 ?? [],
+    focusProductStock: data?.focusProductStock ?? {},
+    dashboardKpi: data?.dashboardKpi ?? null,
+    actionInsights: data?.actionInsights ?? null,
+    computedAt: data?.computedAt ?? null,
   }
 }

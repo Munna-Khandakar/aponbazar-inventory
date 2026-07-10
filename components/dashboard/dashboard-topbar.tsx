@@ -39,8 +39,8 @@ const getInclusiveDayCount = (startDate: string, endDate: string) => {
 const dashboardPages = [
   {
     href: "/dashboard",
-    label: "Dashboard",
-    description: "Track headline metrics, operational health, and current commercial signals.",
+    label: "Main Dashboard (D0)",
+    description: "Daily updated overview of sales, inventory, and operational health.",
   },
   {
     href: "/dashboard/sales-prediction",
