@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,8 +12,17 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useInventoryBigBlockSeries } from "@/features/inventory-management/hooks/useInventoryBigBlockSeries"
 import { formatDate } from "@/features/inventory-management/utils/formatDate"
+
+const ALL_BLOCKS_VALUE = "all"
 
 type ChartDataPoint = {
   date: string
@@ -235,6 +245,7 @@ const getTooltipSeriesMeta = (seriesName: string) => {
 
 export function PredictiveInventoryStatusChart() {
   const { data, isLoading, isError } = useInventoryBigBlockSeries()
+  const [selectedBlock, setSelectedBlock] = useState<string>(ALL_BLOCKS_VALUE)
 
   if (isLoading) {
     return (
@@ -281,6 +292,16 @@ export function PredictiveInventoryStatusChart() {
     data.data.series?.predicted ?? []
   )
 
+  const effectiveSelectedBlock =
+    selectedBlock === ALL_BLOCKS_VALUE || lineConfigs.some((lc) => lc.blockName === selectedBlock)
+      ? selectedBlock
+      : ALL_BLOCKS_VALUE
+
+  const visibleLineConfigs =
+    effectiveSelectedBlock === ALL_BLOCKS_VALUE
+      ? lineConfigs
+      : lineConfigs.filter((lc) => lc.blockName === effectiveSelectedBlock)
+
   if (!chartData.length || !lineConfigs.length) {
     return (
       <Card className="border-border/70 shadow-sm">
@@ -303,15 +324,26 @@ export function PredictiveInventoryStatusChart() {
 
   return (
     <Card className="border-border/70 shadow-sm">
-      <CardHeader className="space-y-3">
-        <div className="flex items-start gap-3">
-            <div>
-              <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
-              <CardDescription>
-                Daily stock quantity by big block, with actual values shown as solid lines and predicted values shown as dotted lines.
-              </CardDescription>
-            </div>
-          </div>
+      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
+          <CardDescription>
+            Daily stock quantity by big block, with actual values shown as solid lines and predicted values shown as dotted lines.
+          </CardDescription>
+        </div>
+        <Select value={effectiveSelectedBlock} onValueChange={setSelectedBlock}>
+          <SelectTrigger className="w-full sm:w-[220px]" aria-label="Filter by big block">
+            <SelectValue placeholder="All Big Blocks" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_BLOCKS_VALUE}>All Big Blocks</SelectItem>
+            {lineConfigs.map((lineConfig) => (
+              <SelectItem key={lineConfig.blockName} value={lineConfig.blockName}>
+                {lineConfig.blockName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[460px] w-full">
@@ -362,7 +394,7 @@ export function PredictiveInventoryStatusChart() {
             <ChartLegend
               content={<ChartLegendContent className="flex-wrap justify-start gap-x-4 gap-y-2 pt-4" />}
             />
-            {lineConfigs.map((lineConfig) => (
+            {visibleLineConfigs.map((lineConfig) => (
               <Line
                 key={lineConfig.actualKey}
                 type="monotone"
@@ -375,7 +407,7 @@ export function PredictiveInventoryStatusChart() {
                 connectNulls={false}
               />
             ))}
-            {lineConfigs.map((lineConfig) => (
+            {visibleLineConfigs.map((lineConfig) => (
               <Line
                 key={lineConfig.predictedKey}
                 type="monotone"
