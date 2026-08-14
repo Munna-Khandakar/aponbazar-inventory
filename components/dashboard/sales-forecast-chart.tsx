@@ -34,6 +34,22 @@ const formatBdt = (value: number) =>
     maximumFractionDigits: 0,
   })}`
 
+const getMonthYearLabel = (periodLabel?: string) => {
+  const match = periodLabel?.match(/^(\d{4})-(\d{2})-\d{2}$/)
+
+  if (!match) {
+    return null
+  }
+
+  const [, year, month] = match
+
+  return new Date(Date.UTC(Number(year), Number(month) - 1, 1)).toLocaleString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  })
+}
+
 const getGranularityLabel = (granularity?: string) => {
   switch (granularity?.toUpperCase()) {
     case "WEEK":
@@ -47,8 +63,16 @@ const getGranularityLabel = (granularity?: string) => {
   }
 }
 
-const getPeriodTickLines = (value: string) => {
+const getPeriodTickLines = (value: string, granularity?: string) => {
   const normalizedValue = value.replace(/\s+/g, " ").trim()
+
+  if (granularity?.toUpperCase() === "DAY") {
+    const isoDateMatch = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (isoDateMatch) {
+      return [isoDateMatch[3]]
+    }
+  }
+
   const weekMatch = normalizedValue.match(/^(\d{4})-W(\d{1,2})$/)
 
   if (weekMatch) {
@@ -71,14 +95,15 @@ type PeriodAxisTickProps = SVGProps<SVGTextElement> & {
   payload?: {
     value: string
   }
+  granularity?: string
 }
 
-const PeriodAxisTick = ({ x = 0, y = 0, payload }: PeriodAxisTickProps) => {
+const PeriodAxisTick = ({ x = 0, y = 0, payload, granularity }: PeriodAxisTickProps) => {
   if (!payload?.value) {
     return null
   }
 
-  const [lineOne, lineTwo] = getPeriodTickLines(payload.value)
+  const [lineOne, lineTwo] = getPeriodTickLines(payload.value, granularity)
 
   return (
     <g transform={`translate(${x},${y})`}>
@@ -106,13 +131,15 @@ export function SalesForecastChart({ baseMonth }: SalesForecastChartProps) {
   const chartData = data?.points ?? []
   const showLoadingState = isLoading || isFetching
   const granularityLabel = getGranularityLabel(data?.granularity)
+  const isDaily = data?.granularity?.toUpperCase() === "DAY"
+  const headerBadgeLabel = (isDaily && getMonthYearLabel(chartData[0]?.periodLabel)) || granularityLabel
 
   return (
     <Card className="max-h-[520px] overflow-hidden">
       <CardHeader className="flex flex-col justify-between align-items-center">
         <CardTitle className="flex items-center justify-between gap-2 w-full">
           <span className="font-bold">Sales Forecast</span>
-          <span className="rounded border px-2 py-1 text-xs">{granularityLabel}</span>
+          <span className="rounded border px-2 py-1 text-xs">{headerBadgeLabel}</span>
         </CardTitle>
         <CardDescription className="text-sm text-gray-500">
           Actual, target, and predicted sales comparison using the report executor periods
@@ -139,7 +166,7 @@ export function SalesForecastChart({ baseMonth }: SalesForecastChartProps) {
                 tickMargin={10}
                 interval={0}
                 height={52}
-                tick={<PeriodAxisTick />}
+                tick={<PeriodAxisTick granularity={data?.granularity} />}
               />
               <YAxis
                 width={110}
