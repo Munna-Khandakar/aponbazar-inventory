@@ -1,8 +1,12 @@
 "use client"
 
+import { useMemo, useState } from "react"
+
 import { FullscreenTableCard } from "@/components/dashboard/fullscreen-table-card"
 import { StorePerformanceTableSkeleton } from "@/components/dashboard/report-skeletons"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useStorePerformanceSnapshot } from "@/hooks/use-dashboard"
+import type { StorePerformanceSnapshotData } from "@/lib/types/dashboard"
 import { cn } from "@/lib/utils"
 
 const formatCurrency = (value?: number) =>
@@ -68,11 +72,59 @@ const getMetricBadgeTone = (value?: number) => {
   return "bg-rose-100 text-rose-700"
 }
 
-function StorePerformanceSnapshotTable({ rows }: { rows: ReturnType<typeof useStorePerformanceSnapshot>["data"] }) {
+function StorePerformanceSnapshotTable({ rows }: { rows: StorePerformanceSnapshotData[] }) {
+  const [prevRows, setPrevRows] = useState(rows)
+  const [selectedShops, setSelectedShops] = useState<Set<string>>(
+    () => new Set(rows.map((store) => store.shopName))
+  )
+
+  if (rows !== prevRows) {
+    setPrevRows(rows)
+    setSelectedShops(new Set(rows.map((store) => store.shopName)))
+  }
+
+  const allSelected = rows.length > 0 && selectedShops.size === rows.length
+  const someSelected = selectedShops.size > 0 && !allSelected
+
+  const toggleShop = (shopName: string) => {
+    setSelectedShops((prev) => {
+      const next = new Set(prev)
+      if (next.has(shopName)) {
+        next.delete(shopName)
+      } else {
+        next.add(shopName)
+      }
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    setSelectedShops(allSelected ? new Set() : new Set(rows.map((store) => store.shopName)))
+  }
+
+  const totals = useMemo(() => {
+    const selectedRows = rows.filter((store) => selectedShops.has(store.shopName))
+    return selectedRows.reduce(
+      (acc, store) => ({
+        targetSales: acc.targetSales + (store.targetSales ?? 0),
+        mtdSales: acc.mtdSales + (store.mtdSales ?? 0),
+        predictedSalesRom: acc.predictedSalesRom + (store.predictedSalesRom ?? 0),
+      }),
+      { targetSales: 0, mtdSales: 0, predictedSalesRom: 0 }
+    )
+  }, [rows, selectedShops])
+
   return (
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
+          <th className="w-10 py-3 pl-1 pr-2">
+            <Checkbox
+              checked={allSelected ? true : someSelected ? "indeterminate" : false}
+              onCheckedChange={toggleAll}
+              aria-label="Select all shops"
+            />
+          </th>
           <th className="py-3 pr-6 text-left">Shop Name</th>
           <th className="px-4 py-3 text-right">Target Sales</th>
           <th className="px-4 py-3 text-right">MTD Sales</th>
@@ -83,9 +135,17 @@ function StorePerformanceSnapshotTable({ rows }: { rows: ReturnType<typeof useSt
         </tr>
       </thead>
       <tbody>
-        {rows?.map((store) => {
+        {rows.map((store) => {
+          const isSelected = selectedShops.has(store.shopName)
           return (
             <tr key={store.shopName} className="border-b border-border/60 last:border-b-0">
+              <td className="w-10 py-3 pl-1 pr-2">
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => toggleShop(store.shopName)}
+                  aria-label={`Select ${store.shopName}`}
+                />
+              </td>
               <td className="py-3 pr-6">
                 <div className="font-semibold text-foreground">{store.shopName}</div>
               </td>
@@ -128,6 +188,24 @@ function StorePerformanceSnapshotTable({ rows }: { rows: ReturnType<typeof useSt
           )
         })}
       </tbody>
+      <tfoot>
+        <tr className="sticky bottom-0 border-t-2 border-border bg-muted/60 font-semibold backdrop-blur-sm">
+          <td className="py-3 pl-1 pr-2" />
+          <td className="py-3 pr-6 text-foreground">Total ({selectedShops.size} selected)</td>
+          <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+            {formatCurrency(totals.targetSales)}
+          </td>
+          <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+            {formatCurrency(totals.mtdSales)}
+          </td>
+          <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+            {formatCurrency(totals.predictedSalesRom)}
+          </td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="pl-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+        </tr>
+      </tfoot>
     </table>
   )
 }
