@@ -40,17 +40,23 @@ const createStaticHook = <T>(getter: () => T) => (): StaticQueryResult<T> => ({
 
 const useReportRequest = <TReportName extends SalesReportType>(
   reportName: TReportName,
-  options?: { includeGrowthTarget?: boolean; includeShopName?: boolean }
+  options?: { includeGrowthTarget?: boolean; includeShopName?: boolean; baseMonth?: string }
 ): ExecuteReportRequest<TReportName, DateRangeReportParameters | ReportParameters> => {
   const { startDate, endDate, growthTarget, shopName } = useReportFilters()
   const parameters =
     options?.includeGrowthTarget === false
-      ? { startDate, endDate, ...(options?.includeShopName && shopName ? { shopName } : {}) }
+      ? {
+          startDate,
+          endDate,
+          ...(options?.includeShopName && shopName ? { shopName } : {}),
+          ...(options?.baseMonth ? { baseMonth: options.baseMonth } : {}),
+        }
       : {
           startDate,
           endDate,
           growthTarget,
           ...(options?.includeShopName && shopName ? { shopName } : {}),
+          ...(options?.baseMonth ? { baseMonth: options.baseMonth } : {}),
         }
 
   return {
@@ -70,10 +76,11 @@ export const useMonthlyRevenue = createStaticHook(dashboardService.getMonthlyRev
 export const useOrderVolume = createStaticHook(dashboardService.getOrderVolume)
 
 // Page 1: Predictive Sales & Inventory Hooks
-export const useSalesForecast = () => {
+export const useSalesForecast = (baseMonth?: string) => {
   const request = useReportRequest(SalesReportType.MONTH_WISE_SALES, {
     includeGrowthTarget: true,
     includeShopName: true,
+    baseMonth,
   })
 
   return useQuery({

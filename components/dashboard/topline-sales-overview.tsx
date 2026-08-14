@@ -1,35 +1,21 @@
 "use client"
 
-import { useState } from "react"
 import { KpiGaugeCard } from "@/components/dashboard/kpi-gauge-card"
 import { useReportFilters } from "@/hooks/use-report-filters"
 import { useSalesOverview } from "@/hooks/use-dashboard"
+import { getBaseMonthOptions } from "@/lib/base-month"
 import { KpiMetricType, type KpiMetricDataset } from "@/lib/types/kpi-metric"
 
-const getLast12Months = (): { value: string; label: string }[] => {
-  const months = []
-  const now = new Date()
-  for (let i = 1; i <= 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-    const label = d.toLocaleString("en-US", { month: "short", year: "numeric" })
-    months.push({ value, label })
-  }
-  return months
+const MONTH_OPTIONS = getBaseMonthOptions()
+
+type ToplineSalesOverviewProps = {
+  baseMonth: string
+  onBaseMonthChange: (value: string) => void
 }
 
-const getOneYearAgoMonth = (): string => {
-  const now = new Date()
-  const d = new Date(now.getFullYear() - 1, now.getMonth(), 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
-}
-
-const MONTH_OPTIONS = getLast12Months()
-
-export function ToplineSalesOverview() {
+export function ToplineSalesOverview({ baseMonth, onBaseMonthChange }: ToplineSalesOverviewProps) {
   const { growthTarget, setGrowthTarget } = useReportFilters()
   const growthTargetValue = Number(growthTarget) || 0
-  const [baseMonth, setBaseMonth] = useState(getOneYearAgoMonth)
   const { data } = useSalesOverview(baseMonth)
 
   const mtdSalesM = data ? data.mtdSales / 1_000_000 : 0
@@ -92,7 +78,7 @@ export function ToplineSalesOverview() {
             <p className="text-xs uppercase tracking-wide text-slate-500">Baseline comparison</p>
             <select
               value={baseMonth}
-              onChange={(e) => setBaseMonth(e.target.value)}
+              onChange={(e) => onBaseMonthChange(e.target.value)}
               className="w-full rounded-md border border-sky-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400"
             >
               {MONTH_OPTIONS.map((m) => (

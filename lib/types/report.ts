@@ -12,6 +12,7 @@ export type DateRangeReportParameters = {
   startDate: string
   endDate: string
   shopName?: string
+  baseMonth?: string
 }
 
 export type GrowthTargetReportParameters = {

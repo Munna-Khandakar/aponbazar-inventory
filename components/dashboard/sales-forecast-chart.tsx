@@ -97,8 +97,12 @@ const PeriodAxisTick = ({ x = 0, y = 0, payload }: PeriodAxisTickProps) => {
   )
 }
 
-export function SalesForecastChart() {
-  const { data, isLoading, isFetching, error } = useSalesForecast()
+type SalesForecastChartProps = {
+  baseMonth?: string
+}
+
+export function SalesForecastChart({ baseMonth }: SalesForecastChartProps) {
+  const { data, isLoading, isFetching, error } = useSalesForecast(baseMonth)
   const chartData = data?.points ?? []
   const showLoadingState = isLoading || isFetching
   const granularityLabel = getGranularityLabel(data?.granularity)
