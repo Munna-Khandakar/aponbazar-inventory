@@ -44,6 +44,48 @@ const SHOP_TONES = [
     accent: "text-amber-700",
     dot: "bg-amber-500",
   },
+  {
+    header: "bg-emerald-50 text-emerald-800",
+    border: "border-emerald-200",
+    accent: "text-emerald-700",
+    dot: "bg-emerald-500",
+  },
+  {
+    header: "bg-rose-50 text-rose-800",
+    border: "border-rose-200",
+    accent: "text-rose-700",
+    dot: "bg-rose-500",
+  },
+  {
+    header: "bg-indigo-50 text-indigo-800",
+    border: "border-indigo-200",
+    accent: "text-indigo-700",
+    dot: "bg-indigo-500",
+  },
+  {
+    header: "bg-teal-50 text-teal-800",
+    border: "border-teal-200",
+    accent: "text-teal-700",
+    dot: "bg-teal-500",
+  },
+  {
+    header: "bg-orange-50 text-orange-800",
+    border: "border-orange-200",
+    accent: "text-orange-700",
+    dot: "bg-orange-500",
+  },
+  {
+    header: "bg-fuchsia-50 text-fuchsia-800",
+    border: "border-fuchsia-200",
+    accent: "text-fuchsia-700",
+    dot: "bg-fuchsia-500",
+  },
+  {
+    header: "bg-lime-50 text-lime-800",
+    border: "border-lime-200",
+    accent: "text-lime-700",
+    dot: "bg-lime-500",
+  },
 ] as const
 
 type ComparisonMetric = {
@@ -127,9 +169,11 @@ export function ShopComparisonDialog({
 }: ShopComparisonDialogProps) {
   if (shops.length === 0) return null
 
+  const totalCurrentStockValue = shops.reduce((sum, shop) => sum + (shop.currentStockValue ?? 0), 0)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[95vw] w-full p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="text-xl">Shop comparison</DialogTitle>
           <DialogDescription>
@@ -163,11 +207,15 @@ export function ShopComparisonDialog({
                     </th>
                   )
                 })}
+                <th className="px-4 py-3 text-right text-xs font-semibold bg-muted/70 text-foreground">
+                  Total
+                </th>
               </tr>
             </thead>
             <tbody>
               {COMPARISON_METRICS.map((metric, idx) => {
                 const Icon = metric.icon
+                const isCurrentStockValue = metric.label === "Current Stock Value"
                 return (
                   <tr
                     key={metric.label}
@@ -190,6 +238,15 @@ export function ShopComparisonDialog({
                         {metric.render(shop)}
                       </td>
                     ))}
+                    <td className="px-4 py-3.5 text-right text-sm font-semibold whitespace-nowrap bg-muted/40">
+                      {isCurrentStockValue ? (
+                        <span className="font-mono text-foreground">
+                          {formatCurrency(totalCurrentStockValue)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
                   </tr>
                 )
               })}

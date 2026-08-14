@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { GitCompareArrows } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import {
 } from "@/features/inventory-management/utils/shopSnapshotFormatters"
 import { cn } from "@/lib/utils"
 
-const MAX_COMPARE = 3
+const MAX_COMPARE = 10
 
 const InventorySnapshotSkeleton = () => {
   return Array.from({ length: 7 }, (_, index) => (
@@ -43,16 +43,35 @@ function InventorySnapshotTableBody({
   rows,
   selectedShops,
   onToggleShop,
+  onToggleAll,
 }: {
   rows: ShopInventorySnapshotTableRow[]
   selectedShops: Set<string>
   onToggleShop: (shopName: string) => void
+  onToggleAll: () => void
 }) {
+  const allSelected = rows.length > 0 && selectedShops.size === rows.length
+  const someSelected = selectedShops.size > 0 && !allSelected
+
+  const totalCurrentStockValue = useMemo(
+    () =>
+      rows
+        .filter((row) => selectedShops.has(row.shopName))
+        .reduce((sum, row) => sum + (row.currentStockValue ?? 0), 0),
+    [rows, selectedShops]
+  )
+
   return (
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-          <th className="w-10 px-3 py-3" />
+          <th className="w-10 px-3 py-3">
+            <Checkbox
+              checked={allSelected ? true : someSelected ? "indeterminate" : false}
+              onCheckedChange={onToggleAll}
+              aria-label="Select all shops"
+            />
+          </th>
           <th className="py-3 pr-6 text-left">Shop Name</th>
           <th className="px-4 py-3 text-right">Current Stock (Qty)</th>
           <th className="px-4 py-3 text-right">Current Stock (Value)</th>
@@ -68,11 +87,24 @@ function InventorySnapshotTableBody({
             key={row.shopName}
             row={row}
             isSelected={selectedShops.has(row.shopName)}
-            isDisabled={!selectedShops.has(row.shopName) && selectedShops.size >= MAX_COMPARE}
             onToggle={() => onToggleShop(row.shopName)}
           />
         ))}
       </tbody>
+      <tfoot>
+        <tr className="sticky bottom-0 border-t-2 border-border bg-muted/60 font-semibold backdrop-blur-sm">
+          <td className="w-10 px-3 py-3" />
+          <td className="py-3 pr-6 text-foreground">Total ({selectedShops.size} selected)</td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="px-4 py-3 text-right font-mono text-sm whitespace-nowrap">
+            {formatCurrency(totalCurrentStockValue)}
+          </td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="px-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+          <td className="pl-4 py-3 text-right text-sm whitespace-nowrap text-muted-foreground">—</td>
+        </tr>
+      </tfoot>
     </table>
   )
 }
@@ -80,12 +112,10 @@ function InventorySnapshotTableBody({
 function InventorySnapshotTableRow({
   row,
   isSelected,
-  isDisabled,
   onToggle,
 }: {
   row: ShopInventorySnapshotTableRow
   isSelected: boolean
-  isDisabled: boolean
   onToggle: () => void
 }) {
   return (
@@ -93,7 +123,6 @@ function InventorySnapshotTableRow({
       <td className="w-10 px-3 py-3">
         <Checkbox
           checked={isSelected}
-          disabled={isDisabled}
           onCheckedChange={onToggle}
           aria-label={`Select ${row.shopName}`}
         />
@@ -134,30 +163,42 @@ export function ShopInventorySnapshotTable() {
   const { rows, isLoading, isFetching, error } = useShopInventorySnapshot()
   const showLoadingState = isLoading || isFetching
 
-  const [selectedShops, setSelectedShops] = useState<Set<string>>(new Set())
+  const [prevRows, setPrevRows] = useState(rows)
+  const [selectedShops, setSelectedShops] = useState<Set<string>>(
+    () => new Set(rows.map((r) => r.shopName))
+  )
   const [isCompareOpen, setIsCompareOpen] = useState(false)
 
-  // Clear selection when the underlying rows change (e.g. filter change)
-  useEffect(() => {
-    setSelectedShops(new Set())
-  }, [rows])
+  // Reset to all-selected when the underlying rows change (e.g. filter change)
+  if (rows !== prevRows) {
+    setPrevRows(rows)
+    setSelectedShops(new Set(rows.map((r) => r.shopName)))
+  }
 
   const handleToggleShop = (shopName: string) => {
     setSelectedShops((prev) => {
       const next = new Set(prev)
       if (next.has(shopName)) {
         next.delete(shopName)
-      } else if (next.size < MAX_COMPARE) {
+      } else {
         next.add(shopName)
       }
       return next
     })
   }
 
+  const handleToggleAll = () => {
+    setSelectedShops(
+      selectedShops.size === rows.length ? new Set() : new Set(rows.map((r) => r.shopName))
+    )
+  }
+
   const selectedShopRows = useMemo(
     () => rows.filter((r) => selectedShops.has(r.shopName)),
     [rows, selectedShops]
   )
+
+  const isOverCompareLimit = selectedShops.size > MAX_COMPARE
 
   const compareButton =
     selectedShops.size >= 2 ? (
@@ -166,6 +207,8 @@ export function ShopInventorySnapshotTable() {
         variant="outline"
         size="sm"
         className="gap-2"
+        disabled={isOverCompareLimit}
+        title={isOverCompareLimit ? `Select ${MAX_COMPARE} or fewer shops to compare` : undefined}
         onClick={() => setIsCompareOpen(true)}
       >
         <GitCompareArrows size={15} />
@@ -203,6 +246,7 @@ export function ShopInventorySnapshotTable() {
             rows={rows}
             selectedShops={selectedShops}
             onToggleShop={handleToggleShop}
+            onToggleAll={handleToggleAll}
           />
         )}
       </FullscreenTableCard>
