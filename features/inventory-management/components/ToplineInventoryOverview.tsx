@@ -1,7 +1,6 @@
 "use client"
 
 import { KpiGaugeCard } from "@/components/dashboard/kpi-gauge-card"
-import { useReportFilters } from "@/hooks/use-report-filters"
 import { useInventoryOverview } from "@/hooks/use-dashboard"
 import { KpiMetricType, type KpiMetricDataset } from "@/lib/types/kpi-metric"
 
@@ -12,7 +11,6 @@ const formatCompactNumber = (value: number) => {
 }
 
 export function ToplineInventoryOverview() {
-  const { startDate, endDate } = useReportFilters()
   const { data, isLoading } = useInventoryOverview()
 
   const totalStockQty = data?.totalStockQty ?? 0
@@ -62,9 +60,6 @@ export function ToplineInventoryOverview() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Topline Inventory Overview</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            [{startDate} to {endDate}, Search Bar, Outlet/Category Filters]
-          </p>
         </div>
       </header>
 

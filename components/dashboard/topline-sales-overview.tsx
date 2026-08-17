@@ -48,9 +48,6 @@ export function ToplineSalesOverview({ baseMonth, onBaseMonthChange }: ToplineSa
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">Topline Sales Overview</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            [Date Ranges (MTD, 30D, Custom), Search Bar, Outlet/Category Filters]
-          </p>
         </div>
       </header>
 

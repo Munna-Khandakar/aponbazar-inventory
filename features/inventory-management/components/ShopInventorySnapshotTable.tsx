@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { GitCompareArrows } from "lucide-react"
+import { Download, GitCompareArrows } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -15,9 +15,54 @@ import {
   formatQuantity,
   getHealthTone,
 } from "@/features/inventory-management/utils/shopSnapshotFormatters"
+import { downloadCsv } from "@/lib/export-csv"
 import { cn } from "@/lib/utils"
 
 const MAX_COMPARE = 10
+
+function exportInventorySnapshotCsv(
+  rows: ShopInventorySnapshotTableRow[],
+  selectedShops: Set<string>
+) {
+  const selectedRows = rows.filter((row) => selectedShops.has(row.shopName))
+  const totalCurrentStockValue = selectedRows.reduce(
+    (sum, row) => sum + (row.currentStockValue ?? 0),
+    0
+  )
+
+  downloadCsv(
+    "shop-inventory-snapshot.csv",
+    [
+      "Shop Name",
+      "Current Stock (Qty)",
+      "Current Stock (Value)",
+      "5-day Lifting",
+      "Optimum Inventory Value",
+      "Inventory Health",
+      "Forecast Accuracy (%)",
+    ],
+    [
+      ...selectedRows.map((row) => [
+        row.shopName,
+        row.currentStockQty ?? "",
+        row.currentStockValue ?? "",
+        row.fiveDayLifting ?? "",
+        row.optimumInventoryValue ?? "",
+        row.inventoryHealth ?? "",
+        row.forecastAccuracy ?? "",
+      ]),
+      [
+        `Total (${selectedRows.length} selected)`,
+        "",
+        totalCurrentStockValue,
+        "",
+        "",
+        "",
+        "",
+      ],
+    ]
+  )
+}
 
 const InventorySnapshotSkeleton = () => {
   return Array.from({ length: 7 }, (_, index) => (
@@ -216,6 +261,20 @@ export function ShopInventorySnapshotTable() {
       </Button>
     ) : null
 
+  const exportButton =
+    selectedShops.size > 0 ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        onClick={() => exportInventorySnapshotCsv(rows, selectedShops)}
+      >
+        <Download size={15} />
+        Export CSV
+      </Button>
+    ) : null
+
   return (
     <>
       <FullscreenTableCard
@@ -225,7 +284,12 @@ export function ShopInventorySnapshotTable() {
         fullscreenDescription="Expanded view of shop-level stock quantity, stock value, 5-day lifting, and health signals."
         bodyClassName="min-h-0 flex-1 overflow-auto"
         fullscreenDisabled={showLoadingState}
-        headerActions={compareButton}
+        headerActions={
+          <>
+            {exportButton}
+            {compareButton}
+          </>
+        }
       >
         {showLoadingState ? (
           <table className="w-full text-sm">

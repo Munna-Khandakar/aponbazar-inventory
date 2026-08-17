@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Download,
   GaugeCircle,
   Package,
   Target,
@@ -9,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,7 @@ import {
   formatQuantity,
   getHealthTone,
 } from "@/features/inventory-management/utils/shopSnapshotFormatters"
+import { downloadCsv } from "@/lib/export-csv"
 import { cn } from "@/lib/utils"
 
 const SHOP_TONES = [
@@ -156,6 +159,35 @@ const COMPARISON_METRICS: ComparisonMetric[] = [
   },
 ]
 
+function exportComparisonCsv(shops: ShopInventorySnapshotTableRow[]) {
+  const totalCurrentStockValue = shops.reduce((sum, shop) => sum + (shop.currentStockValue ?? 0), 0)
+
+  downloadCsv(
+    "shop-comparison.csv",
+    [
+      "Shop Name",
+      "Current Stock Qty",
+      "Current Stock Value",
+      "5-day Lifting",
+      "Optimum Inventory Value",
+      "Inventory Health",
+      "Forecast Accuracy (%)",
+    ],
+    [
+      ...shops.map((shop) => [
+        shop.shopName,
+        shop.currentStockQty ?? "",
+        shop.currentStockValue ?? "",
+        shop.fiveDayLifting ?? "",
+        shop.optimumInventoryValue ?? "",
+        shop.inventoryHealth ?? "",
+        shop.forecastAccuracy ?? "",
+      ]),
+      [`Total (${shops.length} shops)`, "", totalCurrentStockValue, "", "", "", ""],
+    ]
+  )
+}
+
 type ShopComparisonDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -173,12 +205,24 @@ export function ShopComparisonDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-xl">Shop comparison</DialogTitle>
-          <DialogDescription>
-            Side-by-side view of {shops.length} selected shops across all inventory metrics.
-          </DialogDescription>
+      <DialogContent className="max-w-[98vw] sm:max-w-[98vw] w-full p-0 gap-0 overflow-hidden">
+        <DialogHeader className="flex-row items-start justify-between gap-4 px-6 pt-6 pb-4">
+          <div>
+            <DialogTitle className="text-xl">Shop comparison</DialogTitle>
+            <DialogDescription>
+              Side-by-side view of {shops.length} selected shops across all inventory metrics.
+            </DialogDescription>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mr-8 shrink-0 gap-2"
+            onClick={() => exportComparisonCsv(shops)}
+          >
+            <Download size={15} />
+            Export CSV
+          </Button>
         </DialogHeader>
 
         <div className="overflow-auto border-t border-border/60">

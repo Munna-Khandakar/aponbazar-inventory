@@ -1,11 +1,14 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { Download } from "lucide-react"
 
 import { FullscreenTableCard } from "@/components/dashboard/fullscreen-table-card"
 import { StorePerformanceTableSkeleton } from "@/components/dashboard/report-skeletons"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useStorePerformanceSnapshot } from "@/hooks/use-dashboard"
+import { downloadCsv } from "@/lib/export-csv"
 import type { StorePerformanceSnapshotData } from "@/lib/types/dashboard"
 import { cn } from "@/lib/utils"
 
@@ -72,35 +75,19 @@ const getMetricBadgeTone = (value?: number) => {
   return "bg-rose-100 text-rose-700"
 }
 
-function StorePerformanceSnapshotTable({ rows }: { rows: StorePerformanceSnapshotData[] }) {
-  const [prevRows, setPrevRows] = useState(rows)
-  const [selectedShops, setSelectedShops] = useState<Set<string>>(
-    () => new Set(rows.map((store) => store.shopName))
-  )
-
-  if (rows !== prevRows) {
-    setPrevRows(rows)
-    setSelectedShops(new Set(rows.map((store) => store.shopName)))
-  }
-
+function StorePerformanceSnapshotTable({
+  rows,
+  selectedShops,
+  onToggleShop,
+  onToggleAll,
+}: {
+  rows: StorePerformanceSnapshotData[]
+  selectedShops: Set<string>
+  onToggleShop: (shopName: string) => void
+  onToggleAll: () => void
+}) {
   const allSelected = rows.length > 0 && selectedShops.size === rows.length
   const someSelected = selectedShops.size > 0 && !allSelected
-
-  const toggleShop = (shopName: string) => {
-    setSelectedShops((prev) => {
-      const next = new Set(prev)
-      if (next.has(shopName)) {
-        next.delete(shopName)
-      } else {
-        next.add(shopName)
-      }
-      return next
-    })
-  }
-
-  const toggleAll = () => {
-    setSelectedShops(allSelected ? new Set() : new Set(rows.map((store) => store.shopName)))
-  }
 
   const totals = useMemo(() => {
     const selectedRows = rows.filter((store) => selectedShops.has(store.shopName))
@@ -121,7 +108,7 @@ function StorePerformanceSnapshotTable({ rows }: { rows: StorePerformanceSnapsho
           <th className="w-10 py-3 pl-1 pr-2">
             <Checkbox
               checked={allSelected ? true : someSelected ? "indeterminate" : false}
-              onCheckedChange={toggleAll}
+              onCheckedChange={onToggleAll}
               aria-label="Select all shops"
             />
           </th>
@@ -142,7 +129,7 @@ function StorePerformanceSnapshotTable({ rows }: { rows: StorePerformanceSnapsho
               <td className="w-10 py-3 pl-1 pr-2">
                 <Checkbox
                   checked={isSelected}
-                  onCheckedChange={() => toggleShop(store.shopName)}
+                  onCheckedChange={() => onToggleShop(store.shopName)}
                   aria-label={`Select ${store.shopName}`}
                 />
               </td>
@@ -210,10 +197,102 @@ function StorePerformanceSnapshotTable({ rows }: { rows: StorePerformanceSnapsho
   )
 }
 
+function exportStorePerformanceCsv(
+  rows: StorePerformanceSnapshotData[],
+  selectedShops: Set<string>
+) {
+  const selectedRows = rows.filter((store) => selectedShops.has(store.shopName))
+  const totals = selectedRows.reduce(
+    (acc, store) => ({
+      targetSales: acc.targetSales + (store.targetSales ?? 0),
+      mtdSales: acc.mtdSales + (store.mtdSales ?? 0),
+      predictedSalesRom: acc.predictedSalesRom + (store.predictedSalesRom ?? 0),
+    }),
+    { targetSales: 0, mtdSales: 0, predictedSalesRom: 0 }
+  )
+
+  downloadCsv(
+    "shop-performance-snapshot.csv",
+    [
+      "Shop Name",
+      "Target Sales",
+      "MTD Sales",
+      "Predicted Sales (ROM)",
+      "MTD Target vs Sales (%)",
+      "Predicted Gap (%)",
+      "Forecast Accuracy (%)",
+    ],
+    [
+      ...selectedRows.map((store) => [
+        store.shopName,
+        store.targetSales ?? "",
+        store.mtdSales ?? "",
+        store.predictedSalesRom ?? "",
+        store.mtdTargetVsSales ?? "",
+        store.predictedGap ?? "",
+        store.forecastAccuracy ?? "",
+      ]),
+      [
+        `Total (${selectedRows.length} selected)`,
+        totals.targetSales,
+        totals.mtdSales,
+        totals.predictedSalesRom,
+        "",
+        "",
+        "",
+      ],
+    ]
+  )
+}
+
+const EMPTY_ROWS: StorePerformanceSnapshotData[] = []
+
 export function StorePerformanceTable() {
   const { data, isLoading, isFetching, error } = useStorePerformanceSnapshot()
-  const rows = data ?? []
+  const rows = data ?? EMPTY_ROWS
   const showLoadingState = isLoading || isFetching
+
+  const [prevRows, setPrevRows] = useState(rows)
+  const [selectedShops, setSelectedShops] = useState<Set<string>>(
+    () => new Set(rows.map((store) => store.shopName))
+  )
+
+  if (rows !== prevRows) {
+    setPrevRows(rows)
+    setSelectedShops(new Set(rows.map((store) => store.shopName)))
+  }
+
+  const toggleShop = (shopName: string) => {
+    setSelectedShops((prev) => {
+      const next = new Set(prev)
+      if (next.has(shopName)) {
+        next.delete(shopName)
+      } else {
+        next.add(shopName)
+      }
+      return next
+    })
+  }
+
+  const toggleAll = () => {
+    setSelectedShops(
+      selectedShops.size === rows.length ? new Set() : new Set(rows.map((store) => store.shopName))
+    )
+  }
+
+  const exportButton =
+    selectedShops.size > 0 ? (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        onClick={() => exportStorePerformanceCsv(rows, selectedShops)}
+      >
+        <Download size={15} />
+        Export CSV
+      </Button>
+    ) : null
 
   return (
     <FullscreenTableCard
@@ -223,6 +302,7 @@ export function StorePerformanceTable() {
       fullscreenDescription="Expanded table view for target, MTD sales, ROM forecast, and accuracy."
       bodyClassName="min-h-0 flex-1 overflow-auto"
       fullscreenDisabled={showLoadingState}
+      headerActions={exportButton}
     >
       {showLoadingState ? (
         <table className="w-full text-sm">
@@ -235,7 +315,12 @@ export function StorePerformanceTable() {
           Failed to load shop performance data
         </div>
       ) : (
-        <StorePerformanceSnapshotTable rows={rows} />
+        <StorePerformanceSnapshotTable
+          rows={rows}
+          selectedShops={selectedShops}
+          onToggleShop={toggleShop}
+          onToggleAll={toggleAll}
+        />
       )}
     </FullscreenTableCard>
   )
