@@ -4,25 +4,92 @@ import { useState } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   ChartContainer,
   ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useInventoryBigBlockSeries } from "@/features/inventory-management/hooks/useInventoryBigBlockSeries"
 import { formatDate } from "@/features/inventory-management/utils/formatDate"
+import { cn } from "@/lib/utils"
 
-const ALL_BLOCKS_VALUE = "all"
+type LegendPayloadItem = {
+  value?: string
+  color?: string
+  type?: string
+}
+
+type BlockLegendContentProps = {
+  payload?: LegendPayloadItem[]
+  verticalAlign?: string
+  deselectedBlocks: Set<string>
+  onToggleBlock: (blockName: string) => void
+  onToggleAll: () => void
+}
+
+function BlockLegendContent({
+  payload,
+  verticalAlign = "bottom",
+  deselectedBlocks,
+  onToggleBlock,
+  onToggleAll,
+}: BlockLegendContentProps) {
+  if (!payload?.length) {
+    return null
+  }
+
+  const blockItems = payload.filter((item) => item.type !== "none" && item.value)
+  const allSelected = blockItems.every((item) => !deselectedBlocks.has(item.value as string))
+  const someSelected = !allSelected && blockItems.some((item) => !deselectedBlocks.has(item.value as string))
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-start gap-x-4 gap-y-2",
+        verticalAlign === "top" ? "pb-3" : "pt-4"
+      )}
+    >
+      <label className="flex cursor-pointer items-center gap-1.5 border-r border-border pr-4 text-sm font-medium">
+        <Checkbox
+          checked={allSelected ? true : someSelected ? "indeterminate" : false}
+          onCheckedChange={onToggleAll}
+          className="h-3.5 w-3.5"
+          aria-label="Toggle all big blocks"
+        />
+        <span className="text-foreground">All</span>
+      </label>
+      {blockItems
+        .map((item) => {
+          const blockName = item.value as string
+          const isChecked = !deselectedBlocks.has(blockName)
+
+          return (
+            <label
+              key={blockName}
+              className="flex cursor-pointer items-center gap-1.5 text-sm"
+            >
+              <Checkbox
+                checked={isChecked}
+                onCheckedChange={() => onToggleBlock(blockName)}
+                className="h-3.5 w-3.5"
+                aria-label={`Toggle ${blockName}`}
+              />
+              <span
+                className="h-2 w-2 shrink-0 rounded-[2px]"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className={isChecked ? "text-foreground" : "text-muted-foreground"}>
+                {blockName}
+              </span>
+            </label>
+          )
+        })}
+    </div>
+  )
+}
 
 type ChartDataPoint = {
   date: string
@@ -245,7 +312,19 @@ const getTooltipSeriesMeta = (seriesName: string) => {
 
 export function PredictiveInventoryStatusChart() {
   const { data, isLoading, isError } = useInventoryBigBlockSeries()
-  const [selectedBlock, setSelectedBlock] = useState<string>(ALL_BLOCKS_VALUE)
+  const [deselectedBlocks, setDeselectedBlocks] = useState<Set<string>>(new Set())
+
+  const toggleBlock = (blockName: string) => {
+    setDeselectedBlocks((prev) => {
+      const next = new Set(prev)
+      if (next.has(blockName)) {
+        next.delete(blockName)
+      } else {
+        next.add(blockName)
+      }
+      return next
+    })
+  }
 
   if (isLoading) {
     return (
@@ -292,15 +371,11 @@ export function PredictiveInventoryStatusChart() {
     data.data.series?.predicted ?? []
   )
 
-  const effectiveSelectedBlock =
-    selectedBlock === ALL_BLOCKS_VALUE || lineConfigs.some((lc) => lc.blockName === selectedBlock)
-      ? selectedBlock
-      : ALL_BLOCKS_VALUE
-
-  const visibleLineConfigs =
-    effectiveSelectedBlock === ALL_BLOCKS_VALUE
-      ? lineConfigs
-      : lineConfigs.filter((lc) => lc.blockName === effectiveSelectedBlock)
+  const toggleAllBlocks = () => {
+    setDeselectedBlocks((prev) =>
+      prev.size === 0 ? new Set(lineConfigs.map((lc) => lc.blockName)) : new Set()
+    )
+  }
 
   if (!chartData.length || !lineConfigs.length) {
     return (
@@ -324,26 +399,11 @@ export function PredictiveInventoryStatusChart() {
 
   return (
     <Card className="border-border/70 shadow-sm">
-      <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
-          <CardDescription>
-            Daily stock quantity by big block, with actual values shown as solid lines and predicted values shown as dotted lines.
-          </CardDescription>
-        </div>
-        <Select value={effectiveSelectedBlock} onValueChange={setSelectedBlock}>
-          <SelectTrigger className="w-full sm:w-[220px]" aria-label="Filter by big block">
-            <SelectValue placeholder="All Big Blocks" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_BLOCKS_VALUE}>All Big Blocks</SelectItem>
-            {lineConfigs.map((lineConfig) => (
-              <SelectItem key={lineConfig.blockName} value={lineConfig.blockName}>
-                {lineConfig.blockName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <CardHeader>
+        <CardTitle>Big Block Inventory Trend &amp; Predicted</CardTitle>
+        <CardDescription>
+          Daily stock quantity by big block, with actual values shown as solid lines and predicted values shown as dotted lines. Use the checkboxes below the chart to show or hide individual blocks.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[460px] w-full">
@@ -392,9 +452,15 @@ export function PredictiveInventoryStatusChart() {
               }
             />
             <ChartLegend
-              content={<ChartLegendContent className="flex-wrap justify-start gap-x-4 gap-y-2 pt-4" />}
+              content={
+                <BlockLegendContent
+                  deselectedBlocks={deselectedBlocks}
+                  onToggleBlock={toggleBlock}
+                  onToggleAll={toggleAllBlocks}
+                />
+              }
             />
-            {visibleLineConfigs.map((lineConfig) => (
+            {lineConfigs.map((lineConfig) => (
               <Line
                 key={lineConfig.actualKey}
                 type="monotone"
@@ -405,9 +471,10 @@ export function PredictiveInventoryStatusChart() {
                 dot={false}
                 activeDot={{ r: 3 }}
                 connectNulls={false}
+                hide={deselectedBlocks.has(lineConfig.blockName)}
               />
             ))}
-            {visibleLineConfigs.map((lineConfig) => (
+            {lineConfigs.map((lineConfig) => (
               <Line
                 key={lineConfig.predictedKey}
                 type="monotone"
@@ -420,6 +487,7 @@ export function PredictiveInventoryStatusChart() {
                 activeDot={{ r: 3 }}
                 connectNulls={false}
                 legendType="none"
+                hide={deselectedBlocks.has(lineConfig.blockName)}
               />
             ))}
           </LineChart>
